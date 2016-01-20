@@ -134,4 +134,3 @@ elif 'develop' in s.script_args:
     else:
         print "Calling initialize_OilLibrary_db"
         call("initialize_OilLibrary_db")
-        print 'OilLibrary database successfully generated from file!'
