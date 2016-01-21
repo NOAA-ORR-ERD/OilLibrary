@@ -10,6 +10,8 @@ temp.txt
 # ignore ipython notebook checkpoints areas
 .ipynb_checkpoints
 
+.cache
+
 /OilLibrary.egg-info
 /build
 /*.egg
