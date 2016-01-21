@@ -10,8 +10,8 @@ from setuptools import Command
 from setuptools.command.test import test as TestCommand
 
 here = os.path.abspath(os.path.dirname(__file__))
-README = open(os.path.join(here, 'README.txt')).read()
-pkg_name = 'OilLibrary'
+README = open(os.path.join(here, 'README.md')).read()
+pkg_name = 'oil-library'
 
 
 def clean_files(del_db=False):
@@ -94,7 +94,7 @@ class PyTest(TestCommand):
 
 s = setup(name=pkg_name,
           version='0.1',
-          description='OilLibrary',
+          description='oil-library',
           long_description=README,
           author='ADIOS/GNOME team at NOAA ORR',
           author_email='orr.gnome@noaa.gov',
@@ -133,4 +133,9 @@ elif 'develop' in s.script_args:
         print 'OilLibrary database exists - do not remake!'
     else:
         print "Calling initialize_OilLibrary_db"
-        call("initialize_OilLibrary_db")
+        ret = call("initialize_OilLibrary_db")
+
+        if ret == 0:
+            print 'OilLibrary database successfully generated from file!'
+        else:
+            print 'OilLibrary database generation returned: ', ret
