@@ -93,7 +93,7 @@ class PyTest(TestCommand):
         sys.exit(errno)
 
 s = setup(name=pkg_name,
-          version='0.1',
+          version='0.0.1',
           description='oil-library',
           long_description=README,
           author='ADIOS/GNOME team at NOAA ORR',
