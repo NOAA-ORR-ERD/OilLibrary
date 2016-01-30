@@ -76,6 +76,7 @@ class remake_oil_db(Command):
         else:
             print 'OilLibrary database generation returned: ', ret
 
+
 class PyTest(TestCommand):
     """So we can run tests with ``setup.py test``"""
     def finalize_options(self):
@@ -86,14 +87,14 @@ class PyTest(TestCommand):
 
     def run_tests(self):
         # no idea why it doesn't work to call pytest.main
-        #import pytest
-        #errno = pytest.main(self.test_args)
+        # import pytest
+        # errno = pytest.main(self.test_args)
         errno = os.system('py.test --pyargs oil_library')
         import sys
         sys.exit(errno)
 
 s = setup(name=pkg_name,
-          version='0.0.1',
+          version='0.0.2',
           description='oil-library',
           long_description=README,
           author='ADIOS/GNOME team at NOAA ORR',
