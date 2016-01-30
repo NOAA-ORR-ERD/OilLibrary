@@ -78,7 +78,7 @@ class OilLibraryFile(object):
                 raise ImportFileHeaderLengthError('Bad file header: '
                                                   'did not find '
                                                   '3 fields for version!!')
-        elif self.__version__[-1] != 'adios':
+        elif not self.__version__[-1].startswith('adios'):
             if ignore_version:
                 # If we failed on header content, we probably have a bad
                 # or unexpected header, but a header nonetheless.

@@ -86,17 +86,21 @@ class Base(object):
             content that we don't want to return.  So we will prune it.
         '''
         oil_json = self._tojson()
-        for c in oil_json['categories']:
-            if 'oils' in c:
-                del c['oils']
+        if 'categories' in oil_json:
+            for c in oil_json['categories']:
+                if 'oils' in c:
+                    del c['oils']
 
-        for list_attr in ('cuts', 'densities', 'kvis', 'molecular_weights',
+        for list_attr in ('cuts', 'densities',
+                          'kvis', 'dvis',
+                          'molecular_weights',
                           'sara_fractions', 'sara_densities'):
-            for attr in oil_json[list_attr]:
-                if 'imported' in attr:
-                    del attr['imported']
-                if 'oil' in attr:
-                    del attr['oil']
+            if list_attr in oil_json:
+                for attr in oil_json[list_attr]:
+                    if 'imported' in attr:
+                        del attr['imported']
+                    if 'oil' in attr:
+                        del attr['oil']
 
         return oil_json
 

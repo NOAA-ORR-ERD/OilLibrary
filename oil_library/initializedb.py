@@ -30,10 +30,8 @@ def initialize_sql(settings):
 
 def load_database(settings):
     with transaction.manager:
-        # -- Our loading routine --
         session = DBSession()
 
-        # 1. purge our builtin rows if any exist
         sys.stderr.write('Purging old records in database')
         imported_recs_purged, oil_recs_purged = purge_old_records(session)
         print ('finished!!!\n'
@@ -41,28 +39,26 @@ def load_database(settings):
                '    {0} oil records purged.'
                .format(imported_recs_purged, oil_recs_purged))
 
-        # 2. we need to open our OilLib file
-        print 'opening file: {0} ...'.format(settings['oillib.file'])
-        fd = OilLibraryFile(settings['oillib.file'])
-        print 'file version:', fd.__version__
+        for fn in settings['oillib.files'].split('\n'):
+            print 'opening file: {0} ...'.format(fn)
+            fd = OilLibraryFile(fn)
+            print 'file version:', fd.__version__
 
-        # 3. iterate over our rows
-        sys.stderr.write('Adding new records to database')
-        rowcount = 0
-        for r in fd.readlines():
-            if len(r) < 10:
-                print 'got record:', r
+            sys.stderr.write('Adding new records to database')
+            rowcount = 0
+            for r in fd.readlines():
+                if len(r) < 10:
+                    print 'got record:', r
 
-            # 3a. for each row, we populate the Oil object
-            add_oil_object(session, fd.file_columns, r)
+                add_oil_object(session, fd.file_columns, r)
 
-            if rowcount % 100 == 0:
-                sys.stderr.write('.')
+                if rowcount % 100 == 0:
+                    sys.stderr.write('.')
 
-            rowcount += 1
+                rowcount += 1
 
-        print 'finished!!!  {0} rows processed.'.format(rowcount)
-        session.close()
+            print 'finished!!!  {0} rows processed.'.format(rowcount)
+            session.close()
 
         # we need to open a session for each record here because we want
         # the option of transactionally rolling back rejected records.
@@ -73,21 +69,22 @@ def load_database(settings):
         process_categories(session)
 
 
-def make_db(oillib_file=None, db_file=None):
+def make_db(oillib_files=None, db_file=None):
     '''
     Entry point for console_script installed by setup
     '''
-    pck_loc = os.path.split(__file__)[0]
+    pck_loc = os.path.dirname(os.path.realpath(__file__))
 
     if not db_file:
         db_file = os.path.join(pck_loc, 'OilLib.db')
 
-    if not oillib_file:
-        oillib_file = os.path.join(pck_loc, 'OilLib')
+    if not oillib_files:
+        oillib_files = '\n'.join([os.path.join(pck_loc, fn)
+                                  for fn in ('OilLib', 'OilLibTest')])
 
     sqlalchemy_url = 'sqlite:///{0}'.format(db_file)
     settings = {'sqlalchemy.url': sqlalchemy_url,
-                'oillib.file': oillib_file}
+                'oillib.files': oillib_files}
     try:
         initialize_sql(settings)
         load_database(settings)
