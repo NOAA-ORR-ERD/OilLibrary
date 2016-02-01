@@ -12,6 +12,7 @@ from setuptools.command.test import test as TestCommand
 here = os.path.abspath(os.path.dirname(__file__))
 README = open(os.path.join(here, 'README.md')).read()
 pkg_name = 'oil_library'
+pkg_version = '0.0.3'
 
 
 def clean_files(del_db=False):
@@ -94,7 +95,7 @@ class PyTest(TestCommand):
         sys.exit(errno)
 
 s = setup(name=pkg_name,
-          version='0.0.2',
+          version=pkg_version,
           description=('{}: {}'.format(pkg_name,
                                        'The NOAA library of oils '
                                        'and their properties.')),
