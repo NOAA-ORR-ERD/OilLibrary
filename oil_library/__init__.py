@@ -14,7 +14,7 @@ from oil_library.mock_oil import sample_oil_to_mock_oil
 from oil_library.oil_props import OilProps
 
 try:
-    __version__ = get_distribution('OilLibrary').version
+    __version__ = get_distribution('oil_library').version
 except:
     __version__ = 'not_found'
 
