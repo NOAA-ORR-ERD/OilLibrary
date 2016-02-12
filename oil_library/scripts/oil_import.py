@@ -1,16 +1,10 @@
 import os
 import sys
+import datetime
 
 import numpy as np
 
 from ..oil_library_parse import OilLibraryFile
-
-
-def usage(argv):
-    cmd = os.path.basename(argv[0])
-    print('usage: {0} <import_file_1> <import_file_2>\n'
-          '(example: "{0} OilLib ADIOS2Export.txt")'.format(cmd))
-    sys.exit(1)
 
 
 def diff_import_files(file1, file2):
@@ -134,9 +128,16 @@ def row_diff(a, b, field_names):
             if not is_equal(v1, v2)]
 
 
+def diff_import_files_usage(argv):
+    cmd = os.path.basename(argv[0])
+    print('usage: {0} <import_file_1> <import_file_2>\n'
+          '(example: "{0} OilLib ADIOS2Export.txt")'.format(cmd))
+    sys.exit(1)
+
+
 def diff_import_files_cmd(argv=sys.argv, proc=diff_import_files):
     if len(argv) < 3:
-        usage(argv)
+        diff_import_files_usage(argv)
 
     f1, f2 = argv[1:3]
 
@@ -145,3 +146,157 @@ def diff_import_files_cmd(argv=sys.argv, proc=diff_import_files):
     except:
         print "{0} FAILED\n".format(proc)
         raise
+
+
+def add_header_to_csv(file1):
+    print 'opening file: {0} ...'.format(file1)
+    fd1 = OilLibraryFile(file1, ignore_version=True)
+
+    new_path = generate_new_filename(file1)
+    new_version = get_file_version(fd1)
+    new_app_name = get_application_name(fd1)
+
+    fd1.__version__ = [new_version,
+                       datetime.date.today().isoformat(),
+                       new_app_name]
+
+    print 'exporting to:', new_path
+    fd1.export(new_path)
+
+
+def generate_new_filename(filename):
+    '''
+        Basically we would like to make a new file of the same name
+        as the original filename in the same folder, but we would like
+        to insert the string 'fixed' in the middle of the filename and the
+        file extension.  And if there is no extension, we would like .fixed
+        to become the extension.
+    '''
+    new_dir = os.path.dirname(filename)
+
+    new_filename = list(os.path.splitext(os.path.basename(filename)))
+    new_filename.insert(-1, 'fixed')
+
+    if new_filename[-1] == '':
+        del new_filename[-1]
+    else:
+        new_filename[-1] = new_filename[-1].strip('.')
+
+    return os.path.join(new_dir, '.'.join(new_filename))
+
+
+def get_file_version(file_obj):
+    if (file_obj.__version__ is not None and
+            len(file_obj.__version__) == 3):
+        print 'current file version: {}'.format(file_obj.__version__[0])
+        print 'would you like to keep the existing file version (y)? ',
+        yes_or_no = sys.stdin.readline().strip()
+        if yes_or_no == '':
+            yes_or_no = 'y'
+
+        choose_version = not yes_or_no.lower()[0] == 'y'
+    else:
+        print 'no file version found'
+        choose_version = True
+
+    if choose_version is True:
+        return get_chosen_version()
+    else:
+        return file_obj.__version__[0]
+
+
+def get_chosen_version():
+    file_version = ''
+    while file_version == '':
+        print 'file version: ',
+        file_version = sys.stdin.readline().strip()
+
+        if file_version == '':
+            continue
+
+        try:
+            file_version = '.'.join(['{}'.format(int(v))
+                                     for v in file_version.split('.')])
+        except ValueError:
+            print 'invalid number!'
+            file_version = ''
+            continue
+
+    return file_version
+
+
+def get_application_name(file_obj):
+    print ('\nThe version header of our file, if it exists, contains a field '
+           'specifying\n'
+           'the application or program that the data is intended for.')
+
+    if (file_obj.__version__ is not None and
+            len(file_obj.__version__) == 3):
+        print 'current applicaton name: {}'.format(file_obj.__version__[2])
+        print 'would you like to keep the existing application name (y)? ',
+        yes_or_no = sys.stdin.readline().strip()
+        if yes_or_no == '':
+            yes_or_no = 'y'
+
+        choose_app = not yes_or_no.lower()[0] == 'y'
+    else:
+        print 'no application name found'
+        choose_app = True
+
+    if choose_app is True:
+        return get_chosen_app_name()
+    else:
+        return file_obj.__version__[2]
+
+
+def get_chosen_app_name():
+    apps = ['adios', 'adios test records']
+    app_num = -1
+
+    while app_num == -1:
+        print 'available application names:'
+        for i, n in enumerate(apps):
+            print '\t{}\t{}'.format(i, n)
+        print 'which application? ',
+        app_num = sys.stdin.readline().strip()
+
+        if app_num == '':
+            continue
+
+        try:
+            app_num = int(app_num)
+            apps[app_num]
+        except ValueError:
+            print 'invalid number!'
+            app_num = -1
+            continue
+        except IndexError:
+            print 'number is not in the list!'
+            app_num = -1
+            continue
+
+    return apps[app_num]
+
+
+def add_header_to_csv_usage(argv):
+    cmd = os.path.basename(argv[0])
+    print('usage: {0} <import_file_1>\n'
+          '(example: "{0} ADIOS2Export.txt")'.format(cmd))
+    sys.exit(1)
+
+
+def add_header_to_csv_cmd(argv=sys.argv, proc=add_header_to_csv):
+    if len(argv) < 2:
+        add_header_to_csv_usage(argv)
+
+    f1 = argv[1]
+
+    try:
+        proc(f1)
+    except:
+        print "{0} FAILED\n".format(proc)
+        raise
+
+
+
+

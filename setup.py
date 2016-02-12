@@ -121,6 +121,9 @@ s = setup(name=pkg_name,
                                             ('diff_import_files = '
                                              'oil_library.scripts.oil_import'
                                              ':diff_import_files_cmd'),
+                                            ('add_header_to_import_file = '
+                                             'oil_library.scripts.oil_import'
+                                             ':add_header_to_csv_cmd'),
                                             ],
                         },
           zip_safe=False,
