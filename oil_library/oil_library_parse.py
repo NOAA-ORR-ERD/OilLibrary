@@ -50,6 +50,7 @@ class OilLibraryFile(object):
                                          attempt to build our object.
             :type ignore_version: Boolean
         '''
+        self.name = name
         self.file_columns = None
         self.file_columns_lu = None
         self.num_columns = None
@@ -73,6 +74,7 @@ class OilLibraryFile(object):
                 # missing header.  If so, we probably read the column names
                 # instead.  So we need to undo our readline() if we are
                 # ignoring this.
+                self.__version__ = None
                 self.fileobj.seek(0)
             else:
                 raise ImportFileHeaderLengthError('Bad file header: '
@@ -101,8 +103,18 @@ class OilLibraryFile(object):
 
         line = line.strip()
         if len(line) > 0:
-            row = unicode(str(line), encoding='utf_8',
-                          errors='replace').split(self.field_delim)
+            try:
+                row = line.decode('utf-8')
+            except:
+                # If we fail to encode in utf-8, then it is possible that
+                # our file contains mac_roman characters of which some are
+                # out-of-range.
+                # This is probably about the best we can do to anticipate
+                # our file contents.
+                row = line.decode('mac_roman')
+
+            row = row.encode('utf-8')
+            row = (row.split(self.field_delim))
             row = [c.strip('"') for c in row]
             row = [c if len(c) > 0 else None for c in row]
         else:
@@ -119,6 +131,53 @@ class OilLibraryFile(object):
                 break
             elif len(line) > 0:
                 yield line
+
+    def rewind(self):
+        self.fileobj.seek(0)
+        first_line = self.readline()
+
+        if (self.__version__ is not None and
+                len(first_line) == len(self.__version__)):
+            print 'first line contains the version header'
+            self.readline()
+        elif len(first_line) == len(self.file_columns):
+            # For tabular data, the number of data fields will be the same
+            # as for the column names, so this check will not be able
+            # to tell if the column names are missing.
+            # But at this point, we have already opened the file and
+            # constructed our object and performed as many reasonable checks
+            # as we can.  So we just try to be consistent with that.
+            print 'first line contains the file column names'
+        else:
+            raise ImportFileHeaderLengthError('Bad file header: '
+                                              'should have found either '
+                                              'the version or field names '
+                                              'in the first row!!')
+
+    def export(self, filename):
+        self.rewind()
+
+        file_out = open(filename, 'w')
+
+        if self.__version__ is not None:
+            print self.field_delim.join(self.__version__)
+            file_out.write(self.field_delim.join(self.__version__))
+            file_out.write('\n')
+
+        file_out.write(self.field_delim.join(self.file_columns))
+        file_out.write('\n')
+
+        for l in self.readlines():
+            l = ['' if f is None else f for f in l]
+
+            sys.stderr.write('.')
+            file_out.write(self.field_delim.join(l))
+            file_out.write('\n')
+
+        file_out.close()
+
+    def __repr__(self):
+        return "<OilLibraryFile('%s')>" % (self.name)
 
 
 if __name__ == '__main__':
