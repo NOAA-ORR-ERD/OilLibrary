@@ -50,6 +50,8 @@ def load_database(settings):
                 if len(r) < 10:
                     print 'got record:', r
 
+                r = [unicode(f, 'utf-8') if f is not None else f
+                     for f in r]
                 add_oil_object(session, fd.file_columns, r)
 
                 if rowcount % 100 == 0:
