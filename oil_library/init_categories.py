@@ -18,6 +18,7 @@
     The criteria follows closely, but not identically, to the ASTM standards
 '''
 import transaction
+from sqlalchemy.orm.exc import NoResultFound
 
 import unit_conversion as uc
 
@@ -82,6 +83,7 @@ def load_categories(session):
     refined.append('Group V')
 
     other.append('Other')
+    other.append('Generic')
 
     session.add_all([crude, refined, other])
     transaction.commit()
@@ -111,6 +113,7 @@ def link_oils_to_categories(session):
     link_refined_fuel_oil_6(session)
 
     link_all_other_oils(session)
+    link_generic_oils(session)
 
     show_uncategorized_oils(session)
 
@@ -369,6 +372,54 @@ def link_all_other_oils(session):
 
     print ('{0} oils added to {1}.'
            .format(count, [n.name for n in categories]))
+    transaction.commit()
+
+
+def link_generic_oils(session):
+    '''
+        Category Name:
+        - Other->Generic
+        Criteria:
+        - Any oils that have been generically generated.  These are found
+          in the OilLibTest data file.  For now, this needs to be a
+          hard-coded list.
+    '''
+    try:
+        top_category = (session.query(Category)
+                        .filter(Category.parent == None)
+                        .filter(Category.name == 'Other')
+                        .one())
+    except NoResultFound:
+        print 'Top category "Other" not found.'
+        return
+
+    categories = [c for c in top_category.children
+                  if c.name in ('Generic',)
+                  ]
+    if len(categories) == 0:
+        print 'Category "Other->Generic" not found!!'
+        return
+
+    oil_id_list = ['AD02542', 'AD02543', 'AD02544', 'AD02545',
+                   'AD02546', 'AD02547', 'AD02549', 'AD02550',
+                   'AD02551', 'AD02552', 'AD02553', 'AD02554',
+                   'AD02555', 'AD02556', 'AD02557', 'AD02558',
+                   'AD02559', 'AD02560', 'AD02561', 'AD02562',
+                   'AD02563', 'AD02564', 'AD02565', 'AD02566',
+                   'AD02567']
+
+    for oil_id in oil_id_list:
+        try:
+            oil = session.query(Oil).filter(Oil.adios_oil_id == oil_id).one()
+
+            for category in categories:
+                    oil.categories.append(category)
+
+            print ('Generic oil {0} added to categories {1}.'
+                   .format(oil_id, [n.name for n in categories]))
+        except NoResultFound:
+            print 'Generic oil {0} not found.'.format(oil_id, )
+
     transaction.commit()
 
 
