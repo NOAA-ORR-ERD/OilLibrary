@@ -15,3 +15,4 @@ temp.txt
 /OilLibrary.egg-info
 /build
 /*.egg
+oil_library.egg-info
