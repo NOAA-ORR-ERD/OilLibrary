@@ -366,7 +366,7 @@ class OilProps(object):
 
         self._sara = np.asarray(items, dtype=sara_dtype)
 
-        if not np.allclose(self._sara[:]['fraction'].sum(), 1.0):
+        if not np.isclose(self._sara[:]['fraction'].sum(), 1.0):
             msg = ("mass fraction sum: {0} - sum should be approximately 1.0"
                    .format(self._sara[:]['fraction'].sum()))
             raise ValueError(msg)

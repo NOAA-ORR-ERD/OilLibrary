@@ -19,6 +19,9 @@ from oil_library.models import (ImportedRecord, Oil, Estimated,
 from oil_library.utilities import (get_boiling_points_from_api,
                                    get_viscosity)
 
+from pprint import PrettyPrinter
+pp = PrettyPrinter(indent=2, width=120)
+
 
 class OilRejected(Exception):
     '''
@@ -40,6 +43,13 @@ class OilRejected(Exception):
         return '{0}(oil={1}, errors={2})'.format(self.__class__.__name__,
                                                  self.oil_name,
                                                  self.message)
+
+
+def pprint_for_one_oil(oil, *args):
+    adios_oil_id = 'AD02434'
+
+    if hasattr(oil, 'adios_oil_id') and oil.adios_oil_id == adios_oil_id:
+        pp.pprint(args)
 
 
 def process_oils(session_class):
@@ -67,6 +77,14 @@ def process_oils(session_class):
 
 
 def add_oil(record):
+    oil = generate_oil(record)
+
+    reject_oil_if_bad(record, oil)
+
+    record.oil = oil
+
+
+def generate_oil(record):
     print 'Estimations for {0}'.format(record.adios_oil_id)
     oil = Oil()
     oil.estimated = Estimated()
@@ -85,8 +103,7 @@ def add_oil(record):
     add_imported_sara_fractions(record, oil)
     add_misc_fractions(record, oil)
 
-    add_resin_fractions(record, oil)
-    add_asphaltene_fractions(record, oil)
+    add_ra_fractions(record, oil)
 
     add_bullwinkle_fractions(record, oil)
     add_adhesion(record, oil)
@@ -101,9 +118,7 @@ def add_oil(record):
 
     add_k0y(record, oil)
 
-    reject_oil_if_bad(record, oil)
-
-    record.oil = oil
+    return oil
 
 
 def add_demographics(imported_rec, oil):
@@ -205,8 +220,6 @@ def add_viscosities(imported_rec, oil):
             to the respective reference temperature
         '''
         kvis, estimated = get_kvis(imported_rec)
-
-        kvis.sort(key=lambda x: (x[2], x[1]))
         kwargs = ['m_2_s', 'ref_temp_k', 'weathering']
 
         for v in kvis:
@@ -234,7 +247,7 @@ def get_kvis(imported_rec):
         viscosities.append((kv, t, w))
         estimated.append(True)
 
-    return viscosities, estimated
+    return sorted(viscosities, key=lambda x: (x[2], x[1])), estimated
 
 
 def get_kvis_from_dvis(oil_rec):
@@ -446,8 +459,33 @@ def add_imported_sara_fractions(record, oil):
     oil.asphaltenes_fraction = record.asphaltenes
 
 
-def add_resin_fractions(imported_rec, oil):
+def add_ra_fractions(imported_rec, oil):
+    '''
+        Add the resin and asphaltene fractions to our oil
+    '''
+    f_res = get_resin_fraction(imported_rec, oil)
+    f_asph = get_asphaltene_fraction(imported_rec, oil)
+    f_max_cut = get_max_distillation_cut_fraction(imported_rec)
+
+    print ('Our initial fractions so far (SA, R, A): ({}, {}, {})'
+           .format(f_max_cut, f_res, f_asph)),
+    print 'total: {}'.format(f_max_cut + f_res + f_asph)
+
+    oil.sara_fractions.append(SARAFraction(sara_type='Resins',
+                                           fraction=f_res,
+                                           ref_temp_k=1015.0))
+
+    oil.sara_fractions.append(SARAFraction(sara_type='Asphaltenes',
+                                           fraction=f_asph,
+                                           ref_temp_k=1015.0))
+
+    pprint_for_one_oil(oil, 'oil.sara_fractions', oil.sara_fractions)
+
+
+def get_resin_fraction(imported_rec, oil):
     try:
+        pprint_for_one_oil(oil, 'imported_rec.resins', imported_rec.resins)
+
         if (imported_rec is not None and
             imported_rec.resins is not None and
                 imported_rec.resins >= 0.0 and
@@ -455,21 +493,28 @@ def add_resin_fractions(imported_rec, oil):
             f_res = imported_rec.resins
         else:
             a, b = get_corrected_density_and_viscosity(oil)
+            pprint_for_one_oil(oil, 'a, b', (a, b))
 
             f_res = (3.3 * a + 0.087 * b - 74.0)
             f_res /= 100.0  # percent to fractional value
 
+            pprint_for_one_oil(oil, 'f_res', f_res)
+
             f_res = 0.0 if f_res < 0.0 else f_res
 
-        oil.sara_fractions.append(SARAFraction(sara_type='Resins',
-                                               fraction=f_res,
-                                               ref_temp_k=1015.0))
+            pprint_for_one_oil(oil, 'f_res', f_res)
+
+        return f_res
     except:
         print 'Failed to add Resin fraction!'
+        return 0
 
 
-def add_asphaltene_fractions(imported_rec, oil):
+def get_asphaltene_fraction(imported_rec, oil):
     try:
+        pprint_for_one_oil(oil, 'imported_rec.asphaltenes',
+                           imported_rec.asphaltenes)
+
         if (imported_rec is not None and
             imported_rec.asphaltenes is not None and
                 imported_rec.asphaltenes >= 0.0 and
@@ -477,19 +522,24 @@ def add_asphaltene_fractions(imported_rec, oil):
             f_asph = imported_rec.asphaltenes
         else:
             a, b = get_corrected_density_and_viscosity(oil)
+            pprint_for_one_oil(oil, 'AD00028',
+                               'a, b', (a, b))
 
             f_asph = (0.0014 * (a ** 3.0) +
                       0.0004 * (b ** 2.0) -
                       18.0)
             f_asph /= 100.0  # percent to fractional value
 
+            pprint_for_one_oil(oil, 'f_asph', f_asph)
+
             f_asph = 0.0 if f_asph < 0.0 else f_asph
 
-        oil.sara_fractions.append(SARAFraction(sara_type='Asphaltenes',
-                                               fraction=f_asph,
-                                               ref_temp_k=1015.0))
+            pprint_for_one_oil(oil, 'f_asph', f_asph)
+
+        return f_asph
     except:
         print 'Failed to add Asphaltene fraction!'
+        return 0
 
 
 def get_corrected_density_and_viscosity(oil):
@@ -506,6 +556,9 @@ def get_corrected_density_and_viscosity(oil):
         temperature = 273.15 + 15
         P0_oil = density_at_temperature(oil, temperature)
         V0_oil = get_viscosity(oil, temperature)
+
+        pprint_for_one_oil(oil, '(P0_oil, V0_oil)', (P0_oil, V0_oil))
+
         a = 10 * exp(0.001 * P0_oil)
         b = 10 * log(1000.0 * P0_oil * V0_oil)
 
@@ -518,6 +571,13 @@ def get_corrected_density_and_viscosity(oil):
         raise
 
     return a, b
+
+
+def get_max_distillation_cut_fraction(imported_rec):
+    if imported_rec is not None and len(imported_rec.cuts) > 0:
+        return max([c.fraction for c in imported_rec.cuts])
+    else:
+        return 0
 
 
 def add_bullwinkle_fractions(imported_rec, oil):
@@ -682,6 +742,9 @@ def add_distillation_cut_boiling_point(imported_rec, oil):
 
         oil.estimated.cuts = True
 
+    pprint_for_one_oil(oil, 'oil.estimated.cuts', oil.estimated.cuts)
+    pprint_for_one_oil(oil, 'oil.cuts', oil.cuts)
+
 
 def add_molecular_weights(imported_rec, oil):
     '''
@@ -745,6 +808,8 @@ def add_saturate_aromatic_fractions(imported_rec, oil):
         oil.sara_fractions.append(SARAFraction(sara_type='Aromatics',
                                                fraction=f_arom,
                                                ref_temp_k=T_i))
+
+    pprint_for_one_oil(oil, oil.sara_fractions)
 
 
 def adjust_molecular_weights(oil):
@@ -864,8 +929,13 @@ def get_sa_mass_fractions(oil_obj):
     '''
     fraction_sum = sum([sara.fraction for sara in oil_obj.sara_fractions
                         if sara.sara_type in ('Resins', 'Asphaltenes')])
+    pprint_for_one_oil(oil_obj, 'fraction_sum', fraction_sum)
 
     for P_try, F_i, T_i, c_type in get_ptry_values(oil_obj, 'Saturates'):
+        pprint_for_one_oil(oil_obj,
+                           'P_try, F_i, T_i, c_type',
+                           P_try, F_i, T_i, c_type)
+
         if T_i < 530.0:
             sg = P_try / 1000
             mw = None

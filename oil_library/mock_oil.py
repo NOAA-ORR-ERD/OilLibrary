@@ -4,16 +4,14 @@ It could be duck typed, though right now it defines a models.Oil object
 Currently only works/tested for _sample_oils dict which only contains name
 and API - needs work, but will suffice for testing
 '''
-import numpy
-np = numpy
+import numpy as np
 
 import unit_conversion as uc
 
 from .models import Oil, KVis, Density, Cut
 from .utilities import get_boiling_points_from_api
 
-from .init_oil import (add_asphaltene_fractions,
-                       add_resin_fractions,
+from .init_oil import (add_ra_fractions,
                        add_molecular_weights,
                        add_saturate_aromatic_fractions,
                        add_component_densities,
@@ -45,8 +43,7 @@ def sample_oil_to_mock_oil(max_cuts=None, **kwargs):
         for k in kwargs['kvis']:
             oil.kvis.append(KVis(**k))
 
-    add_resin_fractions(None, oil)
-    add_asphaltene_fractions(None, oil)
+    add_ra_fractions(None, oil)
 
     # add cuts - all mass goes into saturates/aromatics for now
     mass_left = 1.0
