@@ -112,8 +112,8 @@ def link_oils_to_categories(session):
     link_refined_ifo(session)
     link_refined_fuel_oil_6(session)
 
-    link_all_other_oils(session)
     link_generic_oils(session)
+    link_all_other_oils(session)
 
     show_uncategorized_oils(session)
 
