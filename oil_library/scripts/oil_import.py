@@ -296,7 +296,3 @@ def add_header_to_csv_cmd(argv=sys.argv, proc=add_header_to_csv):
     except:
         print "{0} FAILED\n".format(proc)
         raise
-
-
-
-

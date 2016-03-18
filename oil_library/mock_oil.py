@@ -57,7 +57,7 @@ def sample_oil_to_mock_oil(max_cuts=None, **kwargs):
     for t, f in get_boiling_points_from_api(max_cuts, mass_left, oil.api):
         added_to_sums = False
 
-        for idx, [ut, summed_value] in enumerate(summed_boiling_points):
+        for idx, [ut, _summed_value] in enumerate(summed_boiling_points):
             if np.isclose(t, ut):
                 summed_boiling_points[idx][1] += f
                 added_to_sums = True

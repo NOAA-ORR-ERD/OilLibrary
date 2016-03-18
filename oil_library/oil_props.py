@@ -316,7 +316,7 @@ class OilProps(object):
         '''
         all_comp = list(chain(*[sorted(list(g), key=lambda s: s.sara_type,
                                        reverse=True)
-                                for k, g
+                                for _k, g
                                 in groupby(sorted(self._r_oil.sara_fractions,
                                                   key=lambda s: s.ref_temp_k),
                                            lambda x: x.ref_temp_k)]
@@ -324,7 +324,7 @@ class OilProps(object):
 
         all_dens = list(chain(*[sorted(list(g), key=lambda s: s.sara_type,
                                        reverse=True)
-                                for k, g
+                                for _k, g
                                 in groupby(sorted(self._r_oil.sara_densities,
                                                   key=lambda s: s.ref_temp_k),
                                            lambda x: x.ref_temp_k)]
@@ -332,7 +332,7 @@ class OilProps(object):
 
         all_mw = list(chain(*[sorted(list(g), key=lambda s: s.sara_type,
                                      reverse=True)
-                              for k, g
+                              for _k, g
                               in groupby(sorted(self._r_oil.molecular_weights,
                                                 key=lambda s: s.ref_temp_k),
                                          lambda x: x.ref_temp_k)]

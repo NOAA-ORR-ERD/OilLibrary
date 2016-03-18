@@ -726,7 +726,7 @@ def add_distillation_cut_boiling_point(imported_rec, oil):
         for t, f in get_boiling_points_from_api(5, mass_left, oil.api):
             added_to_sums = False
 
-            for idx, [ut, summed_value] in enumerate(summed_boiling_points):
+            for idx, [ut, _summed_value] in enumerate(summed_boiling_points):
                 if np.isclose(t, ut):
                     summed_boiling_points[idx][1] += f
                     added_to_sums = True
@@ -1004,10 +1004,10 @@ def add_component_densities(imported_rec, oil):
                       if f.sara_type in ('Resins', 'Asphaltenes')]
 
     ptry_avg_density = sum([(P_try * F_i)
-                            for P_try, F_i, T_i, c_type in ptry_values] +
+                            for P_try, F_i, _T_i, _c_type in ptry_values] +
                            [(P_try * F_i) for P_try, F_i in ra_ptry_values])
 
-    total_sa_fraction = sum([F_i for P_try, F_i, T_i, c_type in ptry_values])
+    total_sa_fraction = sum([F_i for P_try, F_i, _T_i, _c_type in ptry_values])
 
     total_ra_fraction = sum([f.fraction for f in oil.sara_fractions
                              if f.sara_type in ('Resins', 'Asphaltenes')])
