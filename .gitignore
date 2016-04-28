@@ -1,0 +1,18 @@
+*.pyc
+*.swp
+*~
+
+# ignore generated oildb
+oil_library/OilLib.db
+OilLibrary.db
+temp.txt
+
+# ignore ipython notebook checkpoints areas
+.ipynb_checkpoints
+
+.cache
+
+/OilLibrary.egg-info
+/build
+/*.egg
+oil_library.egg-info
