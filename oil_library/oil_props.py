@@ -17,8 +17,9 @@ from repoze.lru import lru_cache
 import numpy as np
 
 import unit_conversion as uc
-from .utilities import get_density, get_viscosity
+
 from .models import Oil
+from .utilities import get_density, get_viscosity
 
 
 # create a dtype for storing sara information in numpy array
@@ -204,6 +205,10 @@ class OilProps(object):
             ret = ret[np.where(self._sara['type'] == sara_type)]
 
         return ret
+
+    @property
+    def component_types(self):
+        return self._sara['type']
 
     @lru_cache(2)
     def vapor_pressure(self, temp, atmos_pressure=101325.0):

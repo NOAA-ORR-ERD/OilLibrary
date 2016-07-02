@@ -3,8 +3,7 @@ Tests for oil_props module in gnome.db.oil_library
 '''
 import copy
 
-import numpy
-np = numpy
+import numpy as np
 
 import pytest
 from pytest import raises
