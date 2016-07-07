@@ -228,6 +228,10 @@ class Density(Base):
             if (a in self.columns):
                 setattr(self, a, v)
 
+        if 'weathering' not in kwargs:
+            # sqlalchemy column defaults only work upon insert/update
+            self.weathering = 0.0
+
     def __repr__(self):
         return ("<Density({0.kg_m_3} kg/m^3 at {0.ref_temp_k}K)>"
                 .format(self))
@@ -248,6 +252,10 @@ class KVis(Base):
             if (a in self.columns):
                 setattr(self, a, v)
 
+        if 'weathering' not in kwargs:
+            # sqlalchemy column defaults only work upon insert/update
+            self.weathering = 0.0
+
     def __repr__(self):
         return ('<KVis({0.m_2_s} m^2/s at {0.ref_temp_k}K)>'
                 .format(self))
@@ -266,6 +274,10 @@ class DVis(Base):
         for a, v in kwargs.iteritems():
             if (a in self.columns):
                 setattr(self, a, v)
+
+        if 'weathering' not in kwargs:
+            # sqlalchemy column defaults only work upon insert/update
+            self.weathering = 0.0
 
     def __repr__(self):
         return ('<DVis({0.kg_ms} kg/ms at {0.ref_temp_k}K)>'
@@ -380,7 +392,7 @@ class Estimated(Base):
     bullwinkle_fraction = Column(Boolean, default=False)
     adhesion_kg_m_2 = Column(Boolean, default=False)
     sulphur_fraction = Column(Boolean, default=False)
-    soluability = Column(Boolean, default=False)
+    solubility = Column(Boolean, default=False)
     cuts = Column(Boolean, default=False)
     molecular_weights = Column(Boolean, default=True)
 
@@ -420,7 +432,7 @@ class Oil(Base):
     bullwinkle_time = Column(Float(53))
     bullwinkle_fraction = Column(Float(53))
     adhesion_kg_m_2 = Column(Float(53))
-    soluability = Column(Float(53))
+    solubility = Column(Float(53))
     k0y = Column(Float(53))
 
     nickel_ppm = Column(Float(53))
