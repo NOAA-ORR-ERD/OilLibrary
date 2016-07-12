@@ -10,6 +10,7 @@ from sqlalchemy import (Table,
                         ForeignKey)
 
 from sqlalchemy.ext.declarative import declarative_base as real_declarative_base
+from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm.collections import InstrumentedList
 from sqlalchemy.orm.relationships import (RelationshipProperty,
                                           ONETOMANY, MANYTOONE, MANYTOMANY)
@@ -583,6 +584,14 @@ class MolecularWeight(Base):
         for a, v in kwargs.iteritems():
             if (a in self.columns):
                 setattr(self, a, v)
+
+    @hybrid_property
+    def kg_mol(self):
+        return self.g_mol / 1000.0
+
+    @kg_mol.setter
+    def length(self, value):
+        self.g_mol = value * 1000.0
 
     def __repr__(self):
         return ('<MolecularWeight('
