@@ -14,7 +14,8 @@ from .utilities import get_boiling_points_from_api
 
 from .oil_props import OilProps
 
-from .init_oil import (add_ra_fractions,
+from .init_oil import (density_at_temperature,
+                       add_ra_fractions,
                        add_molecular_weights,
                        add_saturate_aromatic_fractions,
                        add_component_densities,
@@ -57,6 +58,8 @@ def get_oil(oil_, max_cuts=None):
     if isinstance(oil_, dict):
         prune_db_ids(oil_)
         oil_obj = Oil.from_json(oil_)
+
+        add_kvis_from_dvis(oil_obj, oil_)
 
         _estimate_missing_oil_props(oil_obj, max_cuts)
 
@@ -106,6 +109,42 @@ def prune_db_ids(oil_):
                              'estimated_id'):
                     if attr in item:
                         del item[attr]
+
+
+def add_kvis_from_dvis(oil_obj, oil_json):
+    '''
+        Our Oil object has no dynamic viscosity properties, but we may have
+        dynamic viscosities in our JSON payload.  So we convert them to
+        kinematic viscosity records and add them.
+    '''
+    if 'dvis' in oil_json:
+        kvis_values = [convert_dvis_to_kvis(oil_obj, **d)
+                       for d in oil_json['dvis']]
+        all_kwargs = [dict(d.items() + [('m_2_s', k)])
+                      for d, k in zip(oil_json['dvis'], kvis_values)
+                      if k is not None]
+        for kwargs in all_kwargs:
+            if not kvis_exists(oil_obj.kvis, kwargs):
+                oil_obj.kvis.append(KVis(**kwargs))
+
+    oil_obj.kvis.sort(key=lambda k: k.ref_temp_k)
+
+
+def convert_dvis_to_kvis(oil_obj, kg_ms, ref_temp_k):
+    density = density_at_temperature(oil_obj, ref_temp_k)
+    if density is None:
+        return None
+    else:
+        return kg_ms / density
+
+
+def kvis_exists(kvis, kwargs):
+    temperature = kwargs['ref_temp_k']
+    weathering = kwargs.get('weathering', 0.0)
+    return len([v for v in kvis
+                if (v.ref_temp_k == temperature and
+                    v.weathering == weathering)
+                ]) > 0
 
 
 def _estimate_missing_oil_props(oil_obj, max_cuts):

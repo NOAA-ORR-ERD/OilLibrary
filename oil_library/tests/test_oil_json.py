@@ -33,7 +33,7 @@ def test_get_oil_from_json():
                  'oil_water_interfacial_tension_ref_temp_k',
                  'pour_point_max_k',
                  'pour_point_min_k',
-                 'soluability',
+                 'solubility',
                  'sulphur_fraction',
                  'k0y',):
         assert getattr(oil_from_db, attr) == getattr(oil_from_json, attr)

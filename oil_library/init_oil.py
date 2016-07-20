@@ -108,7 +108,7 @@ def generate_oil(record):
     add_bullwinkle_fractions(record, oil)
     add_adhesion(record, oil)
     add_sulphur_mass_fraction(record, oil)
-    add_soluability(record, oil)
+    add_solubility(record, oil)
     add_distillation_cut_boiling_point(record, oil)
     add_molecular_weights(record, oil)
     add_component_densities(record, oil)
@@ -684,13 +684,13 @@ def add_sulphur_mass_fraction(imported_rec, oil):
         oil.estimated.sulphur_fraction = True
 
 
-def add_soluability(imported_rec, oil):
+def add_solubility(imported_rec, oil):
     '''
-        There is no direct soluability attribute in the imported record,
+        There is no direct solubility attribute in the imported record,
         so we will just assign a constant per the documentation.
     '''
-    oil.soluability = 0.0
-    oil.estimated.soluability = True
+    oil.solubility = 0.0
+    oil.estimated.solubility = True
 
 
 def add_distillation_cut_boiling_point(imported_rec, oil):
