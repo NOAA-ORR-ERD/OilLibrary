@@ -16,3 +16,6 @@ temp.txt
 /build
 /*.egg
 oil_library.egg-info
+
+# OS-X stuff..
+.DS_Store
