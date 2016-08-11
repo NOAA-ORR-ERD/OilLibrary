@@ -1,4 +1,7 @@
 import os
+import sys
+import logging
+
 from pkg_resources import get_distribution
 
 from sqlalchemy import create_engine
@@ -38,3 +41,30 @@ from .factory import get_oil, get_oil_props
 
 _sample_oils.update({k: get_oil(v, max_cuts=2)
                      for k, v in sample_oils._sample_oils.iteritems()})
+
+## utility for setting up console logging
+def initialize_console_log(level='debug'):
+    '''
+    Initializes the logger to simply log everything to the console (stdout)
+
+    Likely what you want for scripting use
+
+    :param level='debug': the level you want your log to show. options are,
+                          in order of importance: "debug", "info", "warning",
+                          "error", "critical"
+
+    You will only get the logging messages at or above the level you set.
+
+    '''
+    levels = {"debug": logging.DEBUG,
+              "info": logging.INFO,
+              "warning": logging.WARNING,
+              "error": logging.ERROR,
+              "critical": logging.CRITICAL,
+              }
+    level = levels[level.lower()]
+    format_str = '%(levelname)s - %(module)8s - line:%(lineno)d - %(message)s'
+    logging.basicConfig(stream=sys.stdout,
+                        level=level,
+                        format=format_str,
+                        )

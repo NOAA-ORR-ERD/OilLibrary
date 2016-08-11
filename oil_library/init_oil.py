@@ -6,7 +6,9 @@
     with the Oil object.  This is where we will place the estimated oil
     properties.
 '''
+
 from math import log, log10, exp, fabs
+import logging
 import transaction
 
 import numpy as np
@@ -155,8 +157,8 @@ def add_densities(imported_rec, oil):
         oil.api = (141.5 * 1000 / d_0) - 131.5
         # oil.estimated.api = True
     else:
-        print ('Warning: no densities and no api for record {0}'
-               .format(imported_rec.adios_oil_id))
+        logging.warning('no densities and no api for record {0}'
+                        .format(imported_rec.adios_oil_id))
 
     if not [d for d in oil.densities
             if (d.ref_temp_k is not None and
@@ -467,9 +469,9 @@ def add_ra_fractions(imported_rec, oil):
     f_asph = get_asphaltene_fraction(imported_rec, oil)
     f_max_cut = get_max_distillation_cut_fraction(imported_rec)
 
-    print ('Our initial fractions so far (SA, R, A): ({}, {}, {})'
-           .format(f_max_cut, f_res, f_asph)),
-    print 'total: {}'.format(f_max_cut + f_res + f_asph)
+    logging.info('Our initial fractions so far (SA, R, A): ({}, {}, {})'
+                 .format(f_max_cut, f_res, f_asph)),
+    logging.info('total: {}'.format(f_max_cut + f_res + f_asph))
 
     oil.sara_fractions.append(SARAFraction(sara_type='Resins',
                                            fraction=f_res,
@@ -506,7 +508,7 @@ def get_resin_fraction(imported_rec, oil):
 
         return f_res
     except:
-        print 'Failed to add Resin fraction!'
+        logging.info('Failed to add Resin fraction!')
         return 0
 
 
@@ -538,7 +540,7 @@ def get_asphaltene_fraction(imported_rec, oil):
 
         return f_asph
     except:
-        print 'Failed to add Asphaltene fraction!'
+        logging.info('Failed to add Asphaltene fraction!')
         return 0
 
 
@@ -562,7 +564,7 @@ def get_corrected_density_and_viscosity(oil):
         a = 10 * exp(0.001 * P0_oil)
         b = 10 * log(1000.0 * P0_oil * V0_oil)
 
-    except:
+    except:  # fixme: what exception is this supposed to catch?
         print 'get_corrected_density_and_viscosity() generated exception:'
         print '\toil = ', oil
         print '\toil.kvis = ', oil.kvis
@@ -709,7 +711,7 @@ def add_distillation_cut_boiling_point(imported_rec, oil):
         if c.fraction >= 0.0 and c.fraction <= 1.0:
             oil.cuts.append(c)
         else:
-            print ('{0}: {1}: bad distillation cut!'.format(imported_rec, c))
+            logging.error('{0}: {1}: bad distillation cut!'.format(imported_rec, c))
 
     if not oil.cuts:
         mass_left = 1.0
