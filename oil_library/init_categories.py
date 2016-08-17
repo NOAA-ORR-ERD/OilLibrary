@@ -17,6 +17,8 @@
     and the viscosity at a given temperature, usually at 38 C(100F).
     The criteria follows closely, but not identically, to the ASTM standards
 '''
+import logging
+
 import transaction
 from sqlalchemy.orm.exc import NoResultFound
 
@@ -26,21 +28,25 @@ from oil_library.models import Oil, ImportedRecord, Category
 from oil_library.utilities import get_viscosity
 
 
+logger = logging.getLogger(__name__)
+
+
 def process_categories(session):
-    print '\nPurging Categories...'
+    logger.info('Purging Categories...')
     num_purged = clear_categories(session)
 
-    print '{0} categories purged.'.format(num_purged)
-    print 'Orphaned categories:', session.query(Category).all()
+    logger.info('{0} categories purged.'.format(num_purged))
+    logger.info('Orphaned categories: {}'
+                .format(session.query(Category).all()))
 
-    print 'Loading Categories...'
+    logger.info('Loading Categories...')
     load_categories(session)
-    print 'Finished!!!'
+    logger.info('Finished!!!')
 
-    print 'Here are our newly built categories...'
+    logger.info('Here are our newly built categories...')
     for c in session.query(Category).filter(Category.parent == None):
         for item in list_categories(c):
-            print '   ', item
+            logger.info(item)
 
     link_oils_to_categories(session)
 
@@ -132,8 +138,8 @@ def link_crude_light_oils(session):
         o.categories.append(category)
         count += 1
 
-    print ('{0} oils added to {1} -> {2}.'
-           .format(count, top_category.name, category.name))
+    logger.info('{0} oils added to {1} -> {2}.'
+                .format(count, top_category.name, category.name))
     transaction.commit()
 
 
@@ -152,8 +158,8 @@ def link_crude_medium_oils(session):
         o.categories.append(category)
         count += 1
 
-    print ('{0} oils added to {1} -> {2}.'
-           .format(count, top_category.name, category.name))
+    logger.info('{0} oils added to {1} -> {2}.'
+                .format(count, top_category.name, category.name))
     transaction.commit()
 
 
@@ -171,8 +177,8 @@ def link_crude_heavy_oils(session):
         o.categories.append(category)
         count += 1
 
-    print ('{0} oils added to {1} -> {2}.'
-           .format(count, top_category.name, category.name))
+    logger.info('{0} oils added to {1} -> {2}.'
+                .format(count, top_category.name, category.name))
     transaction.commit()
 
 
@@ -212,9 +218,9 @@ def link_refined_fuel_oil_1(session):
                 o.categories.append(category)
             count += 1
 
-    print ('{0} oils added to {1} -> {2}.'
-           .format(count, top_category.name,
-                   [n.name for n in categories]))
+    logger.info('{0} oils added to {1} -> {2}.'
+                .format(count, top_category.name,
+                        [n.name for n in categories]))
     transaction.commit()
 
 
@@ -254,9 +260,9 @@ def link_refined_fuel_oil_2(session):
                 o.categories.append(category)
             count += 1
 
-    print ('{0} oils added to {1} -> {2}.'
-           .format(count, top_category.name,
-                   [n.name for n in categories]))
+    logger.info('{0} oils added to {1} -> {2}.'
+                .format(count, top_category.name,
+                        [n.name for n in categories]))
     transaction.commit()
 
 
@@ -294,9 +300,9 @@ def link_refined_ifo(session):
                 o.categories.append(category)
             count += 1
 
-    print ('{0} oils added to {1} -> {2}.'
-           .format(count, top_category.name,
-                   [n.name for n in categories]))
+    logger.info('{0} oils added to {1} -> {2}.'
+                .format(count, top_category.name,
+                        [n.name for n in categories]))
     transaction.commit()
 
 
@@ -336,9 +342,9 @@ def link_refined_fuel_oil_6(session):
                 o.categories.append(category)
             count += 1
 
-    print ('{0} oils added to {1} -> {2}.'
-           .format(count, top_category.name,
-                   [n.name for n in categories]))
+    logger.info('{0} oils added to {1} -> {2}.'
+                .format(count, top_category.name,
+                        [n.name for n in categories]))
     transaction.commit()
 
 
@@ -370,8 +376,8 @@ def link_all_other_oils(session):
             o.categories.append(category)
         count += 1
 
-    print ('{0} oils added to {1}.'
-           .format(count, [n.name for n in categories]))
+    logger.info('{0} oils added to {1}.'
+                .format(count, [n.name for n in categories]))
     transaction.commit()
 
 
@@ -390,14 +396,14 @@ def link_generic_oils(session):
                         .filter(Category.name == 'Other')
                         .one())
     except NoResultFound:
-        print 'Top category "Other" not found.'
+        logger.warning('Top category "Other" not found.')
         return
 
     categories = [c for c in top_category.children
                   if c.name in ('Generic',)
                   ]
     if len(categories) == 0:
-        print 'Category "Other->Generic" not found!!'
+        logger.warning('Category "Other->Generic" not found!!')
         return
 
     oil_id_list = ['AD02542', 'AD02543', 'AD02544', 'AD02545',
@@ -415,10 +421,10 @@ def link_generic_oils(session):
             for category in categories:
                     oil.categories.append(category)
 
-            print ('Generic oil {0} added to categories {1}.'
-                   .format(oil_id, [n.name for n in categories]))
+            logger.info('Generic oil {0} added to categories {1}.'
+                        .format(oil_id, [n.name for n in categories]))
         except NoResultFound:
-            print 'Generic oil {0} not found.'.format(oil_id, )
+            logger.warning('Generic oil {0} not found.'.format(oil_id, ))
 
     transaction.commit()
 
@@ -435,8 +441,9 @@ def show_uncategorized_oils(session):
              'viscosity\t'
              'pour_point\t'
              'name\n')
-    print ('{0} oils uncategorized.'
-           .format(len(oils)))
+
+    logger.info('{0} oils uncategorized.'.format(len(oils)))
+
     for o in oils:
         if o.api >= 0:
             if o.api < 15:

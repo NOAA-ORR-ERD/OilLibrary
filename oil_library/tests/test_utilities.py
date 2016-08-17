@@ -108,8 +108,7 @@ def test_boiling_point(max_cuts):
 
     exp_bp_0 = 1./(max_cuts * 2) * slope + intercept
     bp = get_boiling_points_from_api(max_cuts, 1.0, api)
-    print '\nBoiling Points: '
-    print bp
+
     assert len(bp) == max_cuts * 2
     assert ([bp[ix][0] - bp[ix + 1][0] for ix in range(0, max_cuts * 2, 2)] ==
             [0.0] * max_cuts)

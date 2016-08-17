@@ -35,7 +35,6 @@ class BaseTestCase(unittest.TestCase):
     def setUpClass(cls):
         cls.engine = create_engine(sqlalchemy_url)
         Base.metadata.create_all(cls.engine)
-        print Base
 
     def setUp(self):
         self.session = DBSession()

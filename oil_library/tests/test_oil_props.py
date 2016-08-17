@@ -157,7 +157,6 @@ class TestCopy():
         assert op is not dcop
 
         for item in op.__dict__:
-            print "item checking:", item
             try:
                 assert getattr(op, item) == getattr(dcop, item)
             except ValueError:

@@ -1,5 +1,6 @@
 import os
 import sys
+import logging
 
 import transaction
 from sqlalchemy import engine_from_config
@@ -13,6 +14,8 @@ from .init_categories import process_categories
 from .init_oil import process_oils
 
 from zope.sqlalchemy import ZopeTransactionExtension
+
+logger = logging.getLogger(__name__)
 
 
 def initialize_sql(settings):
@@ -32,23 +35,23 @@ def load_database(settings):
     with transaction.manager:
         session = DBSession()
 
-        sys.stderr.write('Purging old records in database')
+        logger.info('Purging old records in database')
         imported_recs_purged, oil_recs_purged = purge_old_records(session)
-        print ('finished!!!\n'
-               '    {0} imported records purged.\n'
-               '    {0} oil records purged.'
-               .format(imported_recs_purged, oil_recs_purged))
+        logger.info('finished!!!\n'
+                     '    {0} imported records purged.\n'
+                     '    {0} oil records purged.'
+                     .format(imported_recs_purged, oil_recs_purged))
 
         for fn in settings['oillib.files'].split('\n'):
-            print 'opening file: {0} ...'.format(fn)
+            logger.info('opening file: {0} ...'.format(fn))
             fd = OilLibraryFile(fn)
-            print 'file version:', fd.__version__
+            logger.info('file version: {}'.format(fd.__version__))
 
-            sys.stderr.write('Adding new records to database')
+            print('Adding new records to database')
             rowcount = 0
             for r in fd.readlines():
                 if len(r) < 10:
-                    print 'got record:', r
+                    logger.info('got record: {}'.format(r))
 
                 r = [unicode(f, 'utf-8') if f is not None else f
                      for f in r]
@@ -59,7 +62,7 @@ def load_database(settings):
 
                 rowcount += 1
 
-            print 'finished!!!  {0} rows processed.'.format(rowcount)
+            print('finished!!!  {0} rows processed.'.format(rowcount))
             session.close()
 
         # we need to open a session for each record here because we want
@@ -75,6 +78,8 @@ def make_db(oillib_files=None, db_file=None):
     '''
     Entry point for console_script installed by setup
     '''
+    logging.basicConfig(level=logging.INFO)
+
     pck_loc = os.path.dirname(os.path.realpath(__file__))
 
     if not db_file:
@@ -91,5 +96,5 @@ def make_db(oillib_files=None, db_file=None):
         initialize_sql(settings)
         load_database(settings)
     except:
-        print "FAILED TO CREATED OIL LIBRARY DATABASE \n"
+        logger.info("FAILED TO CREATED OIL LIBRARY DATABASE \n")
         raise

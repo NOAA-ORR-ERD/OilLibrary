@@ -24,6 +24,8 @@ from oil_library.utilities import (get_boiling_points_from_api,
 from pprint import PrettyPrinter
 pp = PrettyPrinter(indent=2, width=120)
 
+logger = logging.getLogger(__name__)
+
 
 class OilRejected(Exception):
     '''
@@ -48,6 +50,11 @@ class OilRejected(Exception):
 
 
 def pprint_for_one_oil(oil, *args):
+    '''
+        Just a simple diagnostic printing routine.
+        The idea is to print messages for just one oil record
+        to reduce verboseness when diagnosing these routines.
+    '''
     adios_oil_id = 'AD02434'
 
     if hasattr(oil, 'adios_oil_id') and oil.adios_oil_id == adios_oil_id:
@@ -59,7 +66,7 @@ def process_oils(session_class):
     record_ids = [r.adios_oil_id for r in session.query(ImportedRecord)]
     session.close()
 
-    print '\nAdding Oil objects...'
+    logger.info('Adding Oil objects...')
     for record_id in record_ids:
         # Note: committing our transaction for every record slows the
         #       import job significantly.  But this is necessary if we
@@ -74,7 +81,7 @@ def process_oils(session_class):
             add_oil(rec)
             transaction.commit()
         except OilRejected as e:
-            print repr(e)
+            logger.warning(repr(e))
             transaction.abort()
 
 
@@ -87,7 +94,7 @@ def add_oil(record):
 
 
 def generate_oil(record):
-    print 'Estimations for {0}'.format(record.adios_oil_id)
+    logger.info('Begin estimations for {0}'.format(record.adios_oil_id))
     oil = Oil()
     oil.estimated = Estimated()
 
@@ -157,8 +164,8 @@ def add_densities(imported_rec, oil):
         oil.api = (141.5 * 1000 / d_0) - 131.5
         # oil.estimated.api = True
     else:
-        logging.warning('no densities and no api for record {0}'
-                        .format(imported_rec.adios_oil_id))
+        logger.warning('no densities and no api for record {0}'
+                       .format(imported_rec.adios_oil_id))
 
     if not [d for d in oil.densities
             if (d.ref_temp_k is not None and
@@ -270,7 +277,6 @@ def get_kvis_from_dvis(oil_rec):
                          if d.kg_ms > 0.0 and d.ref_temp_k is not None]:
             density = density_at_temperature(oil_rec, t, w)
 
-            # kvis = dvis/density
             if density is not None:
                 kvis_out.append(((dv / density), t, w))
 
@@ -469,9 +475,9 @@ def add_ra_fractions(imported_rec, oil):
     f_asph = get_asphaltene_fraction(imported_rec, oil)
     f_max_cut = get_max_distillation_cut_fraction(imported_rec)
 
-    logging.info('Our initial fractions so far (SA, R, A): ({}, {}, {})'
-                 .format(f_max_cut, f_res, f_asph)),
-    logging.info('total: {}'.format(f_max_cut + f_res + f_asph))
+    logger.info('Our initial fractions so far (SA, R, A): ({}, {}, {})'
+                .format(f_max_cut, f_res, f_asph)),
+    logger.info('total: {}'.format(f_max_cut + f_res + f_asph))
 
     oil.sara_fractions.append(SARAFraction(sara_type='Resins',
                                            fraction=f_res,
@@ -481,13 +487,9 @@ def add_ra_fractions(imported_rec, oil):
                                            fraction=f_asph,
                                            ref_temp_k=1015.0))
 
-    pprint_for_one_oil(oil, 'oil.sara_fractions', oil.sara_fractions)
-
 
 def get_resin_fraction(imported_rec, oil):
     try:
-        pprint_for_one_oil(oil, 'imported_rec.resins', imported_rec.resins)
-
         if (imported_rec is not None and
             imported_rec.resins is not None and
                 imported_rec.resins >= 0.0 and
@@ -495,28 +497,20 @@ def get_resin_fraction(imported_rec, oil):
             f_res = imported_rec.resins
         else:
             a, b = get_corrected_density_and_viscosity(oil)
-            pprint_for_one_oil(oil, 'a, b', (a, b))
 
             f_res = (3.3 * a + 0.087 * b - 74.0)
             f_res /= 100.0  # percent to fractional value
 
-            pprint_for_one_oil(oil, 'f_res', f_res)
-
             f_res = 0.0 if f_res < 0.0 else f_res
-
-            pprint_for_one_oil(oil, 'f_res', f_res)
 
         return f_res
     except:
-        logging.info('Failed to add Resin fraction!')
+        logger.info('Failed to add Resin fraction!')
         return 0
 
 
 def get_asphaltene_fraction(imported_rec, oil):
     try:
-        pprint_for_one_oil(oil, 'imported_rec.asphaltenes',
-                           imported_rec.asphaltenes)
-
         if (imported_rec is not None and
             imported_rec.asphaltenes is not None and
                 imported_rec.asphaltenes >= 0.0 and
@@ -524,23 +518,17 @@ def get_asphaltene_fraction(imported_rec, oil):
             f_asph = imported_rec.asphaltenes
         else:
             a, b = get_corrected_density_and_viscosity(oil)
-            pprint_for_one_oil(oil, 'AD00028',
-                               'a, b', (a, b))
 
             f_asph = (0.0014 * (a ** 3.0) +
                       0.0004 * (b ** 2.0) -
                       18.0)
             f_asph /= 100.0  # percent to fractional value
 
-            pprint_for_one_oil(oil, 'f_asph', f_asph)
-
             f_asph = 0.0 if f_asph < 0.0 else f_asph
-
-            pprint_for_one_oil(oil, 'f_asph', f_asph)
 
         return f_asph
     except:
-        logging.info('Failed to add Asphaltene fraction!')
+        logger.info('Failed to add Asphaltene fraction!')
         return 0
 
 
@@ -559,17 +547,19 @@ def get_corrected_density_and_viscosity(oil):
         P0_oil = density_at_temperature(oil, temperature)
         V0_oil = get_viscosity(oil, temperature)
 
-        pprint_for_one_oil(oil, '(P0_oil, V0_oil)', (P0_oil, V0_oil))
-
         a = 10 * exp(0.001 * P0_oil)
         b = 10 * log(1000.0 * P0_oil * V0_oil)
 
     except:  # fixme: what exception is this supposed to catch?
-        print 'get_corrected_density_and_viscosity() generated exception:'
-        print '\toil = ', oil
-        print '\toil.kvis = ', oil.kvis
-        print '\tP0_oil = ', density_at_temperature(oil, temperature)
-        print '\tV0_oil = ', get_viscosity(oil, temperature)
+        logger.error('get_corrected_density_and_viscosity() '
+                     'generated exception:\n'
+                     '\toil = {0}\n'
+                     '\toil.kvis = {0.kvis}\n'
+                     '\tP0_oil = {1}\n'
+                     '\tV0_oil = {2}\n'
+                     .format(oil,
+                             density_at_temperature(oil, temperature),
+                             get_viscosity(oil, temperature)))
         raise
 
     return a, b
@@ -711,7 +701,8 @@ def add_distillation_cut_boiling_point(imported_rec, oil):
         if c.fraction >= 0.0 and c.fraction <= 1.0:
             oil.cuts.append(c)
         else:
-            logging.error('{0}: {1}: bad distillation cut!'.format(imported_rec, c))
+            logger.error('{0}: {1}: bad distillation cut!'
+                         .format(imported_rec, c))
 
     if not oil.cuts:
         mass_left = 1.0
@@ -743,9 +734,6 @@ def add_distillation_cut_boiling_point(imported_rec, oil):
             oil.cuts.append(Cut(fraction=accumulated_frac, vapor_temp_k=t_i))
 
         oil.estimated.cuts = True
-
-    pprint_for_one_oil(oil, 'oil.estimated.cuts', oil.estimated.cuts)
-    pprint_for_one_oil(oil, 'oil.cuts', oil.cuts)
 
 
 def add_molecular_weights(imported_rec, oil):
@@ -811,8 +799,6 @@ def add_saturate_aromatic_fractions(imported_rec, oil):
                                                fraction=f_arom,
                                                ref_temp_k=T_i))
 
-    pprint_for_one_oil(oil, oil.sara_fractions)
-
 
 def adjust_molecular_weights(oil):
     '''
@@ -861,9 +847,10 @@ def adjust_resin_asphaltene_fractions(imported_rec, oil):
                 if sara.sara_type in ('Resins', 'Asphaltenes'):
                     sara.fraction *= scale
 
-            print ('\tNew SARA total = {0}, RA fractions scaled by {1}'
-                   .format(sum([sara.fraction for sara in oil.sara_fractions]),
-                           scale))
+            logger.info('\tNew SARA total = {0}, RA fractions scaled by {1}'
+                        .format(sum([sara.fraction
+                                     for sara in oil.sara_fractions]),
+                                scale))
 
 
 def get_ptry_values(oil_obj, component_type, sub_fraction=None):
@@ -931,13 +918,8 @@ def get_sa_mass_fractions(oil_obj):
     '''
     fraction_sum = sum([sara.fraction for sara in oil_obj.sara_fractions
                         if sara.sara_type in ('Resins', 'Asphaltenes')])
-    pprint_for_one_oil(oil_obj, 'fraction_sum', fraction_sum)
 
     for P_try, F_i, T_i, c_type in get_ptry_values(oil_obj, 'Saturates'):
-        pprint_for_one_oil(oil_obj,
-                           'P_try, F_i, T_i, c_type',
-                           P_try, F_i, T_i, c_type)
-
         if T_i < 530.0:
             sg = P_try / 1000
             mw = None
@@ -957,14 +939,13 @@ def get_sa_mass_fractions(oil_obj):
 
                 f_arom = F_i - f_sat
             else:
-                print '\tNo molecular weight at that temperature.'
+                logger.info('\tNo molecular weight at that temperature.')
                 continue
         else:
             # Above 530K we will evenly split the saturates & aromatics
             f_sat = f_arom = F_i / 2
 
         if fraction_sum >= 1.0:
-            # print 'we cannot add any more'
             break
         elif f_sat + f_arom + fraction_sum > 1.0:
             # we need to scale our sub-fractions so that the
@@ -1015,8 +996,6 @@ def add_component_densities(imported_rec, oil):
                              if f.sara_type in ('Resins', 'Asphaltenes')])
     oil_density = density_at_temperature(oil, 288.15)
 
-    # print ('\n\nNow we will try to adjust our ptry densities '
-    #        'to match the oil total density')
     oil_sa_avg_density = ((oil_density - total_ra_fraction * 1100.0) /
                           total_sa_fraction)
 
@@ -1138,5 +1117,6 @@ def oil_api_matches_density(oil):
     if np.isclose(oil.api, api_from_density, atol=1.0):
         return True
 
-    print '(oil.api, api_from_density) = ', (oil.api, api_from_density)
+    logger.info('(oil.api, api_from_density) = ({}, {})'
+                .format(oil.api, api_from_density))
     return False

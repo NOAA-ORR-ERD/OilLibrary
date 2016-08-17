@@ -1,9 +1,8 @@
 #!/usr/bin/env python
-# OilLibParse - program to parse the OilLib flat file
-#               from the ADIOS2 application
-
 import sys
-from optparse import OptionParser
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class ImportFileHeaderLengthError(Exception):
@@ -138,7 +137,7 @@ class OilLibraryFile(object):
 
         if (self.__version__ is not None and
                 len(first_line) == len(self.__version__)):
-            print 'first line contains the version header'
+            logger.debug('first line contains the version header')
             self.readline()
         elif len(first_line) == len(self.file_columns):
             # For tabular data, the number of data fields will be the same
@@ -147,7 +146,7 @@ class OilLibraryFile(object):
             # But at this point, we have already opened the file and
             # constructed our object and performed as many reasonable checks
             # as we can.  So we just try to be consistent with that.
-            print 'first line contains the file column names'
+            logger.debug('first line contains the file column names')
         else:
             raise ImportFileHeaderLengthError('Bad file header: '
                                               'should have found either '
@@ -160,7 +159,8 @@ class OilLibraryFile(object):
         file_out = open(filename, 'w')
 
         if self.__version__ is not None:
-            print self.field_delim.join(self.__version__)
+            logger.debug(self.field_delim.join(self.__version__))
+
             file_out.write(self.field_delim.join(self.__version__))
             file_out.write('\n')
 
@@ -178,75 +178,3 @@ class OilLibraryFile(object):
 
     def __repr__(self):
         return "<OilLibraryFile('%s')>" % (self.name)
-
-
-if __name__ == '__main__':
-    # parse our command line options
-    usage = '''Usage: OilLibParse.py FILE [options]
-
-Required:
-  FILE\t\t\tan input file containing Oil Library table data'''
-    parser = OptionParser(usage=usage)
-    parser.add_option('-f', '--field',
-                      dest='fields',
-                      help='list of fields to be displayed',
-                      metavar='Field1,...,FieldN')
-    parser.add_option('-v', '--verbose',
-                      action='store_true', default=False,
-                      dest='verbose',
-                      help='verbose output')
-    parser.add_option('-n', '--noprompt',
-                      action='store_false', default=True,
-                      dest='prompt',
-                      help='do not prompt for the next row')
-    parser.add_option('-r', '--raw',
-                      action='store_true', default=False,
-                      dest='raw',
-                      help='just display the raw row data')
-    (options, args) = parser.parse_args()
-
-    # open our OilLib file
-    if len(args) < 1:
-        parser.error("please specify an input file")
-    else:
-        filename = args[0]
-
-    if options.verbose:
-        print 'opening:', (filename,)
-    fd = OilLibraryFile(filename)
-    if options.verbose:
-        print fd.__version__
-
-    for r in fd.readlines():
-        matchingFields = []
-
-        if options.verbose:
-            print '-' * 50
-            print ('Number of Fields/Header Columns: '
-                   '{0}/{1}'.format(len(r), fd.num_columns))
-
-        if options.fields:
-            fields = options.fields.split(',')
-            matchingFields = set(fields).intersection(fd.file_columns)
-            if options.verbose:
-                print 'fields specified:', fields
-                print 'fields matching columns:', matchingFields
-
-        if options.raw:
-            print '\t%s' % (r,)
-        elif len(matchingFields) > 0:
-            # we just display the fields we want
-            for f in matchingFields:
-                print '\t%-20s\t%s' % (f + ':', (r[fd.file_columns_lu[f]],))
-        else:
-            # we display all fields
-            for f, i in zip(r, range(len(r))):
-                if i < fd.num_columns:
-                    fieldName = fd.file_columns[i]
-                    print '\t%-20s\t%s' % (fieldName + ':', (f,))
-                else:
-                    print '\t%-20s\t%s' % ('extra field:', (f,))
-        if options.prompt:
-            sys.stdin.readline()
-        else:
-            print

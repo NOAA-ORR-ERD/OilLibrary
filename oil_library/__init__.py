@@ -37,12 +37,8 @@ def _get_db_session():
 
 _sample_oils = {}
 
-from .factory import get_oil, get_oil_props
 
-_sample_oils.update({k: get_oil(v, max_cuts=2)
-                     for k, v in sample_oils._sample_oils.iteritems()})
-
-## utility for setting up console logging
+# utility for setting up console logging
 def initialize_console_log(level='debug'):
     '''
     Initializes the logger to simply log everything to the console (stdout)
@@ -68,3 +64,20 @@ def initialize_console_log(level='debug'):
                         level=level,
                         format=format_str,
                         )
+
+
+# Set default logging handler to avoid "No handler found" warnings.
+try:  # Python 2.7+
+    from logging import NullHandler
+except ImportError:
+    class NullHandler(logging.Handler):
+        def emit(self, record):
+            pass
+
+logging.getLogger(__name__).addHandler(NullHandler())
+
+
+from .factory import get_oil, get_oil_props
+
+_sample_oils.update({k: get_oil(v, max_cuts=2)
+                     for k, v in sample_oils._sample_oils.iteritems()})
