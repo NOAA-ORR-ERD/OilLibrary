@@ -33,7 +33,7 @@ json_data = {'name': 'benzene',
              'solubility': 1.78,  # kg/m^3
              'nickel_ppm': None,
              'vanadium_ppm': None,
-             'k0y': None,
+             'k0y': 0.000002024,
              'cuts': [{'liquid_temp_k': 353.05,
                        'vapor_temp_k': 353.45,
                        'fraction': 1.0
