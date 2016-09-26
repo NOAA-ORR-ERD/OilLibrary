@@ -879,7 +879,7 @@ def get_ptry_values(oil_obj, component_type, sub_fraction=None):
         F_i = c.fraction - previous_cut_fraction
         previous_cut_fraction = c.fraction
 
-        P_try = 1000 * (T_i ** (1.0 / 3.0) / watson_factor)
+        P_try = 1000 * ((1.8 * T_i) ** (1.0 / 3.0) / watson_factor)
 
         if sub_fraction is not None:
             if len(sub_fraction) > idx:
@@ -900,7 +900,10 @@ def get_sa_mass_fractions(oil_obj):
             then:
               (Reference: CPPF, eq.s 3.77 and 3.78)
               - f(sat, i) = (fmass(i) *
-                             (2.24 - 1.98 * SG(sat, i) - 0.009 * M(w, sat, i)))
+                             (2.24 - 1.98 * SG(sat, i) - 0.009 * m(sat, i)))
+              m(sat, i) = MW(sat, i) * (n - 1.475) (Reference: CPPF, eq.s 3.50)
+              n is refractive index, which is defined in CPPF, eq 2.114 & 2.115
+              and depends on boiling point temp and specific gravity
               - if f(sat, i) >= fmass(i):
                   - f(sat, i) = fmass(i)
               - else if f(sat, i) < 0:
@@ -930,7 +933,13 @@ def get_sa_mass_fractions(oil_obj):
                     break
 
             if mw is not None:
-                f_sat = F_i * (2.2843 - 1.98138 * sg - 0.009108 * mw)
+                I = .3773 * (T_i ** -.02269) * (sg ** .9182)
+                if not I==1:	
+                    n = ((1 + (2 * I)) / (1 - I)) ** .5
+                else:	# this shouldn't happen
+                    raise
+                m = mw * (n - 1.475)
+                f_sat = F_i * (2.236 - 1.98138 * sg - 0.009108 * m)
 
                 if f_sat >= F_i:
                     f_sat = F_i
