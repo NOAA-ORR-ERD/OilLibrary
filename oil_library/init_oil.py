@@ -934,9 +934,9 @@ def get_sa_mass_fractions(oil_obj):
 
             if mw is not None:
                 I = .3773 * (T_i ** -.02269) * (sg ** .9182)
-                if not I==1:	
+                if not I == 1:
                     n = ((1 + (2 * I)) / (1 - I)) ** .5
-                else:	# this shouldn't happen
+                else:  # this shouldn't happen
                     raise
                 m = mw * (n - 1.475)
                 f_sat = F_i * (2.236 - 1.98138 * sg - 0.009108 * m)

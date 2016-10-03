@@ -5,6 +5,8 @@ import oil_4
 import oil_crude
 import oil_6
 import benzene
+import oil_ans_mp
+import oil_bahia
 
 _sample_oils = {'oil_gas': oil_gas.json_data,
                 'oil_jetfuels': oil_jetfuels.json_data,
@@ -13,4 +15,6 @@ _sample_oils = {'oil_gas': oil_gas.json_data,
                 'oil_crude': oil_crude.json_data,
                 'oil_6': oil_6.json_data,
                 'benzene': benzene.json_data,
+                'oil_ans_mp': oil_ans_mp.json_data,
+                'oil_bahia': oil_bahia.json_data,
                 }
