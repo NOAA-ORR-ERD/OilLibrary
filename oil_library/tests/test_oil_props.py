@@ -11,7 +11,7 @@ from pytest import raises
 import unit_conversion as uc
 
 from oil_library import get_oil_props, get_oil
-from oil_library.utilities import get_density
+from oil_library.utilities.oil import get_density
 
 from sqlalchemy.orm.exc import NoResultFound
 

@@ -10,16 +10,18 @@ import unit_conversion as uc
 from . import _get_db_session
 from . import _sample_oils
 from .models import Oil, KVis, Density, Cut
-from .utilities import get_boiling_points_from_api
+from .utilities.oil import get_boiling_points_from_api
 
 from .oil_props import OilProps
 
-from .init_oil import (density_at_temperature,
-                       add_ra_fractions,
-                       add_molecular_weights,
-                       add_saturate_aromatic_fractions,
-                       add_component_densities,
-                       adjust_resin_asphaltene_fractions)
+from .utilities.imported_record import (oil_density_at_temp,
+                                        )
+
+from .init_oil_old import (add_ra_fractions,
+                           add_molecular_weights,
+                           add_saturate_aromatic_fractions,
+                           add_component_densities,
+                           adjust_resin_asphaltene_fractions)
 
 
 def get_oil(oil_, max_cuts=None):
@@ -131,7 +133,7 @@ def add_kvis_from_dvis(oil_obj, oil_json):
 
 
 def convert_dvis_to_kvis(oil_obj, kg_ms, ref_temp_k):
-    density = density_at_temperature(oil_obj, ref_temp_k)
+    density = oil_density_at_temp(oil_obj, ref_temp_k)
     if density is None:
         return None
     else:

@@ -5,10 +5,10 @@ import numpy as np
 import pytest
 
 from oil_library import get_oil
-from oil_library.utilities import (get_density,
-                                   get_viscosity,
-                                   get_pour_point,
-                                   get_boiling_points_from_api)
+from ..utilities.oil import (get_density,
+                             get_viscosity,
+                             get_pour_point,
+                             get_boiling_points_from_api)
 
 
 oil_ = get_oil('LUCKENBACH FUEL OIL')

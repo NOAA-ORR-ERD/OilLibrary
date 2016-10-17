@@ -24,8 +24,8 @@ from sqlalchemy.orm.exc import NoResultFound
 
 import unit_conversion as uc
 
-from oil_library.models import Oil, ImportedRecord, Category
-from oil_library.utilities import get_viscosity
+from .models import Oil, ImportedRecord, Category
+from .utilities.oil import get_viscosity
 
 
 logger = logging.getLogger(__name__)

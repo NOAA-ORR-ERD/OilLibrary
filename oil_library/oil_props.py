@@ -19,7 +19,7 @@ import numpy as np
 import unit_conversion as uc
 
 from .models import Oil
-from .utilities import get_density, get_viscosity
+from .utilities.oil import get_density, get_viscosity
 
 
 # create a dtype for storing sara information in numpy array

@@ -10,13 +10,13 @@ import transaction
 
 from slugify import slugify_filename
 
-from oil_library.models import (ImportedRecord, Oil,
-                                Synonym,
-                                Density,
-                                KVis,
-                                DVis,
-                                Cut,
-                                Toxicity)
+from .models import (ImportedRecord, Oil,
+                     Synonym,
+                     Density,
+                     KVis,
+                     DVis,
+                     Cut,
+                     Toxicity)
 
 
 def purge_old_records(session):
