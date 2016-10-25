@@ -15,27 +15,9 @@ from .models import (ImportedRecord, Oil, Estimated,
                      Cut, SARAFraction, SARADensity, MolecularWeight)
 
 from .utilities.estimations import api_from_density
-from .utilities.imported_record import (oil_density_at_temp,
-                                        oil_densities,
-                                        oil_api,
-                                        oil_aggregate_kvis,
-                                        oil_inert_fractions,
-                                        oil_normalized_cut_values,
-                                        oil_component_temps,
-                                        oil_component_types,
-                                        oil_component_mol_wt,
-                                        oil_component_densities,
-                                        oil_component_mass_fractions,
-                                        oil_water_surface_tension,
-                                        oil_seawater_surface_tension,
-                                        oil_pour_point,
-                                        oil_flash_point,
-                                        oil_max_water_fraction_emulsion,
-                                        oil_bullwinkle_fraction,
-                                        oil_solubility,
-                                        oil_adhesion,
-                                        oil_sulphur_fraction,
-                                        )
+
+from .utilities.imported_record import ImportedRecordWithEstimation
+from .utilities.oil import OilWithEstimation
 
 
 from pprint import PrettyPrinter
@@ -115,60 +97,61 @@ def generate_oil(imported_rec):
                 .format(imported_rec.adios_oil_id))
     oil = Oil()
     oil.estimated = Estimated()
+    imp_rec_obj = ImportedRecordWithEstimation(imported_rec)
 
-    add_demographics(imported_rec, oil)
+    add_demographics(imp_rec_obj, oil)
 
     # Core estimations
-    add_densities(imported_rec, oil)
-    add_viscosities(imported_rec, oil)
+    add_densities(imp_rec_obj, oil)
+    add_viscosities(imp_rec_obj, oil)
 
     # Distillation estimations
-    add_inert_fractions(imported_rec, oil)
-    add_distillation_cuts(imported_rec, oil)
+    add_inert_fractions(imp_rec_obj, oil)
+    add_distillation_cuts(imp_rec_obj, oil)
 
     # Component Fractional estimations
-    add_component_mol_wt(imported_rec, oil)
-    add_component_mass_fractions(imported_rec, oil)
-    add_component_densities(imported_rec, oil)
+    add_component_mol_wt(imp_rec_obj, oil)
+    add_component_mass_fractions(imp_rec_obj, oil)
+    add_component_densities(imp_rec_obj, oil)
 
     # Miscellaneous estimations
-    add_oil_water_interfacial_tension(imported_rec, oil)
-    add_oil_seawater_interfacial_tension(imported_rec, oil)
-    add_pour_point(imported_rec, oil)
-    add_flash_point(imported_rec, oil)
-    add_max_water_fraction_of_emulsion(imported_rec, oil)
-    add_bullwinkle_fractions(imported_rec, oil)
-    add_solubility(imported_rec, oil)
-    add_adhesion(imported_rec, oil)
-    add_sulphur_mass_fraction(imported_rec, oil)
+    add_oil_water_interfacial_tension(imp_rec_obj, oil)
+    add_oil_seawater_interfacial_tension(imp_rec_obj, oil)
+    add_pour_point(imp_rec_obj, oil)
+    add_flash_point(imp_rec_obj, oil)
+    add_max_water_fraction_of_emulsion(imp_rec_obj, oil)
+    add_bullwinkle_fractions(imp_rec_obj, oil)
+    add_solubility(imp_rec_obj, oil)
+    add_adhesion(imp_rec_obj, oil)
+    add_sulphur_mass_fraction(imp_rec_obj, oil)
 
     # estimations not in the document, but needed
-    add_metals(imported_rec, oil)
+    add_metals(imp_rec_obj, oil)
     add_aggregate_volatile_fractions(oil)
-    add_misc_fractions(imported_rec, oil)
-    add_k0y(imported_rec, oil)
+    add_misc_fractions(imp_rec_obj, oil)
+    add_k0y(imp_rec_obj, oil)
 
     return oil
 
 
-def add_demographics(imported_rec, oil):
-    oil.name = imported_rec.oil_name
-    oil.adios_oil_id = imported_rec.adios_oil_id
+def add_demographics(imp_rec_obj, oil):
+    oil.name = imp_rec_obj.record.oil_name
+    oil.adios_oil_id = imp_rec_obj.record.adios_oil_id
 
 
-def add_densities(imported_rec, oil):
+def add_densities(imp_rec_obj, oil):
     try:
-        oil.densities = oil_densities(imported_rec)
-        oil.api = oil_api(imported_rec)
+        oil.densities = imp_rec_obj.get_densities()
+        oil.api = imp_rec_obj.get_api()
     except Exception as e:
         logger.warning('Exception: record {}\n'
                        '{}\n'
                        'check for valid api and densities.'
-                       .format(imported_rec.adios_oil_id, e))
+                       .format(imp_rec_obj.record.adios_oil_id, e))
 
 
-def add_viscosities(imported_rec, oil):
-        kvis, estimated = oil_aggregate_kvis(imported_rec)
+def add_viscosities(imp_rec_obj, oil):
+        kvis, estimated = imp_rec_obj.aggregate_kvis()
 
         for k in kvis:
             oil.kvis.append(k)
@@ -177,25 +160,25 @@ def add_viscosities(imported_rec, oil):
             oil.estimated.viscosities = True
 
 
-def add_inert_fractions(imported_rec, oil):
+def add_inert_fractions(imp_rec_obj, oil):
     '''
         Add the resin and asphaltene fractions to our oil
         This does not include the component resins & asphaltenes
     '''
-    f_res, f_asph = oil_inert_fractions(imported_rec)
+    f_res, f_asph = imp_rec_obj.inert_fractions()
 
     oil.resins_fraction, oil.asphaltenes_fraction = f_res, f_asph
 
 
-def add_distillation_cuts(imported_rec, oil):
-    for T_i, f_evap_i in zip(*oil_normalized_cut_values(imported_rec)):
+def add_distillation_cuts(imp_rec_obj, oil):
+    for T_i, f_evap_i in zip(*imp_rec_obj.normalized_cut_values()):
         oil.cuts.append(Cut(vapor_temp_k=T_i, fraction=f_evap_i))
 
 
-def add_component_mol_wt(imported_rec, oil):
-    temps = oil_component_temps(imported_rec)
-    mol_wts = oil_component_mol_wt(imported_rec)
-    c_types = oil_component_types(imported_rec)
+def add_component_mol_wt(imp_rec_obj, oil):
+    temps = imp_rec_obj.component_temps()
+    mol_wts = imp_rec_obj.component_mol_wt()
+    c_types = imp_rec_obj.component_types()
 
     for T_i, mol_wt_i, c_type in zip(temps, mol_wts, c_types):
         oil.molecular_weights.append(MolecularWeight(sara_type=c_type,
@@ -203,10 +186,10 @@ def add_component_mol_wt(imported_rec, oil):
                                                      ref_temp_k=T_i))
 
 
-def add_component_mass_fractions(imported_rec, oil):
-    temps = oil_component_temps(imported_rec)
-    fracs = oil_component_mass_fractions(imported_rec)
-    c_types = oil_component_types(imported_rec)
+def add_component_mass_fractions(imp_rec_obj, oil):
+    temps = imp_rec_obj.component_temps()
+    fracs = imp_rec_obj.component_mass_fractions()
+    c_types = imp_rec_obj.component_types()
 
     for T_i, f_i, c_type in zip(temps, fracs, c_types):
         oil.sara_fractions.append(SARAFraction(sara_type=c_type,
@@ -214,14 +197,14 @@ def add_component_mass_fractions(imported_rec, oil):
                                                ref_temp_k=T_i))
 
 
-def add_component_densities(imported_rec, oil):
-    densities = oil_component_densities(imported_rec)
-    fracs = oil_component_mass_fractions(imported_rec)
-    temps = oil_component_temps(imported_rec)
-    c_types = oil_component_types(imported_rec)
+def add_component_densities(imp_rec_obj, oil):
+    densities = imp_rec_obj.component_densities()
+    fracs = imp_rec_obj.component_mass_fractions()
+    temps = imp_rec_obj.component_temps()
+    c_types = imp_rec_obj.component_types()
 
     # we need to scale our densities to match our aggregate density
-    rho0_oil = oil_density_at_temp(imported_rec, 273.15 + 15)
+    rho0_oil = imp_rec_obj.density_at_temp(273.15 + 15)
     Cf_dens = (rho0_oil / np.sum(fracs * densities))
 
     densities *= Cf_dens
@@ -232,8 +215,8 @@ def add_component_densities(imported_rec, oil):
                                               ref_temp_k=T_i))
 
 
-def add_oil_water_interfacial_tension(imported_rec, oil):
-    ow_st, ref_temp_k, estimated = oil_water_surface_tension(imported_rec)
+def add_oil_water_interfacial_tension(imp_rec_obj, oil):
+    (ow_st, ref_temp_k, estimated) = imp_rec_obj.oil_water_surface_tension()
 
     oil.oil_water_interfacial_tension_n_m = ow_st
     oil.oil_water_interfacial_tension_ref_temp_k = ref_temp_k
@@ -242,8 +225,10 @@ def add_oil_water_interfacial_tension(imported_rec, oil):
     oil.estimated.oil_water_interfacial_tension_ref_temp_k = estimated
 
 
-def add_oil_seawater_interfacial_tension(imported_rec, oil):
-    osw_st, ref_temp_k, estimated = oil_seawater_surface_tension(imported_rec)
+def add_oil_seawater_interfacial_tension(imp_rec_obj, oil):
+    (osw_st,
+     ref_temp_k,
+     estimated) = imp_rec_obj.oil_seawater_surface_tension()
 
     oil.oil_seawater_interfacial_tension_n_m = osw_st
     oil.oil_seawater_interfacial_tension_ref_temp_k = ref_temp_k
@@ -252,8 +237,8 @@ def add_oil_seawater_interfacial_tension(imported_rec, oil):
     oil.estimated.oil_seawater_interfacial_tension_ref_temp_k = estimated
 
 
-def add_pour_point(imported_rec, oil):
-    min_k, max_k, estimated = oil_pour_point(imported_rec)
+def add_pour_point(imp_rec_obj, oil):
+    min_k, max_k, estimated = imp_rec_obj.pour_point()
 
     oil.pour_point_min_k = min_k
     oil.pour_point_max_k = max_k
@@ -262,8 +247,8 @@ def add_pour_point(imported_rec, oil):
     oil.estimated.pour_point_max_k = estimated
 
 
-def add_flash_point(imported_rec, oil):
-    min_k, max_k, estimated = oil_flash_point(imported_rec)
+def add_flash_point(imp_rec_obj, oil):
+    min_k, max_k, estimated = imp_rec_obj.flash_point()
 
     oil.flash_point_min_k = min_k
     oil.flash_point_max_k = max_k
@@ -272,32 +257,32 @@ def add_flash_point(imported_rec, oil):
     oil.estimated.flash_point_max_k = estimated
 
 
-def add_max_water_fraction_of_emulsion(imported_rec, oil):
-    f_w_max = oil_max_water_fraction_emulsion(imported_rec)
-    oil.emulsion_water_fraction_max = f_w_max
+def add_max_water_fraction_of_emulsion(imp_rec_obj, oil):
+    f_w_max = imp_rec_obj.max_water_fraction_emulsion()
 
+    oil.emulsion_water_fraction_max = f_w_max
     oil.estimated.emulsion_water_fraction_max = True
 
 
-def add_bullwinkle_fractions(imported_rec, oil):
-    oil.bullwinkle_fraction = oil_bullwinkle_fraction(imported_rec)
+def add_bullwinkle_fractions(imp_rec_obj, oil):
+    oil.bullwinkle_fraction = imp_rec_obj.bullwinkle_fraction()
 
 
-def add_solubility(imported_rec, oil):
-    oil.solubility = oil_solubility(imported_rec)
+def add_solubility(imp_rec_obj, oil):
+    oil.solubility = imp_rec_obj.solubility()
 
 
-def add_adhesion(imported_rec, oil):
-    oil.adhesion = oil_adhesion(imported_rec)
+def add_adhesion(imp_rec_obj, oil):
+    oil.adhesion = imp_rec_obj.adhesion()
 
 
-def add_sulphur_mass_fraction(imported_rec, oil):
-    oil.sulphur_fraction = oil_sulphur_fraction(imported_rec)
+def add_sulphur_mass_fraction(imp_rec_obj, oil):
+    oil.sulphur_fraction = imp_rec_obj.sulphur_fraction()
 
 
-def add_metals(imported_rec, oil):
-    oil.nickel_ppm = imported_rec.nickel
-    oil.vanadium_ppm = imported_rec.vanadium
+def add_metals(imp_rec_obj, oil):
+    oil.nickel_ppm = imp_rec_obj.record.nickel
+    oil.vanadium_ppm = imp_rec_obj.record.vanadium
 
 
 def add_aggregate_volatile_fractions(oil):
@@ -313,16 +298,16 @@ def add_aggregate_volatile_fractions(oil):
                                      if f.sara_type == 'Aromatics'])
 
 
-def add_misc_fractions(imported_rec, oil):
-    oil.polars_fraction = imported_rec.polars
-    oil.benzene_fraction = imported_rec.benzene
-    oil.paraffins_fraction = imported_rec.paraffins
-    oil.wax_content_fraction = imported_rec.wax_content
+def add_misc_fractions(imp_rec_obj, oil):
+    oil.polars_fraction = imp_rec_obj.record.polars
+    oil.benzene_fraction = imp_rec_obj.record.benzene
+    oil.paraffins_fraction = imp_rec_obj.record.paraffins
+    oil.wax_content_fraction = imp_rec_obj.record.wax_content
 
 
-def add_k0y(imported_rec, oil):
-    if imported_rec.k0y is not None:
-        oil.k0y = imported_rec.k0y
+def add_k0y(imp_rec_obj, oil):
+    if imp_rec_obj.record.k0y is not None:
+        oil.k0y = imp_rec_obj.record.k0y
     else:
         oil.k0y = 2.02e-06
 
@@ -424,7 +409,9 @@ def oil_api_matches_density(oil):
     '''
         The oil API should pretty closely match its density at 15C.
     '''
-    d_0 = oil_density_at_temp(oil, 273.15 + 15)
+    oil_estimations = OilWithEstimation(oil)
+
+    d_0 = oil_estimations.density_at_temp(273.15 + 15)
     api = api_from_density(d_0)
 
     if np.isclose(oil.api, api, atol=1.0):

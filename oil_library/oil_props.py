@@ -19,7 +19,7 @@ import numpy as np
 import unit_conversion as uc
 
 from .models import Oil
-from .utilities.oil import get_density, get_viscosity
+from .utilities.oil import OilWithEstimation
 
 
 # create a dtype for storing sara information in numpy array
@@ -30,7 +30,7 @@ sara_dtype = np.dtype([('type', 'S16'),
                        ('mol_wt', np.float64)])
 
 
-class OilProps(object):
+class OilProps(OilWithEstimation):
     '''
     Class which:
     - Contains an oil object.
@@ -50,7 +50,7 @@ class OilProps(object):
 
     '''
 
-    def __init__(self, oil_):
+    def __init__(self, oil_obj):
         '''
         Extends the raw Oil object to include properties required by
         weathering processes. If oil_ is not pulled from database or user may
@@ -61,7 +61,7 @@ class OilProps(object):
         :param oil_: Oil object that maps to entity in OilLib database
         :type oil_: Oil object
         '''
-        self._r_oil = oil_
+        super(OilProps, self).__init__(oil_obj)
 
         # Default format for mass components:
         # mass_fraction =
@@ -75,50 +75,24 @@ class OilProps(object):
 
     def __repr__(self):
         return ('{0.__class__.__module__}.{0.__class__.__name__}('
-                'oil_={0._r_oil!r})'.format(self))
+                'oil_={0.record!r})'.format(self))
 
-    name = property(lambda self: self._r_oil.name,
-                    lambda self, val: setattr(self._r_oil, 'name', val))
+    name = property(lambda self: self.record.name,
+                    lambda self, val: setattr(self.record, 'name', val))
     api = property(lambda self: self.get('api'))
 
     def get(self, prop):
         'get raw oil props'
         val = None
         try:
-            val = getattr(self._r_oil, prop)
+            val = getattr(self.record, prop)
         except AttributeError:
             try:
-                val = getattr(self._r_oil.imported, prop)
+                val = getattr(self.record.imported, prop)
             except:
                 pass
 
         return val
-
-    @lru_cache(2)
-    def get_density(self, temp=None, out=None):
-        '''
-        return density at a temperature
-        do we want to do any unit conversions here?
-        todo: memoize function
-
-        :param temp: temperature in Kelvin. Could be an ndarray, list or scalar
-        :type temp: scalar, list, tuple or ndarray - assumes it is in Kelvin
-        '''
-        if temp:
-            return get_density(self._r_oil, temp, out)
-        else:
-            return uc.convert('density', 'API', 'kg/m^3', self.api)
-
-    @lru_cache(2)
-    def get_viscosity(self, temp=288.15, out=None):
-        '''
-        return viscosity at a temperature, default is viscosity at 15degC
-        todo: memoize function
-
-        :param temp: temperature in Kelvin. Could be an ndarray, list or scalar
-        :type temp: scalar, list, tuple or ndarray - assumes it is in Kelvin
-        '''
-        return get_viscosity(self._r_oil, temp, out)
 
     @property
     def bulltime(self):
@@ -243,7 +217,7 @@ class OilProps(object):
               Then we output the JSON from the unlinked object.
         '''
 
-        return Oil.from_json(self._r_oil.tojson()).tojson()
+        return Oil.from_json(self.record.tojson()).tojson()
 
     def _compare__dict(self, other):
         '''
@@ -292,7 +266,7 @@ class OilProps(object):
         to be a deepcopy - both OilProps objects can reference the same
         database record
         '''
-        c_op = self.__class__(self._r_oil)
+        c_op = self.__class__(self.record)
         if c_op != self:
             '''
             Attributes are currently derived from _r_oil object. Unless the
@@ -322,7 +296,7 @@ class OilProps(object):
         all_comp = list(chain(*[sorted(list(g), key=lambda s: s.sara_type,
                                        reverse=True)
                                 for _k, g
-                                in groupby(sorted(self._r_oil.sara_fractions,
+                                in groupby(sorted(self.record.sara_fractions,
                                                   key=lambda s: s.ref_temp_k),
                                            lambda x: x.ref_temp_k)]
                               ))
@@ -330,7 +304,7 @@ class OilProps(object):
         all_dens = list(chain(*[sorted(list(g), key=lambda s: s.sara_type,
                                        reverse=True)
                                 for _k, g
-                                in groupby(sorted(self._r_oil.sara_densities,
+                                in groupby(sorted(self.record.sara_densities,
                                                   key=lambda s: s.ref_temp_k),
                                            lambda x: x.ref_temp_k)]
                               ))
@@ -338,7 +312,7 @@ class OilProps(object):
         all_mw = list(chain(*[sorted(list(g), key=lambda s: s.sara_type,
                                      reverse=True)
                               for _k, g
-                              in groupby(sorted(self._r_oil.molecular_weights,
+                              in groupby(sorted(self.record.molecular_weights,
                                                 key=lambda s: s.ref_temp_k),
                                          lambda x: x.ref_temp_k)]
                             ))

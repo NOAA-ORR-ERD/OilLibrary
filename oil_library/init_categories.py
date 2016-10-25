@@ -25,8 +25,8 @@ from sqlalchemy.orm.exc import NoResultFound
 import unit_conversion as uc
 
 from .models import Oil, ImportedRecord, Category
-from .utilities.oil import get_viscosity
 
+from .utilities.oil import OilWithEstimation
 
 logger = logging.getLogger(__name__)
 
@@ -210,8 +210,9 @@ def link_refined_fuel_oil_1(session):
     count = 0
     category_temp = 273.15 + 38
     for o in oils:
+        o_estim = OilWithEstimation(o)
         viscosity = uc.convert('Kinematic Viscosity', 'm^2/s', 'cSt',
-                               get_viscosity(o, category_temp))
+                               o_estim.kvis_at_temp(category_temp))
 
         if viscosity <= 2.5:
             for category in categories:
@@ -252,8 +253,9 @@ def link_refined_fuel_oil_2(session):
     count = 0
     category_temp = 273.15 + 38
     for o in oils:
+        o_estim = OilWithEstimation(o)
         viscosity = uc.convert('Kinematic Viscosity', 'm^2/s', 'cSt',
-                               get_viscosity(o, category_temp))
+                               o_estim.kvis_at_temp(category_temp))
 
         if viscosity > 2.5 or viscosity <= 4.0:
             for category in categories:
@@ -292,8 +294,9 @@ def link_refined_ifo(session):
     count = 0
     category_temp = 273.15 + 38
     for o in oils:
+        o_estim = OilWithEstimation(o)
         viscosity = uc.convert('Kinematic Viscosity', 'm^2/s', 'cSt',
-                               get_viscosity(o, category_temp))
+                               o_estim.kvis_at_temp(category_temp))
 
         if viscosity > 4.0 or viscosity < 200.0:
             for category in categories:
@@ -334,8 +337,9 @@ def link_refined_fuel_oil_6(session):
     count = 0
     category_temp = 273.15 + 50
     for o in oils:
+        o_estim = OilWithEstimation(o)
         viscosity = uc.convert('Kinematic Viscosity', 'm^2/s', 'cSt',
-                               get_viscosity(o, category_temp))
+                               o_estim.kvis_at_temp(category_temp))
 
         if viscosity >= 200.0:
             for category in categories:
@@ -445,13 +449,14 @@ def show_uncategorized_oils(session):
     logger.info('{0} oils uncategorized.'.format(len(oils)))
 
     for o in oils:
+        o_estim = OilWithEstimation(o)
         if o.api >= 0:
             if o.api < 15:
                 category_temp = 273.15 + 50
             else:
                 category_temp = 273.15 + 38
             viscosity = uc.convert('Kinematic Viscosity', 'm^2/s', 'cSt',
-                                   get_viscosity(o, category_temp))
+                                   o_estim.kvis_at_temp(category_temp))
         else:
             viscosity = None
 

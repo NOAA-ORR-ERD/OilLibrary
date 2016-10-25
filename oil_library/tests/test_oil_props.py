@@ -11,7 +11,7 @@ from pytest import raises
 import unit_conversion as uc
 
 from oil_library import get_oil_props, get_oil
-from oil_library.utilities.oil import get_density
+from oil_library.utilities.oil import OilWithEstimation
 
 from sqlalchemy.orm.exc import NoResultFound
 
@@ -50,11 +50,11 @@ def test_get_oil_props(search, isNone):
 # just double check values for _sample_oil are entered correctly
 
 oil_density_units = [
-    ('oil_gas', 0.75, 'g/cm^3'),
-    ('oil_jetfuels', 0.81, 'g/cm^3'),
-    ('oil_4', 0.90, 'g/cm^3'),
-    ('oil_crude', 0.90, 'g/cm^3'),
-    ('oil_6', 0.99, 'g/cm^3'),
+    ('oil_gas', 0.75065, 'g/cm^3'),
+    ('oil_jetfuels', 0.8107, 'g/cm^3'),
+    ('oil_4', 0.90078, 'g/cm^3'),
+    ('oil_crude', 0.90078, 'g/cm^3'),
+    ('oil_6', 0.99086, 'g/cm^3'),
     ]
 
 
@@ -67,7 +67,7 @@ def test_OilProps_sample_oil(oil, density, units):
     d = uc.convert('density', units, 'kg/m^3', density)
 
     assert o.name == oil
-    assert np.isclose(get_density(o, 273.15 + 15), d)
+    assert np.isclose(o.density_at_temp(273.15 + 15), d)
     # assert abs(o.get_density() - d) < 1e-3
 
 
@@ -80,9 +80,9 @@ def test_OilProps_DBquery(oil, api):
 
 class TestProperties:
     op = get_oil_props(u'ALASKA NORTH SLOPE (MIDDLE PIPELINE)')
-    s_comp = sorted(op._r_oil.sara_fractions, key=lambda s: s.ref_temp_k)
+    s_comp = sorted(op.record.sara_fractions, key=lambda s: s.ref_temp_k)
 
-    s_dens = sorted(op._r_oil.sara_densities, key=lambda s: s.ref_temp_k)
+    s_dens = sorted(op.record.sara_densities, key=lambda s: s.ref_temp_k)
 
     # only keep density records + sara_fractions which fraction > 0.
     # OilProps prunes SARA to keep data for fractions > 0.
@@ -136,7 +136,7 @@ class TestCopy():
         cop = copy.copy(op)
         assert op == cop
         assert op is not cop
-        assert op._r_oil is cop._r_oil
+        assert op.record is cop.record
 
         for item in op.__dict__:
             try:
@@ -162,7 +162,7 @@ class TestCopy():
             except ValueError:
                 assert np.all(getattr(op, item) == getattr(dcop, item))
 
-            if item == '_r_oil' or getattr(op, item) is None:
+            if item == 'record' or getattr(op, item) is None:
                 assert getattr(op, item) is getattr(dcop, item)
             else:
                 assert getattr(op, item) is not getattr(dcop, item)

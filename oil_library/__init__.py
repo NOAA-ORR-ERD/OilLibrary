@@ -20,7 +20,9 @@ except:
 currently, the DB is created and located when package is installed
 '''
 _oillib_path = os.path.dirname(__file__)
-_db_file = os.path.join(_oillib_path, 'OilLib.db')
+__module_folder__ = __file__.split(os.sep)[-2]
+_db_file = 'OilLib.db'
+_db_file_path = os.path.join(_oillib_path, _db_file)
 
 
 def _get_db_session():
@@ -29,9 +31,14 @@ def _get_db_session():
     session = DBSession()
 
     try:
-        session.get_bind()
+        eng = session.get_bind()
+
+        if eng.url.database.split(os.path.sep)[-2:] != [__module_folder__,
+                                                        _db_file]:
+            raise UnboundExecutionError
+
     except UnboundExecutionError:
-        session.bind = create_engine('sqlite:///' + _db_file)
+        session.bind = create_engine('sqlite:///' + _db_file_path)
 
     return session
 
