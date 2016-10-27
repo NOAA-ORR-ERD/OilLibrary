@@ -100,7 +100,7 @@ class ImportedRecordWithEstimation(object):
     def culled_dvis(self):
         return self.culled_measurement('dvis', ['kg_ms', 'ref_temp_k'])
 
-    def density_at_temp(self, temperature, weathering=0.0):
+    def density_at_temp(self, temperature=288.15, weathering=0.0):
         if hasattr(temperature, '__iter__'):
             # we like to deal with numpy arrays as opposed to simple iterables
             temperature = np.array(temperature)
@@ -167,20 +167,33 @@ class ImportedRecordWithEstimation(object):
                        weathering=k[0],
                        kg_ms=dvis_dict[k])
 
+    def dvis_to_kvis(self, kg_ms, ref_temp_k):
+        density = self.density_at_temp(ref_temp_k)
+        if density is None:
+            return None
+        else:
+            return kg_ms / density
+
+    @classmethod
+    def dvis_obj_to_kvis_obj(cls, dvis_obj, density):
+        viscosity = est.dvis_to_kvis(dvis_obj.kg_ms, density)
+
+        return KVis(ref_temp_k=dvis_obj.ref_temp_k,
+                    weathering=dvis_obj.weathering,
+                    m_2_s=viscosity)
+
     def aggregate_kvis(self):
         kvis_list = [(k.ref_temp_k, (k.m_2_s, False))
-                     for k in self.record.kvis
-                     if k.m_2_s is not None and
-                     k.ref_temp_k is not None]
+                     for k in self.culled_kvis()]
+
         if hasattr(self.record, 'dvis'):
             dvis_list = [(d.ref_temp_k,
                           (est.dvis_to_kvis(d.kg_ms,
-                                            self.density_at_temp(d.ref_temp_k)),
+                                            self.density_at_temp(d.ref_temp_k)
+                                            ),
                            True)
                           )
-                         for d in self.record.dvis
-                         if d.kg_ms is not None and
-                         d.ref_temp_k is not None]
+                         for d in list(self.non_redundant_dvis())]
 
             agg = dict(dvis_list)
             agg.update(kvis_list)
@@ -195,7 +208,7 @@ class ImportedRecordWithEstimation(object):
 
         return kvis_out, estimated
 
-    def kvis_at_temp(self, temp_k, weathering=0.0):
+    def kvis_at_temp(self, temp_k=288.15, weathering=0.0):
         if hasattr(temp_k, '__iter__'):
             # we like to deal with numpy arrays as opposed to simple iterables
             temp_k = np.array(temp_k)
@@ -222,13 +235,6 @@ class ImportedRecordWithEstimation(object):
             return None
 
         return est.kvis_at_temp(ref_kvis, ref_temp_k, temp_k)
-
-    def dvis_to_kvis(self, kg_ms, ref_temp_k):
-        density = self.density_at_temp(ref_temp_k)
-        if density is None:
-            return None
-        else:
-            return kg_ms / density
 
     #
     # Oil Distillation Fractional Properties

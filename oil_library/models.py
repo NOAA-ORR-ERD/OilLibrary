@@ -566,7 +566,8 @@ class SARADensity(Base):
                 setattr(self, a, v)
 
     def __repr__(self):
-        return ('<SARADensity({0.sara_type}={0.density} at {0.ref_temp_k}K)>'
+        return ('<SARADensity('
+                '{0.sara_type}={0.density} kg/m^3 at {0.ref_temp_k}K)>'
                 .format(self))
 
 
@@ -595,5 +596,5 @@ class MolecularWeight(Base):
 
     def __repr__(self):
         return ('<MolecularWeight('
-                '{0.sara_type}={0.g_mol}gm/mol at {0.ref_temp_k}K)>'
+                '{0.sara_type}={0.g_mol} gm/mol at {0.ref_temp_k}K)>'
                 .format(self))

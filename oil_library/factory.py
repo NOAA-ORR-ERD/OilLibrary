@@ -152,14 +152,13 @@ def _add_kvis_from_dvis(oil_obj, oil_json):
         dynamic viscosities in our JSON payload.  So we convert them to
         kinematic viscosity records and add them.
     '''
-    if 'dvis' in oil_json.record:
+    if hasattr(oil_json.record, 'dvis'):
         dvis_list = list(oil_json.non_redundant_dvis())
-        densities = [oil_json.density_at_temp(d['ref_temp_k'])
+        densities = [oil_json.density_at_temp(d.ref_temp_k)
                      for d in dvis_list]
 
         for dv, rho in zip(dvis_list, densities):
-            kvis_json = oil_json.dvis_obj_to_kvis_obj(dv, rho)
-            oil_obj.record.kvis.append(KVis(**kvis_json))
+            oil_obj.record.kvis.append(oil_json.dvis_obj_to_kvis_obj(dv, rho))
 
     oil_obj.record.kvis.sort(key=lambda k: (k.weathering, k.ref_temp_k))
 
