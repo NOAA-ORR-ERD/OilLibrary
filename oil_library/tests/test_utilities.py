@@ -5,7 +5,6 @@ import numpy as np
 import pytest
 
 from oil_library import get_oil_props
-from pyramid.scripts.pdistreport import out
 
 
 op_obj = get_oil_props('LUCKENBACH FUEL OIL')
