@@ -397,9 +397,17 @@ def oil_has_heavy_sa_components(oil):
         This is highly improbable and indicates the record has problems
         with its imported data values.
     '''
+    resin_rho = [d.density for d in oil.sara_densities
+                 if d.sara_type == 'Resins']
+
+    if len(resin_rho) == 0:
+        resin_rho = 1100.0
+    else:
+        resin_rho = np.max((resin_rho[0], 1100.0))
+
     for d in oil.sara_densities:
         if d.sara_type in ('Saturates', 'Aromatics'):
-            if d.density > 1100.0:
+            if d.density > resin_rho:
                 return True
 
     return False

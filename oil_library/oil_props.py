@@ -16,8 +16,6 @@ from itertools import groupby, chain, izip_longest
 from repoze.lru import lru_cache
 import numpy as np
 
-import unit_conversion as uc
-
 from .models import Oil
 from .utilities.oil import OilWithEstimation
 

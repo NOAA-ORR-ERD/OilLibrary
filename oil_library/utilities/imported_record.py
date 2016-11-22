@@ -17,8 +17,22 @@ def _linear_curve(x, a, b):
     return (a * x + b)
 
 
-def _inverse_linear_curve(y, a, b):
-    return (y - b) / a
+def clamp(x, M, zeta=0.03):
+    '''
+        We make use of a generalized logistic function or Richard's curve
+        to generate a linear function that is clamped at x == M.
+        We make use of a zeta value to tune the parameters nu, resulting in a
+        smooth transition as we cross the M boundary.
+    '''
+    return (x -
+            (x / (1.0 + np.e ** (-15 * (x - M))) ** (1.0 / (1 + zeta))) +
+            (M / (1.0 + np.e ** (-15 * (x - M))) ** (1.0 / (1 - zeta))))
+
+
+def _inverse_linear_curve(y, a, b, M, zeta=0.12):
+    y_c = clamp(y, M, zeta)
+
+    return (y_c - b) / a
 
 
 class ImportedRecordWithEstimation(object):
@@ -291,6 +305,8 @@ class ImportedRecordWithEstimation(object):
             BP_i, fevap_i = zip(*[(c.vapor_temp_k, c.fraction) for c in cuts])
 
         popt, _pcov = curve_fit(_linear_curve, BP_i, fevap_i)
+        f_cutoff = _linear_curve(732.0, *popt)  # center of asymptote (< 739)
+        popt = popt.tolist() + [f_cutoff]
 
         fevap_i = np.linspace(0.0, 1.0 - f_res - f_asph, (N * 2) + 1)[1:]
         T_i = _inverse_linear_curve(fevap_i, *popt)
@@ -385,7 +401,8 @@ class ImportedRecordWithEstimation(object):
         return np.roll(mf_list, -2)
 
     @classmethod
-    def verify_cut_fractional_masses(cls, fmass_i, T_i, f_sat_i, f_arom_i):
+    def verify_cut_fractional_masses(cls, fmass_i, T_i, f_sat_i, f_arom_i,
+                                     prev_f_sat_i=None):
         '''
             Assuming a distillate mass with a boiling point T_i,
             We propose what the component fractional masses might be.
@@ -433,20 +450,43 @@ class ImportedRecordWithEstimation(object):
         f_sat_i = est.saturate_mass_fraction(fmass_i, M_w_avg_i, SG_avg_i, T_i)
         f_arom_i = fmass_i - f_sat_i
 
-        # TODO: Riazi states that this formula only works with
-        #       molecular weights less than 200.  So we will punt
-        #       with Bill's recommendation of 50/50 in those cases.
-        #       In the future we might be able to figure out how
-        #       to implement CPPF eqs. 3.81 and 3.82
+        # Note:   Riazi states that eqs. 3.77 and 3.78 only work with
+        #         molecular weights less than 200. In those cases,
+        #         Chris would like to use the last fraction in which
+        #         the molecular weight was less than 200 instead
+        #         of just guessing 50/50
+        # TODO:   In the future we might be able to figure out how
+        #         to implement CPPF eqs. 3.81 and 3.82, which take
+        #         care of cases where molecular weight is greater
+        #         than 200.
         above_200 = M_w_avg_i > 200.0
         try:
-            f_sat_i[above_200] = fmass_i[above_200] / 2.0
-            f_arom_i[above_200] = fmass_i[above_200] / 2.0
+            if np.any(above_200):
+                if np.all(above_200):
+                    # once in awhile we get a record where all molecular
+                    # weights are over 200, In this case, we have no
+                    # choice but to use the 50/50 scale
+                    scale_sat_i = 0.5
+                else:
+                    last_good_sat_i = f_sat_i[above_200 ^ True][-1]
+                    last_good_fmass_i = fmass_i[above_200 ^ True][-1]
+
+                    scale_sat_i = last_good_sat_i / last_good_fmass_i
+
+                f_sat_i[above_200] = fmass_i[above_200] * scale_sat_i
+                f_arom_i[above_200] = fmass_i[above_200] * (1.0 - scale_sat_i)
         except TypeError:
             # numpy array assignment failed, try a scalar assignment
             if above_200:
-                f_sat_i = fmass_i / 2.0
-                f_arom_i = fmass_i / 2.0
+                # for a scalar, the only way to determine the last
+                # successfully computed f_sat_i is to pass it in
+                if prev_f_sat_i is None:
+                    scale_sat_i = 0.5
+                else:
+                    scale_sat_i = prev_f_sat_i / fmass_i
+
+                f_sat_i = fmass_i * scale_sat_i
+                f_arom_i = fmass_i * (1.0 - scale_sat_i)
 
         return f_sat_i, f_arom_i
 

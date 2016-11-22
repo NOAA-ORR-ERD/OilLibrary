@@ -80,20 +80,3 @@ class JsonRecordWithEstimation(ImportedRecordWithEstimation):
         '''
         if not hasattr(self.record, 'cuts'):
             self.record.cuts = []
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
