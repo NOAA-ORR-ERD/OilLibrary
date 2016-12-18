@@ -13,8 +13,8 @@ from .models import (Oil, KVis, Density, Cut,
 from .oil_props import OilProps
 
 import utilities.estimations as est
-from .utilities.imported_record import ImportedRecordWithEstimation
-from .utilities.json_record import JsonRecordWithEstimation
+from .imported_record.estimations import ImportedRecordWithEstimation
+from .json_record.estimations import JsonRecordWithEstimation
 
 
 def get_oil_props(oil_info, max_cuts=None):

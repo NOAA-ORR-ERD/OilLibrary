@@ -10,7 +10,8 @@ import numpy as np
 from scipy.optimize import curve_fit
 
 from ..models import KVis, DVis, Density
-import estimations as est
+
+from ..utilities import estimations as est
 
 
 def _linear_curve(x, a, b):

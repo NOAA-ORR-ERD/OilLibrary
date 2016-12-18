@@ -25,8 +25,7 @@ from sqlalchemy.orm.exc import NoResultFound
 import unit_conversion as uc
 
 from .models import Oil, ImportedRecord, Category
-
-from .utilities.oil import OilWithEstimation
+from .oil.estimations import OilWithEstimation
 
 logger = logging.getLogger(__name__)
 

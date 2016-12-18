@@ -17,7 +17,7 @@ from repoze.lru import lru_cache
 import numpy as np
 
 from .models import Oil
-from .utilities.oil import OilWithEstimation
+from .oil.estimations import OilWithEstimation
 
 
 # create a dtype for storing sara information in numpy array

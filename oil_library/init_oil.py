@@ -16,8 +16,9 @@ from .models import (ImportedRecord, Oil, Estimated,
 
 from .utilities.estimations import api_from_density
 
-from .utilities.imported_record import ImportedRecordWithEstimation
-from .utilities.oil import OilWithEstimation
+from .imported_record.estimations import ImportedRecordWithEstimation
+from .imported_record.scoring import ImportedRecordWithScore
+from .oil.estimations import OilWithEstimation
 
 
 from pprint import PrettyPrinter
@@ -46,6 +47,11 @@ class OilRejected(Exception):
         return '{0}(oil={1}, errors={2})'.format(self.__class__.__name__,
                                                  self.oil_name,
                                                  self.message)
+
+
+class ImportedRecordInitialize(ImportedRecordWithEstimation,
+                               ImportedRecordWithScore):
+    pass
 
 
 def pprint_for_one_oil(oil, *args):
@@ -97,7 +103,7 @@ def generate_oil(imported_rec):
                 .format(imported_rec.adios_oil_id))
     oil = Oil()
     oil.estimated = Estimated()
-    imp_rec_obj = ImportedRecordWithEstimation(imported_rec)
+    imp_rec_obj = ImportedRecordInitialize(imported_rec)
 
     add_demographics(imp_rec_obj, oil)
 
@@ -130,6 +136,8 @@ def generate_oil(imported_rec):
     add_aggregate_volatile_fractions(oil)
     add_misc_fractions(imp_rec_obj, oil)
     add_k0y(imp_rec_obj, oil)
+
+    oil.score = imp_rec_obj.score()
 
     return oil
 
