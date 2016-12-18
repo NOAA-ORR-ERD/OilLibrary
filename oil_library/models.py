@@ -451,7 +451,7 @@ class Oil(Base):
     wax_content_fraction = Column(Float(53))
     naphthenes_fraction = Column(Float(53))
 
-    score = Column(Float(53))
+    quality_index = Column(Float(53))
 
     categories = relationship('Category', secondary=oil_to_category,
                               backref='oils')

@@ -137,7 +137,7 @@ def generate_oil(imported_rec):
     add_misc_fractions(imp_rec_obj, oil)
     add_k0y(imp_rec_obj, oil)
 
-    oil.score = imp_rec_obj.score()
+    oil.quality_index = imp_rec_obj.score()
 
     return oil
 
