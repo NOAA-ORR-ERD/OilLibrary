@@ -13,7 +13,7 @@ def density_from_api(api):
         Source: Adios2
 
         API is a measure of how heavy an oil is compared to water.
-        So it is somewhat similar to a specific gravity measurement
+        So it is a different unit for specific gravity
     '''
     kg_m_3 = 141.5 / (131.5 + api) * 1000.0
     ref_temp_k = 273.15 + 15.0
@@ -37,8 +37,10 @@ def density_at_temp(ref_density, ref_temp_k, temp_k):
         If we have an oil density at a reference temperature,
         then we can estimate what its density might be at
         another temperature.
+
+        NOTE: need a reference for the coefficient of expansion
     '''
-    k_pt = 0.008
+    k_pt = 0.0008
 
     return ref_density / (1 - k_pt * (ref_temp_k - temp_k))
 
@@ -161,7 +163,7 @@ def saturate_mol_wt(boiling_point):
         Note: for this to actually work in every case, we need to limit
               our temperature to:
               - T_i < 1070.0
-              - T_i > 
+              - T_i >
               - T_i > 1070.0 - exp(6.98291)  (roughly about == -8.06)
     '''
     T_i = np.clip(np.array(boiling_point),
