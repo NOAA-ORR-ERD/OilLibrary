@@ -42,7 +42,7 @@ def density_at_temp(ref_density, ref_temp_k, temp_k):
     '''
     k_pt = 0.0008
 
-    return ref_density / (1 - k_pt * (ref_temp_k - temp_k))
+    return ref_density / (1.0 - k_pt * (ref_temp_k - temp_k))
 
 
 def specific_gravity(density):

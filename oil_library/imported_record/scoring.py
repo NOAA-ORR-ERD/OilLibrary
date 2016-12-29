@@ -22,24 +22,20 @@ class ImportedRecordWithScore(object):
         return np.sum(w_i * Q_i) / np.sum(w_i)
 
     def score(self):
-        scores = [(self.score_api(), 5.0),
-                  (self.score_densities(), 5.0),
+        scores = [(self.score_densities(), 5.0),
                   (self.score_viscosities(), 5.0),
                   (self.score_sara_fractions(), 5.0),
-                  (self.score_cuts(), 5.0),
-                  (self.score_pour_point(), 5.0),
+                  (self.score_cuts(), 10.0),
+                  (self.score_interfacial_tensions(), 3.0),
+                  (self.score_pour_point(), 2.0),
                   (self.score_demographics(), 1.0),
                   (self.score_flash_point(), 1.0),
-                  (self.score_interfacial_tensions(), 1.0),
-                  (self.score_emulsion_constants(), 1.0),
-                  (self.score_toxicities(), 1.0)]
+                  (self.score_emulsion_constants(), 1.0)]
 
         return self.aggregate_score(*zip(*scores))
 
     def score_demographics(self):
-        fields = ('oil_name', 'adios_oil_id',
-                  'location', 'field_name', 'reference', 'comments',
-                  'product_type', 'oil_class')
+        fields = ('reference',)
         scores = []
 
         for f in fields:
@@ -61,6 +57,10 @@ class ImportedRecordWithScore(object):
 
         for d in self.record.densities:
             scores.append(self._score_density_rec(d))
+
+        if not any([np.isclose(d.ref_temp_k, [288.0, 288.15]).any()
+                    for d in self.record.densities]):
+            scores.append(self.score_api())
 
         # We have a maximum number of 4 density field sets in our flat file
         # We can set a lower acceptable number later
@@ -127,10 +127,16 @@ class ImportedRecordWithScore(object):
     def score_emulsion_constants(self):
         scores = []
 
+        scores.append(self._score_water_content_emulsion())
         scores.append(self._score_emulsion_constant_min())
-        scores.append(self._score_emulsion_constant_max())
+        # scores.append(self._score_emulsion_constant_max())
 
-        return self.aggregate_score(scores)
+        w_i = [2.0, 3.0]
+
+        return self.aggregate_score(scores, w_i)
+
+    def _score_water_content_emulsion(self):
+        return (1.0 if self.record.water_content_emulsion is not None else 0.0)
 
     def _score_emulsion_constant_min(self):
         return (1.0 if self.record.emuls_constant_min is not None else 0.0)
@@ -208,20 +214,22 @@ class ImportedRecordWithScore(object):
         if len(scores) < 10:
             scores += [0.0] * (10 - len(scores))
 
-        return self.aggregate_score(scores)
+        # compute our weights
+        w_i = 1.0 / (2.0 ** (np.arange(len(scores)) + 1))
+        w_i[-1] = w_i[-2]  # duplicate the last weight so we sum to 1.0
+
+        return self.aggregate_score(scores, w_i)
 
     def _score_single_cut(self, cut_rec):
-        scores = []
-
-        scores.append(self._cut_has_vapor_temp(cut_rec))
-        scores.append(self._cut_has_fraction(cut_rec))
-        scores.append(self._cut_has_liquid_temp(cut_rec))
-
-        if not all([(s == 1.0) for s in scores[:2]]):
-            return 0.0
+        if self._cut_has_fraction(cut_rec) == 1.0:
+            if self._cut_has_vapor_temp(cut_rec) == 1.0:
+                return 1.0
+            elif self._cut_has_liquid_temp(cut_rec) == 1.0:
+                return 0.8
+            else:
+                return 0.0
         else:
-            w_i = [4.5, 4.5, 1.0]
-            return self.aggregate_score(scores, w_i)
+            return 0.0
 
     def _cut_has_vapor_temp(self, cut_rec):
         return (0.0 if cut_rec.vapor_temp_k is None else 1.0)
