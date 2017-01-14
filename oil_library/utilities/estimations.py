@@ -30,7 +30,7 @@ def api_from_density(density):
     return (141.5 / kg_m_3 * 1000.0) - 131.5
 
 
-def density_at_temp(ref_density, ref_temp_k, temp_k):
+def density_at_temp(ref_density, ref_temp_k, temp_k, k_rho_t=0.0008):
     '''
         Source: Adios2
 
@@ -40,9 +40,18 @@ def density_at_temp(ref_density, ref_temp_k, temp_k):
 
         NOTE: need a reference for the coefficient of expansion
     '''
-    k_pt = 0.0008
 
-    return ref_density / (1.0 - k_pt * (ref_temp_k - temp_k))
+    return ref_density / (1.0 - k_rho_t * (ref_temp_k - temp_k))
+
+
+def vol_expansion_coeff(rho_0, t_0, rho_1, t_1):
+    '''
+        Calculate the volumetric expansion coefficient of a liquid
+        based on a set of two densities and their associated temperatures.
+    '''
+    k_rho_t = (rho_0 - rho_1) / (rho_0 * (t_1 - t_0))
+
+    return k_rho_t
 
 
 def specific_gravity(density):

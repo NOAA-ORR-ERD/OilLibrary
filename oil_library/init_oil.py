@@ -91,9 +91,11 @@ def process_oils(session_class):
 
 
 def add_oil(record):
+    reject_imported_record_if_requirements_not_met(record)
+
     oil = generate_oil(record)
 
-    reject_oil_if_bad(record, oil)
+    reject_oil_if_bad(oil)
 
     record.oil = oil
 
@@ -326,37 +328,35 @@ def add_k0y(imp_rec_obj, oil):
 #
 #
 
-def reject_oil_if_bad(imported_rec, oil):
+def reject_imported_record_if_requirements_not_met(imported_rec):
     '''
-        Here, we have an oil in which all estimations have been made.
-        We will now check the imported record and the oil object to see
-        if there are any detectable flaws.
-        If any flaw is detected, we will raise the OilRejected exception.
-        All flaws will be compiled into a list of error messages to be passed
-        into the exception.
+        Here, we have an imported oil record for which we would like to
+        make estimations.  For this to happen, certain requirements need
+        to be met.  Otherwise, we reject the oil without performing
+        estimations.
     '''
     errors = []
 
-    if imported_rec_was_manually_rejected(imported_rec):
+    if manually_rejected(imported_rec):
         errors.append('Imported Record was manually rejected')
 
-    if not oil_has_kvis(oil):
-        errors.append('Oil has no kinematic viscosities')
+    if not has_product_type(imported_rec):
+        errors.append('Imported Record has no product type')
 
-    if oil_has_duplicate_cuts(oil):
-        errors.append('Oil has duplicate cuts')
+    if not has_api_or_densities(imported_rec):
+        errors.append('Imported Record has no density information')
 
-    if oil_has_heavy_sa_components(oil):
-        errors.append('Oil has heavy SA components')
+    if not has_viscosities(imported_rec):
+        errors.append('Imported Record has no viscosity information')
 
-    if not oil_api_matches_density(oil):
-        errors.append('Oil API does not match its density')
+    if not has_distillation_cuts(imported_rec):
+        errors.append('Imported Record has insufficient cut data')
 
-    if errors:
+    if len(errors) > 0:
         raise OilRejected(errors, imported_rec.adios_oil_id)
 
 
-def imported_rec_was_manually_rejected(imported_rec):
+def manually_rejected(imported_rec):
     '''
         This list was initially compiled to try and fix some anomalies
         that were showing up in the oil query form.
@@ -370,6 +370,101 @@ def imported_rec_was_manually_rejected(imported_rec):
     if adios_oil_id in (None,):
         return True
     return False
+
+
+def has_product_type(imported_rec):
+    '''
+        In order to perform estimations, we need to determine if we are
+        dealing with a crude or refined oil product.  We cannot continue
+        if this information is missing.
+    '''
+    if (imported_rec.product_type is not None and
+            imported_rec.product_type.lower() in ('crude', 'refined')):
+        return True
+
+    return False
+
+
+def has_api_or_densities(imported_rec):
+    '''
+        In order to perform estimations, we need to have at least one
+        density measurement.  We cannot continue if this information
+        is missing.
+        This is just a primitive test, so we do not evaluate the quantities,
+        simply that some kind of value exists.
+    '''
+    if imported_rec.api is not None:
+        return True
+    elif len(imported_rec.densities) > 0:
+        return True
+    else:
+        return False
+
+
+def has_viscosities(imported_rec):
+    '''
+        In order to perform estimations, we need to have at least one
+        viscosity measurement.  We cannot continue if this information
+        is missing.
+        This is just a primitive test, so we do not evaluate the quantities,
+        simply that some kind of value exists.
+    '''
+    if len(imported_rec.kvis) > 0:
+        return True
+    elif len(imported_rec.dvis) > 0:
+        return True
+    else:
+        return False
+
+
+def has_distillation_cuts(imported_rec):
+    '''
+        In order to perform estimations on a refined product, we need to have
+        at least three distillation cut measurements.  We cannot continue
+        if this information is missing.
+        For crude oil products, we can estimate cut information from its
+        API value if the cuts don't exist.
+        This is just a primitive test, so we do not evaluate the quantities,
+        simply that some kind of value exists.
+    '''
+    if (imported_rec.product_type is not None and
+            imported_rec.product_type.lower() == 'crude'):
+        if (len(imported_rec.cuts) >= 3 or
+                imported_rec.api is not None):
+            return True  # cuts can be estimated if not present
+        else:
+            return False
+    else:
+        if len(imported_rec.cuts) >= 3:
+            return True
+        else:
+            return False
+
+
+def reject_oil_if_bad(oil):
+    '''
+        Here, we have an oil in which all estimations have been made.
+        We will now check it to see if there are any detectable flaws.
+        If any flaw is detected, we will raise the OilRejected exception.
+        All flaws will be compiled into a list of error messages to be passed
+        into the exception.
+    '''
+    errors = []
+
+    if not oil_has_kvis(oil):
+        errors.append('Oil has no kinematic viscosities')
+
+    if oil_has_duplicate_cuts(oil):
+        errors.append('Oil has duplicate cuts')
+
+    if oil_has_heavy_sa_components(oil):
+        errors.append('Oil has heavy SA components')
+
+    if not oil_api_matches_density(oil):
+        errors.append('Oil API does not match its density')
+
+    if len(errors) > 0:
+        raise OilRejected(errors, oil.adios_oil_id)
 
 
 def oil_has_kvis(oil):

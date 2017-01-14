@@ -115,14 +115,36 @@ class ImportedRecordWithEstimation(object):
     def culled_dvis(self):
         return self.culled_measurement('dvis', ['kg_ms', 'ref_temp_k'])
 
+    def get_densities(self, weathering=0.0):
+        '''
+            return a list of densities for the oil at a specified state
+            of weathering.
+            We include the API as a density if:
+            - the specified weathering is 0
+            - the culled list of densities does not contain a measurement
+              at 15C
+        '''
+        densities = [d for d in self.culled_densities()
+                     if d.weathering == weathering]
+
+        if (weathering == 0.0 and
+                self.record.api is not None and
+                len([d for d in densities if d.ref_temp_k == 288.15]) == 0):
+            kg_m_3, ref_temp_k = est.density_from_api(self.record.api)
+
+            densities.append(Density(kg_m_3=kg_m_3,
+                                     ref_temp_k=ref_temp_k,
+                                     weathering=0.0))
+
+        return sorted(densities, key=lambda d: d.ref_temp_k)
+
     def density_at_temp(self, temperature=288.15, weathering=0.0):
         if hasattr(temperature, '__iter__'):
             # we like to deal with numpy arrays as opposed to simple iterables
             temperature = np.array(temperature)
 
-        density_list = [d for d in self.culled_densities()
-                        if d.weathering == weathering]
-        closest_density = self.closest_to_temperature(density_list,
+        densities = self.get_densities(weathering=weathering)
+        closest_density = self.closest_to_temperature(densities,
                                                       temperature)
 
         if closest_density is not None:
@@ -147,20 +169,29 @@ class ImportedRecordWithEstimation(object):
         else:
             return None
 
-        return est.density_at_temp(d_ref, ref_temp_k, temperature)
+        k_rho_t = self.vol_expansion_coeff(weathering=weathering)
 
-    def get_densities(self, weathering=0.0):
-        densities = [d for d in self.culled_densities()
-                     if d.weathering == weathering]
+        return est.density_at_temp(d_ref, ref_temp_k, temperature, k_rho_t)
 
-        if len(densities) == 0:
-            kg_m_3, ref_temp_k = est.density_from_api(self.record.api)
+    def vol_expansion_coeff(self, weathering=0.0):
+        '''
+            Return the volumetric expansion coefficient of our oil
+            based on its measured densities, or choose an appropriate
+            default if there is not enough information.
+        '''
+        density_values = [(d.kg_m_3, d.ref_temp_k)
+                          for d in self.get_densities(weathering=weathering)]
 
-            densities.append(Density(kg_m_3=kg_m_3,
-                                     ref_temp_k=ref_temp_k,
-                                     weathering=0.0))
+        if len(density_values) >= 2:
+            d_args = [t for d in density_values[:2] for t in d]
+            k_rho_t = est.vol_expansion_coeff(*d_args)
+        else:
+            if self.record.api > 30:
+                k_rho_t = 0.0009
+            else:
+                k_rho_t = 0.0008
 
-        return densities
+        return k_rho_t
 
     def get_api(self):
         if self.record.api is not None:
