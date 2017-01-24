@@ -352,6 +352,9 @@ def reject_imported_record_if_requirements_not_met(imported_rec):
     if not has_distillation_cuts(imported_rec):
         errors.append('Imported Record has insufficient cut data')
 
+    #if has_densities_below_pour_point(imported_rec):
+    #    errors.append('Imported Record has densities below the pour point')
+
     if len(errors) > 0:
         raise OilRejected(errors, imported_rec.adios_oil_id)
 
@@ -439,6 +442,39 @@ def has_distillation_cuts(imported_rec):
             return True
         else:
             return False
+
+
+def has_densities_below_pour_point(imported_rec):
+    '''
+        This may be presumptuous, but I believe the volumetric coefficient
+        that we use for calculating densities at temperature are probably for
+        oils in the liquid phase.  So we would like to check if any
+        densities in our oil fall below the pour point.
+
+        Note: Right now we won't worry about estimating the pour point
+              if the pour point data points don't exist for the record,
+              then we will assume that our densities are probably fine.
+    '''
+    try:
+        pp_max = imported_rec.pour_point_max_k
+        pp_min = imported_rec.pour_point_min_k
+        pour_point = min([pp for pp in (pp_min, pp_max) if pp is not None])
+    except (ValueError, TypeError):
+        pour_point = None
+
+    if pour_point is None:
+        return False
+    else:
+        rho_temps = [d.ref_temp_k for d in imported_rec.densities
+                     if d.ref_temp_k is not None]
+        if imported_rec.api is not None:
+            rho_temps.append(288.15)
+
+        if any([(t < pour_point) for t in rho_temps]):
+            print ('\tadios_id: {}, pour_point: {}, rho_temps: {}, lt: {}'
+                   .format(imported_rec.adios_oil_id, pour_point, rho_temps,
+                           [(t < pour_point) for t in rho_temps]))
+            return True
 
 
 def reject_oil_if_bad(oil):

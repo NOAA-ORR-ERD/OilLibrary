@@ -54,30 +54,90 @@ class ImportedRecordWithEstimation(object):
             return None
 
     @classmethod
-    def closest_to_temperature(cls, obj_list, temperature):
+    def closest_to_temperature(cls, obj_list, temperature, num=1):
         '''
             General Utility Function
 
             From a list of objects containing a ref_temp_k attribute,
-            return the object that is closest to the specified temperature(s)
+            return the object(s) that are closest to the specified
+            temperature(s)
+
+            We accept only a scalar temperature or a sequence of temperatures
         '''
-        temp_diffs = [(obj, abs(obj.ref_temp_k - temperature))
-                      for obj in obj_list
-                      if obj.ref_temp_k is not None]
+        if hasattr(temperature, '__iter__'):
+            # we like to deal with numpy arrays as opposed to simple iterables
+            temperature = np.array(temperature)
 
-        if len(temp_diffs) > 0:
-            try:
-                # treat like numpy array as a default
-                objs, temp_diff_arr = zip(*[td for td in temp_diffs])
-                temp_diff_arr = np.vstack([ta.reshape(-1)
-                                           for ta in temp_diff_arr])
+        # our requested number of objs can have a range [0 ... listsize-1]
+        if num >= len(obj_list):
+            num = len(obj_list) - 1
 
-                return [objs[i] for i in np.argmin(temp_diff_arr, 0)]
-            except (ValueError, AttributeError):
-                # treat like a scalar
-                return sorted(temp_diffs, key=lambda d: d[1])[0][0]
+        temp_diffs = np.array([abs(obj.ref_temp_k - temperature)
+                               for obj in obj_list]).T
+
+        if len(obj_list) <= 1:
+            return obj_list
         else:
-            return None
+            # we probably don't really need this for such a short list,
+            # but we use a numpy 'introselect' partial sort method for speed
+            try:
+                # temp_diffs for sequence of temps
+                closest_idx = np.argpartition(temp_diffs, num)[:, :num]
+            except IndexError:
+                # temp_diffs for single temp
+                closest_idx = np.argpartition(temp_diffs, num)[:num]
+
+            try:
+                # sequence of temperatures result
+                closest = [sorted([obj_list[i] for i in r],
+                                  key=lambda x: x.ref_temp_k)
+                           for r in closest_idx]
+            except TypeError:
+                # single temperature result
+                closest = sorted([obj_list[i] for i in closest_idx],
+                                 key=lambda x: x.ref_temp_k)
+
+            return closest
+
+    @classmethod
+    def bounding_temperatures(cls, obj_list, temperature):
+        '''
+            General Utility Function
+
+            From a list of objects containing a ref_temp_k attribute,
+            return the object(s) that are closest to the specified
+            temperature(s)
+            specifically:
+            - we want the ones that immediately bound our temperature.
+            - if our temperature is high and out of bounds of the temperatures
+              in our obj_list, then we return a range containing only the
+              highest temperature.
+            - if our temperature is low and out of bounds of the temperatures
+              in our obj_list, then we return a range containing only the
+              lowest temperature.
+
+            We accept only a scalar temperature or a sequence of temperatures
+        '''
+        temperature = np.array(temperature)
+
+        if len(obj_list) <= 1:
+            # range where the lowest and highest are basically the same.
+            return [obj_list * 2]
+        else:
+            geq_temps = temperature.reshape(-1, 1) >= [obj.ref_temp_k
+                                                       for obj in obj_list]
+            high_and_oob = np.all(geq_temps, axis=1)
+            low_and_oob = np.all(geq_temps ^ True, axis=1)
+
+            rho_idxs0 = np.argmin(geq_temps, axis=1)
+            rho_idxs0[rho_idxs0 > 0] -= 1
+            rho_idxs0[high_and_oob] = len(obj_list) - 1
+
+            rho_idxs1 = (rho_idxs0 + 1).clip(0, len(obj_list) - 1)
+            rho_idxs1[low_and_oob] = 0
+
+            return zip([obj_list[i] for i in rho_idxs0],
+                       [obj_list[i] for i in rho_idxs1])
 
     def culled_measurement(self, attr_name, non_null_attrs):
         '''
@@ -139,59 +199,111 @@ class ImportedRecordWithEstimation(object):
         return sorted(densities, key=lambda d: d.ref_temp_k)
 
     def density_at_temp(self, temperature=288.15, weathering=0.0):
-        if hasattr(temperature, '__iter__'):
-            # we like to deal with numpy arrays as opposed to simple iterables
-            temperature = np.array(temperature)
+        '''
+            Get the oil density at a temperature or temperatures.
 
+            Note: there is a catch-22 which prevents us from getting
+                  the min_temp in all casees:
+                  - to estimate pour point, we need viscosities
+                  - if we need to convert dynamic viscosities to
+                    kinematic, we need density at 15C
+                  - to estimate density at temp, we need to estimate pour point
+                  - ...and then we recurse
+                  For this case we need to make an exception.
+            Note: If we have a pour point that is higher than one or more
+                  of our reference temperatures, then the lowest reference
+                  temperature will become our minimum temperature.
+        '''
         densities = self.get_densities(weathering=weathering)
-        closest_density = self.closest_to_temperature(densities,
-                                                      temperature)
 
-        if closest_density is not None:
-            try:
-                # treat as a list
-                d_ref, ref_temp_k = zip(*[(d.kg_m_3, d.ref_temp_k)
-                                          for d in closest_density])
-
-                if len(closest_density) > 1:
-                    d_ref, ref_temp_k = (np.array(d_ref)
-                                         .reshape(temperature.shape),
-                                         np.array(ref_temp_k)
-                                         .reshape(temperature.shape))
-                else:
-                    d_ref, ref_temp_k = d_ref[0], ref_temp_k[0]
-            except TypeError:
-                # treat as a scalar
-                d_ref, ref_temp_k = (closest_density.kg_m_3,
-                                     closest_density.ref_temp_k)
-        elif self.record.api is not None:
-            d_ref, ref_temp_k = est.density_from_api(self.record.api)
+        # set the minimum temperature to be the oil's pour point
+        if (self.record.pour_point_min_k is None and
+                self.record.pour_point_max_k is None and
+                hasattr(self.record, 'dvis') and
+                len(self.record.dvis) > 0):
+            min_temp = 0.0  # effectively no restriction
         else:
-            return None
+            min_temp = np.min([d.ref_temp_k for d in densities] +
+                              [pp for pp in self.pour_point()[:2]
+                               if pp is not None])
 
-        k_rho_t = self.vol_expansion_coeff(weathering=weathering)
-
-        return est.density_at_temp(d_ref, ref_temp_k, temperature, k_rho_t)
-
-    def vol_expansion_coeff(self, weathering=0.0):
-        '''
-            Return the volumetric expansion coefficient of our oil
-            based on its measured densities, or choose an appropriate
-            default if there is not enough information.
-        '''
-        density_values = [(d.kg_m_3, d.ref_temp_k)
-                          for d in self.get_densities(weathering=weathering)]
-
-        if len(density_values) >= 2:
-            d_args = [t for d in density_values[:2] for t in d]
-            k_rho_t = est.vol_expansion_coeff(*d_args)
+        if hasattr(temperature, '__iter__'):
+            temperature = np.clip(temperature, min_temp, 1000.0)
         else:
-            if self.record.api > 30:
-                k_rho_t = 0.0009
+            temperature = min_temp if temperature < min_temp else temperature
+
+        ref_density, ref_temp_k = self._get_reference_densities(densities,
+                                                                temperature)
+        k_rho_t = self._vol_expansion_coeff(densities, temperature)
+
+        rho_t = est.density_at_temp(ref_density, ref_temp_k,
+                                    temperature, k_rho_t)
+        if len(rho_t) == 1:
+            return rho_t[0]
+        else:
+            return rho_t
+
+    def _get_reference_densities(self, densities, temperature):
+        '''
+            Given a temperature, we return the best measured density,
+            and its reference temperature, to be used in calculation.
+
+            For our purposes, it is the density closest to the given
+            temperature.
+        '''
+        closest_densities = self.bounding_temperatures(densities, temperature)
+
+        try:
+            # sequence of ranges
+            density_values = np.array([[d.kg_m_3 for d in r]
+                                       for r in closest_densities])
+            ref_temp_values = np.array([[d.ref_temp_k for d in r]
+                                        for r in closest_densities])
+            greater_than = np.all((temperature > ref_temp_values.T).T, axis=1)
+            density_values[greater_than, 0] = density_values[greater_than, 1]
+            ref_temp_values[greater_than, 0] = ref_temp_values[greater_than, 1]
+
+            return density_values[:, 0], ref_temp_values[:, 0]
+        except TypeError:
+            # single range
+            density_values = np.array([d.kg_m_3 for d in closest_densities])
+            ref_temp_values = np.array([d.ref_temp_k
+                                        for d in closest_densities])
+
+            if np.all(temperature > ref_temp_values):
+                return density_values[1], ref_temp_values[1]
             else:
-                k_rho_t = 0.0008
+                return density_values[0], ref_temp_values[0]
 
-        return k_rho_t
+    def _vol_expansion_coeff(self, densities, temperature):
+        closest_densities = self.bounding_temperatures(densities, temperature)
+
+        temperature = np.array(temperature)
+        closest_values = np.array([[(d.kg_m_3, d.ref_temp_k)
+                                    for d in r]
+                                   for r in closest_densities])
+
+        args_list = [[t for d in v for t in d]
+                     for v in closest_values]
+        k_rho_t = np.array([est.vol_expansion_coeff(*args)
+                            for args in args_list])
+
+        greater_than = np.all((temperature > closest_values[:, :, 1].T).T,
+                              axis=1)
+        less_than = np.all((temperature < closest_values[:, :, 1].T).T,
+                           axis=1)
+
+        if self.record.api > 30:
+            k_rho_default = 0.0009
+        else:
+            k_rho_default = 0.0008
+
+        k_rho_t[greater_than | less_than] = k_rho_default
+
+        if k_rho_t.shape[0] == 1:
+            return k_rho_t[0]
+        else:
+            return k_rho_t
 
     def get_api(self):
         if self.record.api is not None:
@@ -261,7 +373,7 @@ class ImportedRecordWithEstimation(object):
 
         kvis_list = [kv for kv in self.aggregate_kvis()[0]
                      if (kv.weathering == weathering)]
-        closest_kvis = self.closest_to_temperature(kvis_list, temp_k)
+        closest_kvis = self.closest_to_temperature(kvis_list, temp_k)[0]
 
         if closest_kvis is not None:
             try:

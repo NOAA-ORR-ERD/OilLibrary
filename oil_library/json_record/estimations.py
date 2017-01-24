@@ -19,6 +19,17 @@ class JsonRecordWithEstimation(ImportedRecordWithEstimation):
         self._default_attrs_with_weathering()
         self._default_inert_attrs()
         self._default_cut_attr()
+        self._default_oil_misc_attrs()
+
+    def _default_oil_misc_attrs(self):
+        '''
+            Just make sure the attributes exist so later processes
+            don't have to guess
+        '''
+        for attrname in ('pour_point_min_k',
+                         'pour_point_max_k'):
+            if not (hasattr(self.record, attrname)):
+                setattr(self.record, attrname, None)
 
     def _default_attrs_with_weathering(self):
         '''
