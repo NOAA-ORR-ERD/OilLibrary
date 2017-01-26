@@ -137,6 +137,7 @@ def generate_oil(imported_rec):
     add_metals(imp_rec_obj, oil)
     add_aggregate_volatile_fractions(oil)
     add_misc_fractions(imp_rec_obj, oil)
+    add_product_type(imp_rec_obj, oil)
     add_k0y(imp_rec_obj, oil)
 
     oil.quality_index = imp_rec_obj.score()
@@ -313,6 +314,10 @@ def add_misc_fractions(imp_rec_obj, oil):
     oil.benzene_fraction = imp_rec_obj.record.benzene
     oil.paraffins_fraction = imp_rec_obj.record.paraffins
     oil.wax_content_fraction = imp_rec_obj.record.wax_content
+
+
+def add_product_type(imp_rec_obj, oil):
+    oil.product_type = imp_rec_obj.record.product_type
 
 
 def add_k0y(imp_rec_obj, oil):

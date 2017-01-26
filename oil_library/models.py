@@ -429,10 +429,11 @@ class Oil(Base):
     pour_point_max_k = Column(Float(53))
     flash_point_min_k = Column(Float(53))
     flash_point_max_k = Column(Float(53))
-    emulsion_water_fraction_max = Column(Float(53))
+    adhesion_kg_m_2 = Column(Float(53))
     bullwinkle_time = Column(Float(53))
     bullwinkle_fraction = Column(Float(53))
-    adhesion_kg_m_2 = Column(Float(53))
+    emulsion_water_fraction_max = Column(Float(53))
+    product_type = Column(String(16))
     solubility = Column(Float(53))
     k0y = Column(Float(53))
 
