@@ -214,6 +214,7 @@ class ImportedRecordWithEstimation(object):
                   of our reference temperatures, then the lowest reference
                   temperature will become our minimum temperature.
         '''
+        shape = None
         densities = self.get_densities(weathering=weathering)
 
         # set the minimum temperature to be the oil's pour point
@@ -229,6 +230,8 @@ class ImportedRecordWithEstimation(object):
 
         if hasattr(temperature, '__iter__'):
             temperature = np.clip(temperature, min_temp, 1000.0)
+            shape = temperature.shape
+            temperature = temperature.reshape(-1)
         else:
             temperature = min_temp if temperature < min_temp else temperature
 
@@ -240,6 +243,8 @@ class ImportedRecordWithEstimation(object):
                                     temperature, k_rho_t)
         if len(rho_t) == 1:
             return rho_t[0]
+        elif shape is not None:
+            return rho_t.reshape(shape)
         else:
             return rho_t
 
@@ -367,18 +372,21 @@ class ImportedRecordWithEstimation(object):
         return kvis_out, estimated
 
     def kvis_at_temp(self, temp_k=288.15, weathering=0.0):
+        shape = None
         if hasattr(temp_k, '__iter__'):
             # we like to deal with numpy arrays as opposed to simple iterables
             temp_k = np.array(temp_k)
+            shape = temp_k.shape
+            temp_k = temp_k.reshape(-1)
 
         kvis_list = [kv for kv in self.aggregate_kvis()[0]
                      if (kv.weathering == weathering)]
-        closest_kvis = self.closest_to_temperature(kvis_list, temp_k)[0]
+        closest_kvis = self.closest_to_temperature(kvis_list, temp_k)
 
         if closest_kvis is not None:
             try:
                 # treat as a list
-                ref_kvis, ref_temp_k = zip(*[(kv.m_2_s, kv.ref_temp_k)
+                ref_kvis, ref_temp_k = zip(*[(kv[0].m_2_s, kv[0].ref_temp_k)
                                              for kv in closest_kvis])
                 if len(closest_kvis) > 1:
                     ref_kvis = np.array(ref_kvis).reshape(temp_k.shape)
@@ -387,12 +395,17 @@ class ImportedRecordWithEstimation(object):
                     ref_kvis, ref_temp_k = ref_kvis[0], ref_temp_k[0]
             except TypeError:
                 # treat as a scalar
-                ref_kvis, ref_temp_k = (closest_kvis.m_2_s,
-                                        closest_kvis.ref_temp_k)
+                ref_kvis, ref_temp_k = (closest_kvis[0].m_2_s,
+                                        closest_kvis[0].ref_temp_k)
         else:
             return None
 
-        return est.kvis_at_temp(ref_kvis, ref_temp_k, temp_k)
+        kvis_t = est.kvis_at_temp(ref_kvis, ref_temp_k, temp_k)
+
+        if shape is not None:
+            return kvis_t.reshape(shape)
+        else:
+            return kvis_t
 
     #
     # Oil Distillation Fractional Properties
