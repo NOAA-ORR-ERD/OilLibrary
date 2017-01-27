@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import os
-import glob
+import fnmatch
 import shutil
 from subprocess import call
 
@@ -17,7 +17,12 @@ pkg_version = '0.0.10'
 
 def clean_files(del_db=False):
     src = os.path.join(here, r'oil_library')
-    to_rm = glob.glob(os.path.join(src, r'*.pyc'))
+
+    to_rm = []
+    for root, _dirnames, filenames in os.walk(src):
+        for filename in fnmatch.filter(filenames, '*.pyc'):
+            to_rm.append(os.path.join(root, filename))
+
     to_rm.extend([os.path.join(here, '{0}.egg-info'.format(pkg_name)),
                   os.path.join(here, 'build'),
                   os.path.join(here, 'dist')])
