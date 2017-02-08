@@ -397,6 +397,11 @@ class Estimated(Base):
     cuts = Column(Boolean, default=False)
     molecular_weights = Column(Boolean, default=True)
 
+    saturates_fraction = Column(Boolean, default=True)
+    aromatics_fraction = Column(Boolean, default=True)
+    resins_fraction = Column(Boolean, default=True)
+    asphaltenes_fraction = Column(Boolean, default=True)
+
     # relationship fields
     oil = relationship('Oil', backref='estimated', uselist=False)
 

@@ -164,7 +164,7 @@ def _add_kvis_from_dvis(oil_obj, oil_json):
 
 
 def _add_inert_fractions(oil_obj, oil_json):
-    f_res, f_asph = oil_json.inert_fractions()
+    f_res, f_asph, estimated = oil_json.inert_fractions()
 
     if oil_obj.record.resins_fraction is None:
         oil_obj.record.resins_fraction = f_res

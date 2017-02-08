@@ -176,9 +176,12 @@ def add_inert_fractions(imp_rec_obj, oil):
         Add the resin and asphaltene fractions to our oil
         This does not include the component resins & asphaltenes
     '''
-    f_res, f_asph = imp_rec_obj.inert_fractions()
+    f_res, f_asph, estimated = imp_rec_obj.inert_fractions()
 
     oil.resins_fraction, oil.asphaltenes_fraction = f_res, f_asph
+
+    oil.estimated.resins_fraction = estimated
+    oil.estimated.asphaltenes_fraction = estimated
 
 
 def add_distillation_cuts(imp_rec_obj, oil):
