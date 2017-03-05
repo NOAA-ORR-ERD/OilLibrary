@@ -279,7 +279,10 @@ def add_max_water_fraction_of_emulsion(imp_rec_obj, oil):
 
 
 def add_bullwinkle_fractions(imp_rec_obj, oil):
-    oil.bullwinkle_fraction = imp_rec_obj.bullwinkle_fraction()
+    bull_frac, estimated = imp_rec_obj.bullwinkle_fraction()
+
+    oil.bullwinkle_fraction = bull_frac
+    oil.estimated.bullwinkle_fraction = estimated
 
 
 def add_solubility(imp_rec_obj, oil):
@@ -287,7 +290,10 @@ def add_solubility(imp_rec_obj, oil):
 
 
 def add_adhesion(imp_rec_obj, oil):
-    oil.adhesion = imp_rec_obj.adhesion()
+    omega_a, estimated = imp_rec_obj.adhesion()
+
+    oil.adhesion_kg_m_2 = omega_a
+    oil.estimated.adhesion_kg_m_2 = estimated
 
 
 def add_sulphur_mass_fraction(imp_rec_obj, oil):

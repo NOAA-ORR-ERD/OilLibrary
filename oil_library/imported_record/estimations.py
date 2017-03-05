@@ -750,8 +750,11 @@ class ImportedRecordWithEstimation(object):
             - For right now we are referencing the Adios2 code file
               OilInitialize.cpp, function CAdiosData::Bullwinkle(void)
         '''
+        estimated = False
+
         if self.record.product_type == "Refined":
             bullwinkle_fraction = 1.0
+            estimated = True
         elif self.record.emuls_constant_max is not None:
             bullwinkle_fraction = self.record.emuls_constant_max
         else:
@@ -781,8 +784,9 @@ class ImportedRecordWithEstimation(object):
                                        0.78935 * np.log10(1.0 / oil_api))
 
             bullwinkle_fraction = self._adios2_new_bull_calc(bullwinkle_fraction)
+            estimated = True
 
-        return bullwinkle_fraction
+        return bullwinkle_fraction, estimated
 
     def _adios2_new_bull_calc(self, bullwinkle_fraction):
         '''
@@ -820,10 +824,14 @@ class ImportedRecordWithEstimation(object):
         return 0.0
 
     def adhesion(self):
+        estimated = False
         if self.record.adhesion is not None:
-            return self.record.adhesion
+            omega_a = self.record.adhesion
         else:
-            return 0.035
+            omega_a = 0.035
+            estimated = True
+
+        return omega_a, estimated
 
     def sulphur_fraction(self):
         if self.record.sulphur is not None:
