@@ -7,7 +7,8 @@ from sqlalchemy import (Table,
                         Float,
                         Boolean,
                         Enum,
-                        ForeignKey)
+                        ForeignKey,
+                        UniqueConstraint)
 
 from sqlalchemy.ext.declarative import declarative_base as real_declarative_base
 from sqlalchemy.ext.hybrid import hybrid_property
@@ -132,9 +133,12 @@ class ImportedRecord(Base):
         dimensional tabular format.
     '''
     __tablename__ = 'imported_records'
+    __table_args__ = (UniqueConstraint('oil_name', 'location', 'field_name'),
+                      )
+
     id = Column(Integer, primary_key=True)
 
-    oil_name = Column(String(100), unique=True, nullable=False)
+    oil_name = Column(String(100), nullable=False)
     adios_oil_id = Column(String(16), unique=True, nullable=False)
 
     custom = Column(Boolean, default=False)
@@ -423,7 +427,7 @@ class Oil(Base):
     imported_record_id = Column(Integer, ForeignKey('imported_records.id'))
     estimated_id = Column(Integer, ForeignKey('estimated.id'))
 
-    name = Column(String(100), unique=True, nullable=False)
+    name = Column(String(100), nullable=False)
     adios_oil_id = Column(String(16))
     api = Column(Float(53))
     oil_water_interfacial_tension_n_m = Column(Float(53))
