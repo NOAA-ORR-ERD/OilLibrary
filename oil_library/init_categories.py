@@ -390,8 +390,8 @@ def link_generic_oils(session):
         - Other->Generic
         Criteria:
         - Any oils that have been generically generated.  These are found
-          in the OilLibTest data file.  For now, this needs to be a
-          hard-coded list.
+          in the OilLibTest data file.  Basically these oils have a name
+          that is prefixed with '*GENERIC'.
     '''
     try:
         top_category = (session.query(Category)
@@ -403,31 +403,23 @@ def link_generic_oils(session):
         return
 
     categories = [c for c in top_category.children
-                  if c.name in ('Generic',)
-                  ]
+                  if c.name in ('Generic',)]
+
     if len(categories) == 0:
         logger.warning('Category "Other->Generic" not found!!')
         return
 
-    oil_id_list = ['AD02542', 'AD02543', 'AD02544', 'AD02545',
-                   'AD02546', 'AD02547', 'AD02549', 'AD02550',
-                   'AD02551', 'AD02552', 'AD02553', 'AD02554',
-                   'AD02555', 'AD02556', 'AD02557', 'AD02558',
-                   'AD02559', 'AD02560', 'AD02561', 'AD02562',
-                   'AD02563', 'AD02564', 'AD02565', 'AD02566',
-                   'AD02567']
+    oils = session.query(Oil).filter(Oil.name.like('*GENERIC%')).all()
 
-    for oil_id in oil_id_list:
-        try:
-            oil = session.query(Oil).filter(Oil.adios_oil_id == oil_id).one()
+    count = 0
+    for o in oils:
+        for category in categories:
+            o.categories.append(category)
 
-            for category in categories:
-                    oil.categories.append(category)
+        count += 1
 
-            logger.info('Generic oil {0} added to categories {1}.'
-                        .format(oil_id, [n.name for n in categories]))
-        except NoResultFound:
-            logger.warning('Generic oil {0} not found.'.format(oil_id, ))
+    logger.info('{0} oils added to {1}.'
+                .format(count, [n.name for n in categories]))
 
     transaction.commit()
 

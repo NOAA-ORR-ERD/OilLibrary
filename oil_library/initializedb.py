@@ -38,9 +38,9 @@ def load_database(settings):
         logger.info('Purging old records in database')
         imported_recs_purged, oil_recs_purged = purge_old_records(session)
         logger.info('finished!!!\n'
-                     '    {0} imported records purged.\n'
-                     '    {0} oil records purged.'
-                     .format(imported_recs_purged, oil_recs_purged))
+                    '    {0} imported records purged.\n'
+                    '    {0} oil records purged.'
+                    .format(imported_recs_purged, oil_recs_purged))
 
         for fn in settings['oillib.files'].split('\n'):
             logger.info('opening file: {0} ...'.format(fn))
@@ -87,7 +87,9 @@ def make_db(oillib_files=None, db_file=None):
 
     if not oillib_files:
         oillib_files = '\n'.join([os.path.join(pck_loc, fn)
-                                  for fn in ('OilLib', 'OilLibTest')])
+                                  for fn in ('OilLib',
+                                             'OilLibTest',
+                                             'OilLibNorway')])
 
     sqlalchemy_url = 'sqlite:///{0}'.format(db_file)
     settings = {'sqlalchemy.url': sqlalchemy_url,

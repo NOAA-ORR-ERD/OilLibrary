@@ -250,7 +250,7 @@ def get_application_name(file_obj):
 
 
 def get_chosen_app_name():
-    apps = ['adios', 'adios test records']
+    apps = ['adios', 'adios test records', 'adios norway imports']
     app_num = -1
 
     while app_num == -1:
