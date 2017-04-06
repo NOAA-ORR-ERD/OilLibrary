@@ -436,18 +436,21 @@ def has_viscosities(imported_rec):
 
 def has_distillation_cuts(imported_rec):
     '''
-        In order to perform estimations on a refined product, we need to have
-        at least three distillation cut measurements.  We cannot continue
-        if this information is missing.
-        For crude oil products, we can estimate cut information from its
-        API value if the cuts don't exist.
-        This is just a primitive test, so we do not evaluate the quantities,
-        simply that some kind of value exists.
+        - In order to perform estimations on a refined product, we need to have
+          at least three distillation cut measurements.  We cannot continue
+          if this information is missing.
+        - For crude oil products, we can estimate cut information from its
+          API value if the cuts don't exist.
+        - If we have no cuts and no API, we can still estimate cuts by
+          converting density to API, and then API to cuts.
+        - This is just a primitive test, so we do not evaluate the quantities,
+          simply that some kind of value exists.
     '''
     if (imported_rec.product_type is not None and
             imported_rec.product_type.lower() == 'crude'):
         if (len(imported_rec.cuts) >= 3 or
-                imported_rec.api is not None):
+                imported_rec.api is not None or
+                len(imported_rec.densities) > 0):
             return True  # cuts can be estimated if not present
         else:
             return False
