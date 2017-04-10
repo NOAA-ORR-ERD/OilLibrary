@@ -84,7 +84,7 @@ except ImportError:
 logging.getLogger(__name__).addHandler(NullHandler())
 
 
-from .factory import get_oil, get_oil_props
+from .factory import get_oil, get_oil_props, get_oil_by_id
 
 _sample_oils.update({k: get_oil(v, max_cuts=2)
                      for k, v in sample_oils._sample_oils.iteritems()})

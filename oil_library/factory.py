@@ -1,9 +1,10 @@
 '''
-    Factory methods for getting an oil object
+Factory methods for getting an oil object
 '''
+
 import numpy as np
 
-from sqlalchemy.orm.exc import NoResultFound
+from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 
 from . import _get_db_session
 from . import _sample_oils
@@ -25,6 +26,31 @@ def get_oil_props(oil_info, max_cuts=None):
     '''
     oil_ = get_oil(oil_info, max_cuts)
     return OilProps(oil_)
+
+
+def get_oil_by_id(adios_id):
+    """
+    Function returns an oil object that corresponds to the ADIOS ID given
+
+    ADIOS IDS are unique identifyiers, usualy of the form: "ADxxxxx"
+
+    :param adios_id: ADIOS id you want
+    :type adios_id: string
+    """
+    # normalize the ID:
+    adios_id = adios_id.strip().upper()
+
+    session = _get_db_session()
+
+    try:
+        oil = session.query(Oil).filter(Oil.adios_oil_id == adios_id).one()
+        return oil
+    except NoResultFound as ex:
+        ex.message = ("oil with adios_id '{0}', not found in database.  "
+                      "{1}".format(adios_id, ex.message))
+        ex.args = (ex.message, )
+        raise ex
+
 
 
 def get_oil(oil_, max_cuts=None):
@@ -60,14 +86,13 @@ def get_oil(oil_, max_cuts=None):
     if oil_ in _sample_oils.keys():
         return _sample_oils[oil_]
     else:
-        '''
-        db_file should exist - if it doesn't then create if first
-        should we raise error here?
-        '''
         session = _get_db_session()
 
+        # see if this is an ADIOS ID:
+        # normalize the ID:
+        adios_id = oil_.strip().upper()
         try:
-            oil = session.query(Oil).filter(Oil.name == oil_).one()
+            oil = session.query(Oil).filter(Oil.adios_oil_id == adios_id).one()
             oil.densities
             oil.kvis
             oil.cuts
@@ -75,11 +100,38 @@ def get_oil(oil_, max_cuts=None):
             oil.sara_densities
             oil.molecular_weights
             return oil
-        except NoResultFound, ex:
-            ex.message = ("oil with name '{0}', not found in database.  "
-                          "{1}".format(oil_, ex.message))
-            ex.args = (ex.message, )
-            raise ex
+        except NoResultFound: # not an ADIOS ID
+            pass
+
+        results = session.query(Oil).filter(Oil.name == oil_)
+        if len(results.all()) > 1:
+            ids = " ".join([oil.adios_oil_id for oil in results])
+            msg = ("multiple oils with name: {0} found. They have ADIOS IDs: {1}."
+                   "You may want to query them with `get_oil_by_id`".format(oil_, ids))
+            raise MultipleResultsFound(msg)
+        elif len(results.all() == 0):
+            raise NoResultFound("oil with name '{0}', not found in database.".format(oil_))
+        else:
+            try:
+                oil = results.one()
+                oil.densities
+                oil.kvis
+                oil.cuts
+                oil.sara_fractions
+                oil.sara_densities
+                oil.molecular_weights
+                return oil
+            ## fixme: these Exceptions should never happen with the checks above...
+            except MultipleResultsFound as ex:
+                ex.message = ("oil name '{0}' is duplicated in the database. "
+                              "{1}".format(oil_, ex.message))
+                ex.args = (ex.message, )
+                raise ex
+            except NoResultFound as ex:
+                ex.message = ("oil with name '{0}', not found in database.  "
+                              "{1}".format(oil_, ex.message))
+                ex.args = (ex.message, )
+                raise ex
 
 
 def prune_db_ids(oil_):
