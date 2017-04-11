@@ -1,6 +1,7 @@
 '''
 Tests for oil_props module in gnome.db.oil_library
 '''
+
 import copy
 
 import numpy as np
@@ -33,9 +34,25 @@ def test_get_oil(search, isNone):
         if isinstance(search, basestring):
             assert o.name == search
 
+@pytest.mark.parametrize(("adios_id", "name"),
+                         [("AD00051", "ARABIAN LIGHT"),
+                          (" ad00051   ", "ARABIAN LIGHT"),
+                          ("A02434", None),
+                          ("Jibberish", None),
+                          ])
+def test_get_oil_id(adios_id, name):
+    if name is None: # shouldn't be found
+        with raises(NoResultFound):
+            o = get_oil(adios_id)
+    else:
+        o = get_oil(adios_id)
+        assert o.name == name
+        assert o.adios_oil_id == adios_id.strip().upper()
+
+
 
 # Record number 51: "AUTOMOTIVE GASOLINE, EXXON" is found in database
-# but mass fractions do not sum upto one so valid OilProps object not created.
+# but mass fractions do not sum up to one so valid OilProps object not created.
 # In this case return None
 @pytest.mark.parametrize(("search", "isNone"),
                          [('LUCKENBACH FUEL OIL', False), (51, True)])
@@ -80,8 +97,8 @@ def test_OilProps_DBquery(oil, api):
 
 class TestProperties:
     op = get_oil_props(u'ALASKA NORTH SLOPE (MIDDLE PIPELINE)')
-    s_comp = sorted(op.record.sara_fractions, key=lambda s: s.ref_temp_k)
 
+    s_comp = sorted(op.record.sara_fractions, key=lambda s: s.ref_temp_k)
     s_dens = sorted(op.record.sara_densities, key=lambda s: s.ref_temp_k)
 
     # only keep density records + sara_fractions which fraction > 0.

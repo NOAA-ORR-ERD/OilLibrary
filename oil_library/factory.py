@@ -27,32 +27,6 @@ def get_oil_props(oil_info, max_cuts=None):
     oil_ = get_oil(oil_info, max_cuts)
     return OilProps(oil_)
 
-
-def get_oil_by_id(adios_id):
-    """
-    Function returns an oil object that corresponds to the ADIOS ID given
-
-    ADIOS IDS are unique identifyiers, usualy of the form: "ADxxxxx"
-
-    :param adios_id: ADIOS id you want
-    :type adios_id: string
-    """
-    # normalize the ID:
-    adios_id = adios_id.strip().upper()
-
-    session = _get_db_session()
-
-    try:
-        oil = session.query(Oil).filter(Oil.adios_oil_id == adios_id).one()
-        return oil
-    except NoResultFound as ex:
-        ex.message = ("oil with adios_id '{0}', not found in database.  "
-                      "{1}".format(adios_id, ex.message))
-        ex.args = (ex.message, )
-        raise ex
-
-
-
 def get_oil(oil_, max_cuts=None):
     """
     function returns the Oil object given the name of the oil as a string.
@@ -62,6 +36,7 @@ def get_oil(oil_, max_cuts=None):
                    a JSON payload sufficient for creating an Oil object.
                  - If it is one of the names stored in _sample_oil dict,
                    then an Oil object with specified API is returned.
+                 - If it is Adios ID ("AD00000") return the corresponding Oil object
                  - Otherwise, query the database for the oil_name and return
                    the associated Oil object.
     :type oil_: str or dict
@@ -88,38 +63,29 @@ def get_oil(oil_, max_cuts=None):
     else:
         session = _get_db_session()
 
-        # see if this is an ADIOS ID:
-        # normalize the ID:
-        adios_id = oil_.strip().upper()
         try:
+            # see if this is an ADIOS ID:
+            # normalize the ID:
+            adios_id = oil_.strip().upper()
             oil = session.query(Oil).filter(Oil.adios_oil_id == adios_id).one()
-            oil.densities
-            oil.kvis
-            oil.cuts
-            oil.sara_fractions
-            oil.sara_densities
-            oil.molecular_weights
+            # this forces pre-loading of these attributes
+            oil.preload_core_attributes()
             return oil
-        except NoResultFound: # not an ADIOS ID
-            pass
+        except (AttributeError, NoResultFound): # not an ADIOS ID
+            pass # just move on...
 
         results = session.query(Oil).filter(Oil.name == oil_)
         if len(results.all()) > 1:
             ids = " ".join([oil.adios_oil_id for oil in results])
             msg = ("multiple oils with name: {0} found. They have ADIOS IDs: {1}."
-                   "You may want to query them with `get_oil_by_id`".format(oil_, ids))
+                   "You may want to query them with the ADIOS ID instead".format(oil_, ids))
             raise MultipleResultsFound(msg)
-        elif len(results.all() == 0):
+        elif len(results.all()) == 0:
             raise NoResultFound("oil with name '{0}', not found in database.".format(oil_))
         else:
             try:
                 oil = results.one()
-                oil.densities
-                oil.kvis
-                oil.cuts
-                oil.sara_fractions
-                oil.sara_densities
-                oil.molecular_weights
+                oil.preload_core_attributes()
                 return oil
             ## fixme: these Exceptions should never happen with the checks above...
             except MultipleResultsFound as ex:

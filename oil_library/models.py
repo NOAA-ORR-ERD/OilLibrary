@@ -538,6 +538,17 @@ class Oil(Base):
 
         return None
 
+    def preload_core_attributes(self):
+        """
+        preloads the core attributes for more efficient access later
+        """
+        self.densities
+        self.kvis
+        self.cuts
+        self.sara_fractions
+        self.sara_densities
+        self.molecular_weights
+
     def __repr__(self):
         return '<Oil("{0.name}")>'.format(self)
 
