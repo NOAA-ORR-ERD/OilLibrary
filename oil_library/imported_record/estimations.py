@@ -248,6 +248,14 @@ class ImportedRecordWithEstimation(object):
         else:
             return rho_t
 
+    @property
+    def standard_density(self):
+        '''
+            Standard density is simply the density at 15C, which is the
+            default temperature for density_at_temp()
+        '''
+        return self.density_at_temp()
+
     def _get_reference_densities(self, densities, temperature):
         '''
             Given a temperature, we return the best measured density,
@@ -448,7 +456,7 @@ class ImportedRecordWithEstimation(object):
             yield c
 
     def normalized_cut_values(self, N=10):
-        f_res, f_asph, estimated = self.inert_fractions()
+        f_res, f_asph, _estimated = self.inert_fractions()
         cuts = list(self.culled_cuts())
 
         if len(cuts) == 0:
@@ -542,7 +550,7 @@ class ImportedRecordWithEstimation(object):
         return est.specific_gravity(rho_list)
 
     def component_mass_fractions(self):
-        f_res, f_asph, estimated = self.inert_fractions()
+        f_res, f_asph, _estimated = self.inert_fractions()
         cut_temps, fmass_i = self.get_cut_temps_fmasses()
 
         f_sat_i = fmass_i / 2.0
@@ -609,15 +617,15 @@ class ImportedRecordWithEstimation(object):
         f_sat_i = est.saturate_mass_fraction(fmass_i, M_w_avg_i, SG_avg_i, T_i)
         f_arom_i = fmass_i - f_sat_i
 
-        # Note:   Riazi states that eqs. 3.77 and 3.78 only work with
-        #         molecular weights less than 200. In those cases,
-        #         Chris would like to use the last fraction in which
-        #         the molecular weight was less than 200 instead
-        #         of just guessing 50/50
-        # TODO:   In the future we might be able to figure out how
-        #         to implement CPPF eqs. 3.81 and 3.82, which take
-        #         care of cases where molecular weight is greater
-        #         than 200.
+        # Note: Riazi states that eqs. 3.77 and 3.78 only work with
+        #       molecular weights less than 200. In those cases,
+        #       Chris would like to use the last fraction in which the
+        #       molecular weight was less than 200 instead of just guessing
+        #       50/50
+        # TODO: In the future we might be able to figure out how
+        #       to implement CPPF eqs. 3.81 and 3.82, which take
+        #       care of cases where molecular weight is greater
+        #       than 200.
         above_200 = M_w_avg_i > 200.0
         try:
             if np.any(above_200):
@@ -732,7 +740,7 @@ class ImportedRecordWithEstimation(object):
             OilInitialize.cpp contains steps that are missing here and in the
             document.
         '''
-        _f_res, f_asph, estimated = self.inert_fractions()
+        _f_res, f_asph, _estimated = self.inert_fractions()
 
         if f_asph > 0.0:
             return est.bullwinkle_fraction_from_asph(f_asph)

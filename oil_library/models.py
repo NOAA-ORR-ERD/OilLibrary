@@ -538,9 +538,10 @@ class Oil(Base):
 
         return None
 
-    def preload_core_attributes(self):
+    def preload_linked_attributes(self):
         """
-        preloads the core attributes for more efficient access later
+            SQLAlchemy lazy-loads any linked database objects on an
+            as-requested basis.  So this allows us to optionally preload them.
         """
         self.densities
         self.kvis

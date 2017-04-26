@@ -27,6 +27,7 @@ def get_oil_props(oil_info, max_cuts=None):
     oil_ = get_oil(oil_info, max_cuts)
     return OilProps(oil_)
 
+
 def get_oil(oil_, max_cuts=None):
     """
     function returns the Oil object given the name of the oil as a string.
@@ -36,7 +37,8 @@ def get_oil(oil_, max_cuts=None):
                    a JSON payload sufficient for creating an Oil object.
                  - If it is one of the names stored in _sample_oil dict,
                    then an Oil object with specified API is returned.
-                 - If it is Adios ID ("AD00000") return the corresponding Oil object
+                 - If it is Adios ID ("AD00000") return the corresponding
+                   Oil object
                  - Otherwise, query the database for the oil_name and return
                    the associated Oil object.
     :type oil_: str or dict
@@ -69,33 +71,37 @@ def get_oil(oil_, max_cuts=None):
             adios_id = oil_.strip().upper()
             oil = session.query(Oil).filter(Oil.adios_oil_id == adios_id).one()
             # this forces pre-loading of these attributes
-            oil.preload_core_attributes()
+            oil.preload_linked_attributes()
             return oil
-        except (AttributeError, NoResultFound): # not an ADIOS ID
-            pass # just move on...
+        except (AttributeError, NoResultFound):  # not an ADIOS ID
+            pass  # just move on...
 
         results = session.query(Oil).filter(Oil.name == oil_)
         if len(results.all()) > 1:
             ids = " ".join([oil.adios_oil_id for oil in results])
-            msg = ("multiple oils with name: {0} found. They have ADIOS IDs: {1}."
-                   "You may want to query them with the ADIOS ID instead".format(oil_, ids))
+            msg = ('multiple oils with name: {0} found. '
+                   'They have ADIOS IDs: {1}.'
+                   'You may want to query them with the ADIOS ID instead'
+                   .format(oil_, ids))
             raise MultipleResultsFound(msg)
         elif len(results.all()) == 0:
-            raise NoResultFound("oil with name '{0}', not found in database.".format(oil_))
+            raise NoResultFound('oil with name "{0}", not found in database.'
+                                .format(oil_))
         else:
             try:
                 oil = results.one()
-                oil.preload_core_attributes()
+                oil.preload_linked_attributes()
                 return oil
-            ## fixme: these Exceptions should never happen with the checks above...
+            # fixme: these Exceptions should never happen with the checks
+            #        above...
             except MultipleResultsFound as ex:
-                ex.message = ("oil name '{0}' is duplicated in the database. "
-                              "{1}".format(oil_, ex.message))
+                ex.message = ('oil name "{0}" is duplicated in the database. '
+                              '{1}'.format(oil_, ex.message))
                 ex.args = (ex.message, )
                 raise ex
             except NoResultFound as ex:
-                ex.message = ("oil with name '{0}', not found in database.  "
-                              "{1}".format(oil_, ex.message))
+                ex.message = ('oil with name "{0}", not found in database.  '
+                              '{1}'.format(oil_, ex.message))
                 ex.args = (ex.message, )
                 raise ex
 
@@ -182,7 +188,7 @@ def _add_kvis_from_dvis(oil_obj, oil_json):
 
 
 def _add_inert_fractions(oil_obj, oil_json):
-    f_res, f_asph, estimated = oil_json.inert_fractions()
+    f_res, f_asph, _estimated = oil_json.inert_fractions()
 
     if oil_obj.record.resins_fraction is None:
         oil_obj.record.resins_fraction = f_res
