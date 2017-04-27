@@ -578,7 +578,7 @@ def oil_api_matches_density(oil):
     d_0 = oil_estimations.density_at_temp(273.15 + 15)
     api = api_from_density(d_0)
 
-    if np.isclose(oil.api, api, atol=1.0):
+    if np.isclose(oil.api, api, rtol=0.05):
         return True
 
     logger.info('(oil.api, api_from_density) = ({}, {})'
