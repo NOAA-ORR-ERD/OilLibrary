@@ -189,7 +189,8 @@ class ImportedRecordWithEstimation(object):
 
         if (weathering == 0.0 and
                 self.record.api is not None and
-                len([d for d in densities if d.ref_temp_k == 288.15]) == 0):
+                len([d for d in densities
+                     if np.isclose(d.ref_temp_k, 288.0, atol=1.0)]) == 0):
             kg_m_3, ref_temp_k = est.density_from_api(self.record.api)
 
             densities.append(Density(kg_m_3=kg_m_3,
