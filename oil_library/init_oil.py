@@ -581,6 +581,6 @@ def oil_api_matches_density(oil):
     if np.isclose(oil.api, api, rtol=0.05):
         return True
 
-    logger.info('(oil.api, api_from_density) = ({}, {})'
-                .format(oil.api, api))
+    logger.info('(oil.api, api_from_density) = ({}, {}), rtol={:0.3f}'
+                .format(oil.api, api, np.abs(oil.api - api) / np.abs(api)))
     return False
