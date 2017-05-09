@@ -233,7 +233,7 @@ def link_refined_fuel_oil_2(session):
        - Heating Oil
        - No. 2 Distillate
        Density Criteria:
-       - 30 <= API < 35
+       - 30 <= API < 39
        Kinematic Viscosity Criteria:
        - 2.5 < v <= 4.0 cSt @ 38 degrees Celcius
     '''
@@ -247,7 +247,7 @@ def link_refined_fuel_oil_2(session):
                   ]
 
     oils = get_oils_by_api(session, 'Refined',
-                           api_min=30.0, api_max=35.0)
+                           api_min=30.0, api_max=39.0)
 
     count = 0
     category_temp = 273.15 + 38

@@ -6,6 +6,7 @@ from pkg_resources import get_distribution
 
 from sqlalchemy import create_engine
 from sqlalchemy.exc import UnboundExecutionError
+from sqlalchemy.orm.exc import NoResultFound # so we can catch it up higher.
 
 from .models import DBSession
 
