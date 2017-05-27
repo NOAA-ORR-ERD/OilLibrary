@@ -17,20 +17,23 @@
     and the viscosity at a given temperature, usually at 38 C(100F).
     The criteria follows closely, but not identically, to the ASTM standards
 '''
+import sys
 import logging
 
 import transaction
-from sqlalchemy.orm.exc import NoResultFound
+from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
+from slugify import slugify_filename
 
 import unit_conversion as uc
 
 from .models import Oil, ImportedRecord, Category
 from .oil.estimations import OilWithEstimation
+from .oil_library_parse import OilLibraryFile
 
 logger = logging.getLogger(__name__)
 
 
-def process_categories(session):
+def process_categories(session, settings):
     logger.info('Purging Categories...')
     num_purged = clear_categories(session)
 
@@ -47,7 +50,7 @@ def process_categories(session):
         for item in list_categories(c):
             logger.info(item)
 
-    link_oils_to_categories(session)
+    link_oils_to_categories(session, settings)
 
 
 def clear_categories(session):
@@ -105,7 +108,7 @@ def list_categories(category, indent=0):
             yield y
 
 
-def link_oils_to_categories(session):
+def link_oils_to_categories(session, settings):
     # now we try to link the oil records with our categories
     # in some kind of automated fashion
     link_crude_light_oils(session)
@@ -119,6 +122,8 @@ def link_oils_to_categories(session):
 
     link_generic_oils(session)
     link_all_other_oils(session)
+
+    manually_recategorize_oils(session, settings)
 
     show_uncategorized_oils(session)
 
@@ -179,6 +184,25 @@ def link_crude_heavy_oils(session):
     logger.info('{0} oils added to {1} -> {2}.'
                 .format(count, top_category.name, category.name))
     transaction.commit()
+
+
+def link_refined_light_products(session):
+    '''
+       Category Name:
+       - Light Products
+       Parent:
+       - Refined
+       Sample Oils:
+       - Cooper Basin Light Naphtha
+       - kerosene
+       - JP-4
+       - avgas
+       Density Criteria:
+       - API >= 35
+       Kinematic Viscosity Criteria:
+       - v > 0.0 cSt @ 38 degrees Celcius
+    '''
+    raise NotImplementedError
 
 
 def link_refined_fuel_oil_1(session):
@@ -351,39 +375,6 @@ def link_refined_fuel_oil_6(session):
     transaction.commit()
 
 
-def link_all_other_oils(session):
-    '''
-        Category Name:
-        - Other
-        Sample Oils:
-        - Catalytic Cracked Slurry Oil
-        - Fluid Catalytic Cracker Medium Cycle Oil
-        Criteria:
-        - Any oils that fell outside all the other Category Criteria
-    '''
-    top_category = (session.query(Category)
-                    .filter(Category.parent == None)
-                    .filter(Category.name == 'Other')
-                    .one())
-    categories = [c for c in top_category.children
-                  if c.name in ('Other',)
-                  ]
-
-    oils = (session.query(Oil)
-            .filter(Oil.categories == None)
-            .all())
-
-    count = 0
-    for o in oils:
-        for category in categories:
-            o.categories.append(category)
-        count += 1
-
-    logger.info('{0} oils added to {1}.'
-                .format(count, [n.name for n in categories]))
-    transaction.commit()
-
-
 def link_generic_oils(session):
     '''
         Category Name:
@@ -422,6 +413,173 @@ def link_generic_oils(session):
                 .format(count, [n.name for n in categories]))
 
     transaction.commit()
+
+
+def link_all_other_oils(session):
+    '''
+        Category Name:
+        - Other
+        Sample Oils:
+        - Catalytic Cracked Slurry Oil
+        - Fluid Catalytic Cracker Medium Cycle Oil
+        Criteria:
+        - Any oils that fell outside all the other Category Criteria
+    '''
+    top_category = (session.query(Category)
+                    .filter(Category.parent == None)
+                    .filter(Category.name == 'Other')
+                    .one())
+    categories = [c for c in top_category.children
+                  if c.name in ('Other',)
+                  ]
+
+    oils = (session.query(Oil)
+            .filter(Oil.categories == None)
+            .all())
+
+    count = 0
+    for o in oils:
+        for category in categories:
+            o.categories.append(category)
+        count += 1
+
+    logger.info('{0} oils added to {1}.'
+                .format(count, [n.name for n in categories]))
+    transaction.commit()
+
+
+def manually_recategorize_oils(session, settings):
+    '''
+        When we categorize oils, there is a lot of overlap in their criteria
+        that results in oils added to categories when it is fairly clear
+        they should not be a part of that category.
+
+        A smaller, but similar, problem is an oil that should be included
+        in a category, but its criteria falls outside that of said category
+        and it is not added.
+
+        Here we provide a whitelist/blacklist mechanism for manually adding
+        and removing oils from categories after the automatic categorization
+        processes have completed.
+    '''
+    fn = settings['blacklist.file']
+    fd = OilLibraryFile(fn)
+    logger.info('blacklist file version: {}'.format(fd.__version__))
+
+    logger.info('Re-categorizing oils in our blacklist')
+    rowcount = 0
+    for r in fd.readlines():
+        r = [unicode(f, 'utf-8') if f is not None else f
+             for f in r]
+        recategorize_oil(session, fd.file_columns, r)
+        rowcount += 1
+
+    transaction.commit()
+    logger.info('Re-categorization finished!!!  {0} rows processed.'
+                .format(rowcount))
+
+
+def recategorize_oil(session, file_columns, row_data):
+    file_columns = [slugify_filename(c).lower()
+                    for c in file_columns]
+    row_dict = dict(zip(file_columns, row_data))
+
+    try:
+        oil_obj = (session.query(Oil)
+                   .filter(Oil.adios_oil_id == row_dict['adios_oil_id'])
+                   .one())
+    except:
+        logger.error('Re-categorize: could not query oil {}({})'
+                     .format(row_dict['oil_name'],
+                             row_dict['adios_oil_id']))
+        return
+
+    logger.info('Re-categorizing oil: {}'.format(oil_obj.name))
+
+    remove_from_categories(session, oil_obj, row_dict['remove_from'])
+    add_to_categories(session, oil_obj, row_dict['add_to'])
+
+
+def update_oil_in_categories(session, oil_obj, categories, func):
+    for c in categories.split(','):
+        c = c.strip()
+        cat_obj = get_category_by_name(session, c)
+
+        if cat_obj is not None:
+            func(oil_obj, cat_obj)
+        else:
+            logger.error('\t{}("{}", "{}"): Category not accessible'
+                         .format(func.__name__, oil_obj.name, c))
+
+
+def get_category_by_name(session, name):
+    '''
+        Get the category matching a name.
+        - Category name can be a simple name, or a full path to a category
+          inside the Category hierarchy.
+        - A full path consists of a sequence of category names separated by
+          '->' e.g. 'Refined->Gasoline'
+    '''
+    full_path = name.split('->')
+    if len(full_path) > 1:
+        # traverse the path
+        try:
+            cat_obj = (session.query(Category)
+                       .filter(Category.name == full_path[0])
+                       .filter(Category.parent == None)
+                       .one())
+
+            for cat_name in full_path[1:]:
+                matching_catlist = [c for c in cat_obj.children
+                                    if c.name == cat_name]
+
+                if len(matching_catlist) > 1:
+                    raise MultipleResultsFound('One matching child Category '
+                                               'required, found {} categories '
+                                               'matching the name {}'
+                                               .format(len(matching_catlist),
+                                                       cat_name))
+                elif len(matching_catlist) == 0:
+                    raise NoResultFound('child Category matching the name {} '
+                                        'not found'
+                                        .format(cat_name))
+
+                cat_obj = matching_catlist[0]
+        except:
+            cat_obj = None
+    else:
+        # just a simple name
+        try:
+            cat_obj = (session.query(Category)
+                       .filter(Category.name == name).one())
+        except:
+            cat_obj = None
+
+    return cat_obj
+
+
+def remove_from_categories(session, oil_obj, categories):
+    update_oil_in_categories(session, oil_obj, categories,
+                             remove_from_category)
+
+
+def remove_from_category(oil_obj, category):
+    if oil_obj in category.oils:
+        logger.debug('\tRemove oil {} from Category {}'
+                     .format(oil_obj.name, category.name))
+        oil_obj.categories.remove(category)
+
+
+def add_to_categories(session, oil_obj, categories):
+    update_oil_in_categories(session, oil_obj, categories,
+                             add_to_category)
+
+
+def add_to_category(oil_obj, category):
+    if oil_obj not in category.oils:
+        logger.debug('\tAdd oil {} to Category {}'
+                     .format(oil_obj.name, category.name))
+        oil_obj.categories.append(category)
 
 
 def show_uncategorized_oils(session):

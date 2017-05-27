@@ -71,10 +71,10 @@ def load_database(settings):
         process_oils(DBSession)
 
         session = DBSession()
-        process_categories(session)
+        process_categories(session, settings)
 
 
-def make_db(oillib_files=None, db_file=None):
+def make_db(oillib_files=None, db_file=None, blacklist_file=None):
     '''
     Entry point for console_script installed by setup
     '''
@@ -91,9 +91,13 @@ def make_db(oillib_files=None, db_file=None):
                                              'OilLibTest',
                                              'OilLibNorway')])
 
+    if not blacklist_file:
+        blacklist_file = os.path.join(pck_loc, 'blacklist_whitelist.txt')
+
     sqlalchemy_url = 'sqlite:///{0}'.format(db_file)
     settings = {'sqlalchemy.url': sqlalchemy_url,
-                'oillib.files': oillib_files}
+                'oillib.files': oillib_files,
+                'blacklist.file': blacklist_file}
     try:
         initialize_sql(settings)
         load_database(settings)
