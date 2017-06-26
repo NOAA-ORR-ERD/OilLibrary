@@ -14,6 +14,7 @@ class JsonRecordWithEstimation(ImportedRecordWithEstimation):
     def __init__(self, json_rec):
         self.record = ObjFromDict(json_rec)
         self._normalize_json_attrs()
+        self._k_v2 = None
 
     def _normalize_json_attrs(self):
         self._default_attrs_with_weathering()

@@ -74,16 +74,18 @@ def dvis_to_kvis(dvis, density):
     return dvis / density
 
 
-def kvis_at_temp(ref_kvis, ref_temp_k, temp_k):
+def kvis_at_temp(ref_kvis, ref_temp_k, temp_k, k_v2=2416.0):
     '''
         Source: Adios2
 
         If we have an oil kinematic viscosity at a reference temperature,
-        then we can estimate what its viscoisty might be at
+        then we can estimate what its viscosity might be at
         another temperature.
-    '''
-    k_v2 = 5000.0
 
+        Note: Bill's most recent viscosity document, and an analysis of the
+              multi-KVis oils in our oil library suggest that a value of
+              2416.0 (Abu Eishah 1999) would be a good default value for k_v2.
+    '''
     return ref_kvis * np.exp(k_v2 / temp_k - k_v2 / ref_temp_k)
 
 
