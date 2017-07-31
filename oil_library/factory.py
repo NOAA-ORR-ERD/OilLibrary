@@ -20,9 +20,10 @@ from .json_record.estimations import JsonRecordWithEstimation
 
 def get_oil_props(oil_info, max_cuts=None):
     '''
-    returns the OilProps object
-    max_cuts is only used for 'fake' sample_oils. It's a way to allow testing.
-    When pulling record from database, this is ignored.
+        returns the OilProps object.
+        max_cuts is only used for 'fake' sample_oils.
+        It's a way to allow testing. When pulling record from database,
+        this is ignored.
     '''
     oil_ = get_oil(oil_info, max_cuts)
     return OilProps(oil_)

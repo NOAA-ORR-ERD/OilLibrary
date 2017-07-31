@@ -49,7 +49,7 @@ class ImportedRecordWithEstimation(object):
         try:
             return ('<{0}({1.name})>'
                     .format(self.__class__.__name__, self.record))
-        except:
+        except Exception:
             return ('<{0}({1.oil_name})>'
                     .format(self.__class__.__name__, self.record))
 
@@ -255,6 +255,7 @@ class ImportedRecordWithEstimation(object):
 
         rho_t = est.density_at_temp(ref_density, ref_temp_k,
                                     temperature, k_rho_t)
+
         if len(rho_t) == 1:
             return rho_t[0]
         elif shape is not None:
@@ -286,6 +287,7 @@ class ImportedRecordWithEstimation(object):
                                        for r in closest_densities])
             ref_temp_values = np.array([[d.ref_temp_k for d in r]
                                         for r in closest_densities])
+
             greater_than = np.all((temperature > ref_temp_values.T).T, axis=1)
             density_values[greater_than, 0] = density_values[greater_than, 1]
             ref_temp_values[greater_than, 0] = ref_temp_values[greater_than, 1]
@@ -354,6 +356,7 @@ class ImportedRecordWithEstimation(object):
 
     def dvis_to_kvis(self, kg_ms, ref_temp_k):
         density = self.density_at_temp(ref_temp_k)
+
         if density is None:
             return None
         else:
@@ -395,6 +398,7 @@ class ImportedRecordWithEstimation(object):
 
     def kvis_at_temp(self, temp_k=288.15, weathering=0.0):
         shape = None
+
         if hasattr(temp_k, '__iter__'):
             # we like to deal with numpy arrays as opposed to simple iterables
             temp_k = np.array(temp_k)
@@ -513,6 +517,7 @@ class ImportedRecordWithEstimation(object):
 
     def culled_cuts(self):
         prev_temp = prev_fraction = 0.0
+
         for c in self.record.cuts:
             if c.vapor_temp_k < prev_temp:
                 continue

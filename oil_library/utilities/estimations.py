@@ -267,6 +267,7 @@ def _hydrocarbon_characterization_param(specific_gravity, temp_k):
     '''
     T_i = temp_k
     SG_i = specific_gravity
+
     return 0.3773 * T_i ** (-0.02269) * SG_i ** (0.9182)
 
 
@@ -280,6 +281,7 @@ def refractive_index(hc_char_param):
         correlated through parameter I
     '''
     I = hc_char_param
+
     return ((1 + 2 * I) / (1 - I)) ** (1.0 / 2.0)
 
 

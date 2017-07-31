@@ -87,7 +87,7 @@ class OilProps(OilWithEstimation):
         except AttributeError:
             try:
                 val = getattr(self.record.imported, prop)
-            except:
+            except Exception:
                 pass
 
         return val
@@ -187,7 +187,6 @@ class OilProps(OilWithEstimation):
         '''
         water_temp and boiling point units are Kelvin
         returns the vapor_pressure in SI units (Pascals)
-        todo: memoize function
         '''
         D_Zb = 0.97
         R_cal = 1.987  # calories
@@ -223,12 +222,14 @@ class OilProps(OilWithEstimation):
         '''
         for key, val in self.__dict__.iteritems():
             o_val = other.__dict__[key]
+
             if isinstance(val, np.ndarray):
                 if np.any(val != o_val):
                     return False
             else:
                 if val != o_val:
                     return False
+
         return True
 
     def __eq__(self, other):
@@ -265,6 +266,7 @@ class OilProps(OilWithEstimation):
         database record
         '''
         c_op = self.__class__(self.record)
+
         if c_op != self:
             '''
             Attributes are currently derived from _r_oil object. Unless the
@@ -275,6 +277,7 @@ class OilProps(OilWithEstimation):
                 if getattr(self, attr) != getattr(c_op, attr):
                     setattr(c_op, attr,
                             copy.deepcopy(getattr(self, attr), memo))
+
         return c_op
 
     def _init_sara(self):

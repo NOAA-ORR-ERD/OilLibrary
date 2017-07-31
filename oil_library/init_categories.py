@@ -17,7 +17,6 @@
     and the viscosity at a given temperature, usually at 38 C(100F).
     The criteria follows closely, but not identically, to the ASTM standards
 '''
-import sys
 import logging
 
 import transaction
@@ -488,7 +487,7 @@ def recategorize_oil(session, file_columns, row_data):
         oil_obj = (session.query(Oil)
                    .filter(Oil.adios_oil_id == row_dict['adios_oil_id'])
                    .one())
-    except:
+    except Exception:
         logger.error('Re-categorize: could not query oil {}({})'
                      .format(row_dict['oil_name'],
                              row_dict['adios_oil_id']))
@@ -545,14 +544,14 @@ def get_category_by_name(session, name):
                                         .format(cat_name))
 
                 cat_obj = matching_catlist[0]
-        except:
+        except Exception:
             cat_obj = None
     else:
         # just a simple name
         try:
             cat_obj = (session.query(Category)
                        .filter(Category.name == name).one())
-        except:
+        except Exception:
             cat_obj = None
 
     return cat_obj
@@ -604,6 +603,7 @@ def show_uncategorized_oils(session):
                 category_temp = 273.15 + 50
             else:
                 category_temp = 273.15 + 38
+
             viscosity = uc.convert('Kinematic Viscosity', 'm^2/s', 'cSt',
                                    o_estim.kvis_at_temp(category_temp))
         else:
