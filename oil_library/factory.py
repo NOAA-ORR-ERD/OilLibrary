@@ -29,20 +29,22 @@ def get_oil_props(oil_info, max_cuts=None):
     return OilProps(oil_)
 
 
-def get_oil(oil_, max_cuts=None):
+def get_oil(oil_data_in, max_cuts=None):
     """
     function returns the Oil object given the name of the oil as a string.
 
-    :param oil_: The oil that spilled.
-                 - If it is a dictionary of items, then we will assume it is
-                   a JSON payload sufficient for creating an Oil object.
-                 - If it is one of the names stored in _sample_oil dict,
-                   then an Oil object with specified API is returned.
-                 - If it is Adios ID ("AD00000") return the corresponding
-                   Oil object
-                 - Otherwise, query the database for the oil_name and return
-                   the associated Oil object.
-    :type oil_: str or dict
+    :param oil_data_in: The oil that spilled.
+                        - If it is a dictionary of items, then we will assume
+                          it is a JSON payload sufficient for creating an
+                          Oil object.
+                        - If it is a name contained in the _sample_oil
+                          dictionary, then use the _sample_oil dictionary item.
+                        - Otherwise, query the database to see if it matches
+                          the Adios ID of an oil.  Adios ID is unique.
+                        - Otherwise, query the database to see if it matches
+                          the name of an oil.  Oil names are not guaranteed
+                          unique, so if it is not, we will raise an exception.
+    :type oil_data_in: str or dict
 
     Optional arg:
 
@@ -53,58 +55,52 @@ def get_oil(oil_, max_cuts=None):
     :type max_cuts: int
 
     """
-    if isinstance(oil_, dict):
-        prune_db_ids(oil_)
-        oil_obj = Oil.from_json(oil_)
+    if isinstance(oil_data_in, dict):
+        prune_db_ids(oil_data_in)
+        oil_obj = Oil.from_json(oil_data_in)
 
-        _estimate_missing_oil_props(oil_obj, oil_, max_cuts)
+        _estimate_missing_oil_props(oil_obj, oil_data_in, max_cuts)
 
         return oil_obj
-
-    if oil_ in _sample_oils.keys():
-        return _sample_oils[oil_]
+    elif oil_data_in in _sample_oils:
+        return _sample_oils[oil_data_in]
     else:
         session = _get_db_session()
 
-        try:
-            # see if this is an ADIOS ID:
-            # normalize the ID:
-            adios_id = oil_.strip().upper()
-            oil = session.query(Oil).filter(Oil.adios_oil_id == adios_id).one()
-            # this forces pre-loading of these attributes
-            oil.preload_linked_attributes()
-            return oil
-        except (AttributeError, NoResultFound):  # not an ADIOS ID
-            pass  # just move on...
+        adios_id = str(oil_data_in).strip().upper()
+        results = session.query(Oil).filter(Oil.adios_oil_id == adios_id)
 
-        results = session.query(Oil).filter(Oil.name == oil_)
-        if len(results.all()) > 1:
-            ids = " ".join([oil.adios_oil_id for oil in results])
-            msg = ('multiple oils with name: {0} found. '
-                   'They have ADIOS IDs: {1}.'
-                   'You may want to query them with the ADIOS ID instead'
-                   .format(oil_, ids))
-            raise MultipleResultsFound(msg)
-        elif len(results.all()) == 0:
-            raise NoResultFound('oil with name "{0}", not found in database.'
-                                .format(oil_))
-        else:
-            try:
-                oil = results.one()
-                oil.preload_linked_attributes()
-                return oil
-            # fixme: these Exceptions should never happen with the checks
-            #        above...
-            except MultipleResultsFound as ex:
-                ex.message = ('oil name "{0}" is duplicated in the database. '
-                              '{1}'.format(oil_, ex.message))
-                ex.args = (ex.message, )
-                raise ex
-            except NoResultFound as ex:
-                ex.message = ('oil with name "{0}", not found in database.  '
-                              '{1}'.format(oil_, ex.message))
-                ex.args = (ex.message, )
-                raise ex
+        try:
+            oil = results.one()
+            oil.preload_linked_attributes()
+
+            return oil
+        except (AttributeError, NoResultFound):
+            pass
+
+        results = session.query(Oil).filter(Oil.name == oil_data_in)
+
+        try:
+            oil = results.one()
+            oil.preload_linked_attributes()
+
+            return oil
+        except MultipleResultsFound as ex:
+            ids = ", ".join([oil.adios_oil_id for oil in results])
+            ex.message = ('Multiple oils with name "{0}" found '
+                          'having ADIOS IDs {{{1}}}. '
+                          'You may want to find your oil using its unique '
+                          'ADIOS ID instead.'
+                          .format(oil_data_in, ids))
+            ex.args = (ex.message, )
+
+            raise ex
+        except NoResultFound as ex:
+            ex.message = ('Oil with identifier "{0}", not found in database.'
+                          .format(oil_data_in))
+            ex.args = (ex.message, )
+
+            raise ex
 
 
 def prune_db_ids(oil_):

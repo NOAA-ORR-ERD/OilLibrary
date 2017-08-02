@@ -12,7 +12,6 @@ from pytest import raises
 import unit_conversion as uc
 
 from oil_library import get_oil_props, get_oil
-from oil_library.oil.estimations import OilWithEstimation
 
 from sqlalchemy.orm.exc import NoResultFound
 
