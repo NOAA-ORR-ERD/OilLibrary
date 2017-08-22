@@ -366,9 +366,6 @@ def reject_imported_record_if_requirements_not_met(imported_rec):
     if not has_distillation_cuts(imported_rec):
         errors.append('Imported Record has insufficient cut data')
 
-    #if has_densities_below_pour_point(imported_rec):
-    #    errors.append('Imported Record has densities below the pour point')
-
     if len(errors) > 0:
         raise OilRejected(errors, imported_rec.adios_oil_id)
 
@@ -386,6 +383,7 @@ def manually_rejected(imported_rec):
     adios_oil_id = imported_rec.adios_oil_id
     if adios_oil_id in (None,):
         return True
+
     return False
 
 

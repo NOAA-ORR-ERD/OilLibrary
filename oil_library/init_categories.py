@@ -20,17 +20,19 @@
 import logging
 
 import transaction
-from sqlalchemy.orm.exc import NoResultFound
+from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
+from slugify import slugify_filename
 
 import unit_conversion as uc
 
 from .models import Oil, ImportedRecord, Category
 from .oil.estimations import OilWithEstimation
+from .oil_library_parse import OilLibraryFile
 
 logger = logging.getLogger(__name__)
 
 
-def process_categories(session):
+def process_categories(session, settings):
     logger.info('Purging Categories...')
     num_purged = clear_categories(session)
 
@@ -47,7 +49,7 @@ def process_categories(session):
         for item in list_categories(c):
             logger.info(item)
 
-    link_oils_to_categories(session)
+    link_oils_to_categories(session, settings)
 
 
 def clear_categories(session):
@@ -105,7 +107,7 @@ def list_categories(category, indent=0):
             yield y
 
 
-def link_oils_to_categories(session):
+def link_oils_to_categories(session, settings):
     # now we try to link the oil records with our categories
     # in some kind of automated fashion
     link_crude_light_oils(session)
@@ -120,65 +122,79 @@ def link_oils_to_categories(session):
     link_generic_oils(session)
     link_all_other_oils(session)
 
+    manually_recategorize_oils(session, settings)
+
     show_uncategorized_oils(session)
 
 
 def link_crude_light_oils(session):
     # our category
-    top_category = (session.query(Category)
-                    .filter(Category.parent == None)
-                    .filter(Category.name == 'Crude').one())
-    category = [c for c in top_category.children if c.name == 'Light'][0]
+    top, categories = get_categories_by_names(session, 'Crude',
+                                              ('Light',))
 
     oils = get_oils_by_api(session, 'Crude', api_min=31.1)
 
     count = 0
     for o in oils:
-        o.categories.append(category)
+        o.categories.extend(categories)
         count += 1
 
     logger.info('{0} oils added to {1} -> {2}.'
-                .format(count, top_category.name, category.name))
+                .format(count, top.name, [n.name for n in categories]))
     transaction.commit()
 
 
 def link_crude_medium_oils(session):
     # our category
-    top_category = (session.query(Category)
-                    .filter(Category.parent == None)
-                    .filter(Category.name == 'Crude').one())
-    category = [c for c in top_category.children if c.name == 'Medium'][0]
+    top, categories = get_categories_by_names(session, 'Crude',
+                                              ('Medium',))
 
     oils = get_oils_by_api(session, 'Crude',
                            api_min=22.3, api_max=31.1)
 
     count = 0
     for o in oils:
-        o.categories.append(category)
+        o.categories.extend(categories)
         count += 1
 
     logger.info('{0} oils added to {1} -> {2}.'
-                .format(count, top_category.name, category.name))
+                .format(count, top.name, [n.name for n in categories]))
     transaction.commit()
 
 
 def link_crude_heavy_oils(session):
-    # our category
-    top_category = (session.query(Category)
-                    .filter(Category.parent == None)
-                    .filter(Category.name == 'Crude').one())
-    category = [c for c in top_category.children if c.name == 'Heavy'][0]
+    top, categories = get_categories_by_names(session, 'Crude',
+                                              ('Heavy',))
 
     oils = get_oils_by_api(session, 'Crude', api_max=22.3)
 
     count = 0
     for o in oils:
-        o.categories.append(category)
+        o.categories.extend(categories)
         count += 1
 
     logger.info('{0} oils added to {1} -> {2}.'
-                .format(count, top_category.name, category.name))
+                .format(count, top.name, [n.name for n in categories]))
     transaction.commit()
+
+
+def link_refined_light_products(session):
+    '''
+       Category Name:
+       - Light Products
+       Parent:
+       - Refined
+       Sample Oils:
+       - Cooper Basin Light Naphtha
+       - kerosene
+       - JP-4
+       - avgas
+       Density Criteria:
+       - API >= 35
+       Kinematic Viscosity Criteria:
+       - v > 0.0 cSt @ 38 degrees Celcius
+    '''
+    raise NotImplementedError
 
 
 def link_refined_fuel_oil_1(session):
@@ -195,32 +211,27 @@ def link_refined_fuel_oil_1(session):
        Kinematic Viscosity Criteria:
        - v <= 2.5 cSt @ 38 degrees Celcius
     '''
-    top_category = (session.query(Category)
-                    .filter(Category.parent == None)
-                    .filter(Category.name == 'Refined').one())
-    categories = [c for c in top_category.children
-                  if c.name in ('Light Products (Fuel Oil 1)',
-                                'Gasoline',
-                                'Kerosene')
-                  ]
+    top, categories = get_categories_by_names(session, 'Refined',
+                                              ('Light Products (Fuel Oil 1)',
+                                               'Gasoline',
+                                               'Kerosene'))
 
     oils = get_oils_by_api(session, 'Refined', api_min=35.0)
 
-    count = 0
     category_temp = 273.15 + 38
+
+    count = 0
     for o in oils:
         o_estim = OilWithEstimation(o)
         viscosity = uc.convert('Kinematic Viscosity', 'm^2/s', 'cSt',
                                o_estim.kvis_at_temp(category_temp))
 
         if viscosity <= 2.5:
-            for category in categories:
-                o.categories.append(category)
+            o.categories.extend(categories)
             count += 1
 
     logger.info('{0} oils added to {1} -> {2}.'
-                .format(count, top_category.name,
-                        [n.name for n in categories]))
+                .format(count, top.name, [n.name for n in categories]))
     transaction.commit()
 
 
@@ -233,21 +244,17 @@ def link_refined_fuel_oil_2(session):
        - Heating Oil
        - No. 2 Distillate
        Density Criteria:
-       - 30 <= API < 35
+       - 30 <= API < 39
        Kinematic Viscosity Criteria:
        - 2.5 < v <= 4.0 cSt @ 38 degrees Celcius
     '''
-    top_category = (session.query(Category)
-                    .filter(Category.parent == None)
-                    .filter(Category.name == 'Refined').one())
-    categories = [c for c in top_category.children
-                  if c.name in ('Fuel Oil 2',
-                                'Diesel',
-                                'Heating Oil')
-                  ]
+    top, categories = get_categories_by_names(session, 'Refined',
+                                              ('Fuel Oil 2',
+                                               'Diesel',
+                                               'Heating Oil'))
 
     oils = get_oils_by_api(session, 'Refined',
-                           api_min=30.0, api_max=35.0)
+                           api_min=30.0, api_max=39.0)
 
     count = 0
     category_temp = 273.15 + 38
@@ -257,13 +264,11 @@ def link_refined_fuel_oil_2(session):
                                o_estim.kvis_at_temp(category_temp))
 
         if viscosity > 2.5 or viscosity <= 4.0:
-            for category in categories:
-                o.categories.append(category)
+            o.categories.extend(categories)
             count += 1
 
     logger.info('{0} oils added to {1} -> {2}.'
-                .format(count, top_category.name,
-                        [n.name for n in categories]))
+                .format(count, top.name, [n.name for n in categories]))
     transaction.commit()
 
 
@@ -280,12 +285,8 @@ def link_refined_ifo(session):
        Kinematic Viscosity Criteria:
        - 4.0 < v < 200.0 cSt @ 38 degrees Celcius
     '''
-    top_category = (session.query(Category)
-                    .filter(Category.parent == None)
-                    .filter(Category.name == 'Refined').one())
-    categories = [c for c in top_category.children
-                  if c.name in ('Intermediate Fuel Oil',)
-                  ]
+    top, categories = get_categories_by_names(session, 'Refined',
+                                              ('Intermediate Fuel Oil',))
 
     oils = get_oils_by_api(session, 'Refined',
                            api_min=15.0, api_max=30.0)
@@ -298,13 +299,11 @@ def link_refined_ifo(session):
                                o_estim.kvis_at_temp(category_temp))
 
         if viscosity > 4.0 or viscosity < 200.0:
-            for category in categories:
-                o.categories.append(category)
+            o.categories.extend(categories)
             count += 1
 
     logger.info('{0} oils added to {1} -> {2}.'
-                .format(count, top_category.name,
-                        [n.name for n in categories]))
+                .format(count, top.name, [n.name for n in categories]))
     transaction.commit()
 
 
@@ -320,15 +319,11 @@ def link_refined_fuel_oil_6(session):
        Kinematic Viscosity Criteria:
        - 200.0 <= v cSt @ 50 degrees Celcius
     '''
-    top_category = (session.query(Category)
-                    .filter(Category.parent == None)
-                    .filter(Category.name == 'Refined').one())
-    categories = [c for c in top_category.children
-                  if c.name in ('Fuel Oil 6',
-                                'Bunker',
-                                'Heavy Fuel Oil',
-                                'Group V')
-                  ]
+    top, categories = get_categories_by_names(session, 'Refined',
+                                              ('Fuel Oil 6',
+                                               'Bunker',
+                                               'Heavy Fuel Oil',
+                                               'Group V'))
 
     oils = get_oils_by_api(session, 'Refined',
                            api_min=0.0, api_max=15.0)
@@ -341,13 +336,40 @@ def link_refined_fuel_oil_6(session):
                                o_estim.kvis_at_temp(category_temp))
 
         if viscosity >= 200.0:
-            for category in categories:
-                o.categories.append(category)
+            o.categories.extend(categories)
             count += 1
 
     logger.info('{0} oils added to {1} -> {2}.'
-                .format(count, top_category.name,
-                        [n.name for n in categories]))
+                .format(count, top.name, [n.name for n in categories]))
+    transaction.commit()
+
+
+def link_generic_oils(session):
+    '''
+        Category Name:
+        - Other->Generic
+        Criteria:
+        - Any oils that have been generically generated.  These are found
+          in the OilLibTest data file.  Basically these oils have a name
+          that is prefixed with '*GENERIC'.
+    '''
+    _top, categories = get_categories_by_names(session, 'Other',
+                                               ('Generic',))
+
+    if len(categories) == 0:
+        logger.warning('Category "Other->Generic" not found!!')
+        return
+
+    oils = session.query(Oil).filter(Oil.name.like('*GENERIC%')).all()
+
+    count = 0
+    for o in oils:
+        o.categories.extend(categories)
+        count += 1
+
+    logger.info('{0} oils added to {1}.'
+                .format(count, [n.name for n in categories]))
+
     transaction.commit()
 
 
@@ -361,13 +383,8 @@ def link_all_other_oils(session):
         Criteria:
         - Any oils that fell outside all the other Category Criteria
     '''
-    top_category = (session.query(Category)
-                    .filter(Category.parent == None)
-                    .filter(Category.name == 'Other')
-                    .one())
-    categories = [c for c in top_category.children
-                  if c.name in ('Other',)
-                  ]
+    _top, categories = get_categories_by_names(session, 'Other',
+                                               ('Other',))
 
     oils = (session.query(Oil)
             .filter(Oil.categories == None)
@@ -375,8 +392,7 @@ def link_all_other_oils(session):
 
     count = 0
     for o in oils:
-        for category in categories:
-            o.categories.append(category)
+        o.categories.extend(categories)
         count += 1
 
     logger.info('{0} oils added to {1}.'
@@ -384,44 +400,138 @@ def link_all_other_oils(session):
     transaction.commit()
 
 
-def link_generic_oils(session):
+def manually_recategorize_oils(session, settings):
     '''
-        Category Name:
-        - Other->Generic
-        Criteria:
-        - Any oils that have been generically generated.  These are found
-          in the OilLibTest data file.  Basically these oils have a name
-          that is prefixed with '*GENERIC'.
+        When we categorize oils, there is a lot of overlap in their criteria
+        that results in oils added to categories when it is fairly clear
+        they should not be a part of that category.
+
+        A smaller, but similar, problem is an oil that should be included
+        in a category, but its criteria falls outside that of said category
+        and it is not added.
+
+        Here we provide a whitelist/blacklist mechanism for manually adding
+        and removing oils from categories after the automatic categorization
+        processes have completed.
     '''
+    fn = settings['blacklist.file']
+    fd = OilLibraryFile(fn)
+    logger.info('blacklist file version: {}'.format(fd.__version__))
+
+    logger.info('Re-categorizing oils in our blacklist')
+    rowcount = 0
+    for r in fd.readlines():
+        r = [unicode(f, 'utf-8') if f is not None else f
+             for f in r]
+        recategorize_oil(session, fd.file_columns, r)
+        rowcount += 1
+
+    transaction.commit()
+    logger.info('Re-categorization finished!!!  {0} rows processed.'
+                .format(rowcount))
+
+
+def recategorize_oil(session, file_columns, row_data):
+    file_columns = [slugify_filename(c).lower()
+                    for c in file_columns]
+    row_dict = dict(zip(file_columns, row_data))
+
     try:
-        top_category = (session.query(Category)
-                        .filter(Category.parent == None)
-                        .filter(Category.name == 'Other')
-                        .one())
-    except NoResultFound:
-        logger.warning('Top category "Other" not found.')
+        oil_obj = (session.query(Oil)
+                   .filter(Oil.adios_oil_id == row_dict['adios_oil_id'])
+                   .one())
+    except Exception:
+        logger.error('Re-categorize: could not query oil {}({})'
+                     .format(row_dict['oil_name'],
+                             row_dict['adios_oil_id']))
         return
 
-    categories = [c for c in top_category.children
-                  if c.name in ('Generic',)]
+    logger.info('Re-categorizing oil: {}'.format(oil_obj.name))
 
-    if len(categories) == 0:
-        logger.warning('Category "Other->Generic" not found!!')
-        return
+    remove_from_categories(session, oil_obj, row_dict['remove_from'])
+    add_to_categories(session, oil_obj, row_dict['add_to'])
 
-    oils = session.query(Oil).filter(Oil.name.like('*GENERIC%')).all()
 
-    count = 0
-    for o in oils:
-        for category in categories:
-            o.categories.append(category)
+def update_oil_in_categories(session, oil_obj, categories, func):
+    for c in categories.split(','):
+        c = c.strip()
+        cat_obj = get_category_by_name(session, c)
 
-        count += 1
+        if cat_obj is not None:
+            func(oil_obj, cat_obj)
+        else:
+            logger.error('\t{}("{}", "{}"): Category not accessible'
+                         .format(func.__name__, oil_obj.name, c))
 
-    logger.info('{0} oils added to {1}.'
-                .format(count, [n.name for n in categories]))
 
-    transaction.commit()
+def get_category_by_name(session, name):
+    '''
+        Get the category matching a name.
+        - Category name can be a simple name, or a full path to a category
+          inside the Category hierarchy.
+        - A full path consists of a sequence of category names separated by
+          '->' e.g. 'Refined->Gasoline'
+    '''
+    full_path = name.split('->')
+    if len(full_path) > 1:
+        # traverse the path
+        try:
+            cat_obj = (session.query(Category)
+                       .filter(Category.name == full_path[0])
+                       .filter(Category.parent == None)
+                       .one())
+
+            for cat_name in full_path[1:]:
+                matching_catlist = [c for c in cat_obj.children
+                                    if c.name == cat_name]
+
+                if len(matching_catlist) > 1:
+                    raise MultipleResultsFound('One matching child Category '
+                                               'required, found {} categories '
+                                               'matching the name {}'
+                                               .format(len(matching_catlist),
+                                                       cat_name))
+                elif len(matching_catlist) == 0:
+                    raise NoResultFound('child Category matching the name {} '
+                                        'not found'
+                                        .format(cat_name))
+
+                cat_obj = matching_catlist[0]
+        except Exception:
+            cat_obj = None
+    else:
+        # just a simple name
+        try:
+            cat_obj = (session.query(Category)
+                       .filter(Category.name == name).one())
+        except Exception:
+            cat_obj = None
+
+    return cat_obj
+
+
+def remove_from_categories(session, oil_obj, categories):
+    update_oil_in_categories(session, oil_obj, categories,
+                             remove_from_category)
+
+
+def remove_from_category(oil_obj, category):
+    if oil_obj in category.oils:
+        logger.debug('\tRemove oil {} from Category {}'
+                     .format(oil_obj.name, category.name))
+        oil_obj.categories.remove(category)
+
+
+def add_to_categories(session, oil_obj, categories):
+    update_oil_in_categories(session, oil_obj, categories,
+                             add_to_category)
+
+
+def add_to_category(oil_obj, category):
+    if oil_obj not in category.oils:
+        logger.debug('\tAdd oil {} to Category {}'
+                     .format(oil_obj.name, category.name))
+        oil_obj.categories.append(category)
 
 
 def show_uncategorized_oils(session):
@@ -446,6 +556,7 @@ def show_uncategorized_oils(session):
                 category_temp = 273.15 + 50
             else:
                 category_temp = 273.15 + 38
+
             viscosity = uc.convert('Kinematic Viscosity', 'm^2/s', 'cSt',
                                    o_estim.kvis_at_temp(category_temp))
         else:
@@ -476,3 +587,35 @@ def get_oils_by_api(session, product_type,
         oil_query = oil_query.filter(Oil.api > api_min)
 
     return oil_query.all()
+
+
+def get_categories_by_names(session, top_name, child_names):
+    '''
+        Get the top level category by name, and a list of child categories
+        directly underneath it by their names.
+
+        This is a utility function that serves some common functionality in
+        our various categorization functions.  Probably not useful outside
+        of this module.
+    '''
+    try:
+        top_category = (session.query(Category)
+                        .filter(Category.parent == None)
+                        .filter(Category.name == top_name)
+                        .one())
+    except MultipleResultsFound as ex:
+        ex.message = ('Multiple top categories named "{}" found.'
+                      .format(top_name))
+        ex.args = (ex.message, )
+
+        raise ex
+    except NoResultFound:
+        ex.message = ('Top category "{}" not found.'.format(top_name))
+        ex.args = (ex.message, )
+
+        raise ex
+
+    child_categories = [c for c in top_category.children
+                        if c.name in child_names]
+
+    return top_category, child_categories

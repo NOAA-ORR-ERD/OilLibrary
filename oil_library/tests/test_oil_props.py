@@ -12,7 +12,6 @@ from pytest import raises
 import unit_conversion as uc
 
 from oil_library import get_oil_props, get_oil
-from oil_library.oil.estimations import OilWithEstimation
 
 from sqlalchemy.orm.exc import NoResultFound
 
@@ -25,7 +24,6 @@ def test_OilProps_exceptions():
 @pytest.mark.parametrize(("search", "isNone"),
                          [('LUCKENBACH FUEL OIL', False), (51, True)])
 def test_get_oil(search, isNone):
-
     if isNone:
         with raises(NoResultFound):
             o = get_oil(search)
@@ -34,6 +32,7 @@ def test_get_oil(search, isNone):
         if isinstance(search, basestring):
             assert o.name == search
 
+
 @pytest.mark.parametrize(("adios_id", "name"),
                          [("AD00051", "ARABIAN LIGHT"),
                           (" ad00051   ", "ARABIAN LIGHT"),
@@ -41,14 +40,14 @@ def test_get_oil(search, isNone):
                           ("Jibberish", None),
                           ])
 def test_get_oil_id(adios_id, name):
-    if name is None: # shouldn't be found
+    if name is None:  # shouldn't be found
         with raises(NoResultFound):
             o = get_oil(adios_id)
     else:
         o = get_oil(adios_id)
+
         assert o.name == name
         assert o.adios_oil_id == adios_id.strip().upper()
-
 
 
 # Record number 51: "AUTOMOTIVE GASOLINE, EXXON" is found in database
@@ -62,10 +61,11 @@ def test_get_oil_props(search, isNone):
             op = get_oil_props(search)
     else:
         op = get_oil_props(search)
+
         assert op is not None
 
-# just double check values for _sample_oil are entered correctly
 
+# just double check values for _sample_oil are entered correctly
 oil_density_units = [
     ('oil_gas', 0.75065, 'g/cm^3'),
     ('oil_jetfuels', 0.8107, 'g/cm^3'),
@@ -136,6 +136,7 @@ class TestProperties:
 def test_eq():
     op = get_oil_props('ARABIAN MEDIUM, PHILLIPS')
     op1 = get_oil_props('ARABIAN MEDIUM, PHILLIPS')
+
     assert op == op1
 
 

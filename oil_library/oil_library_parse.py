@@ -104,7 +104,7 @@ class OilLibraryFile(object):
         if len(line) > 0:
             try:
                 row = line.decode('utf-8')
-            except:
+            except Exception:
                 # If we fail to encode in utf-8, then it is possible that
                 # our file contains mac_roman characters of which some are
                 # out-of-range.
@@ -126,6 +126,7 @@ class OilLibraryFile(object):
     def readlines(self):
         while True:
             line = self.readline()
+
             if line is None:
                 break
             elif len(line) > 0:
@@ -167,11 +168,12 @@ class OilLibraryFile(object):
         file_out.write(self.field_delim.join(self.file_columns))
         file_out.write('\n')
 
-        for l in self.readlines():
-            l = ['' if f is None else f for f in l]
+        for line in self.readlines():
+            line = ['' if f is None else f
+                    for f in line]
 
             sys.stderr.write('.')
-            file_out.write(self.field_delim.join(l))
+            file_out.write(self.field_delim.join(line))
             file_out.write('\n')
 
         file_out.close()

@@ -11,7 +11,6 @@ def test_get_oil_from_json():
         a json payload.
     '''
     oil_from_db = get_oil('ALASKA NORTH SLOPE (MIDDLE PIPELINE)')
-
     oil_from_json = Oil.from_json(oil_from_db.tojson())
 
     # Do we want to fill in these properties???
