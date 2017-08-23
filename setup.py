@@ -99,6 +99,7 @@ class PyTest(TestCommand):
         import sys
         sys.exit(errno)
 
+
 s = setup(name=pkg_name,
           version=pkg_version,
           description=('{}: {}'.format(pkg_name,
@@ -115,6 +116,7 @@ s = setup(name=pkg_name,
                                         'OilLib',
                                         'OilLibTest',
                                         'OilLibNorway',
+                                        'blacklist_whitelist.txt',
                                         'tests/*.py',
                                         'tests/sample_data/*']},
           cmdclass={'remake_oil_db': remake_oil_db,
