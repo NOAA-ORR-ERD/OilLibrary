@@ -131,26 +131,26 @@ class ImportedRecordWithEstimation(object):
 
             We accept only a scalar temperature or a sequence of temperatures
         '''
-        temperature = np.array(temperature)
+        temperature = np.array(temperature).reshape(-1, 1)
 
         if len(obj_list) <= 1:
             # range where the lowest and highest are basically the same.
-            return [obj_list * 2]
-        else:
-            geq_temps = temperature.reshape(-1, 1) >= [obj.ref_temp_k
-                                                       for obj in obj_list]
-            high_and_oob = np.all(geq_temps, axis=1)
-            low_and_oob = np.all(geq_temps ^ True, axis=1)
+            obj_list *= 2
 
-            rho_idxs0 = np.argmin(geq_temps, axis=1)
-            rho_idxs0[rho_idxs0 > 0] -= 1
-            rho_idxs0[high_and_oob] = len(obj_list) - 1
+        geq_temps = temperature >= [obj.ref_temp_k for obj in obj_list]
 
-            rho_idxs1 = (rho_idxs0 + 1).clip(0, len(obj_list) - 1)
-            rho_idxs1[low_and_oob] = 0
+        high_and_oob = np.all(geq_temps, axis=1)
+        low_and_oob = np.all(geq_temps ^ True, axis=1)
 
-            return zip([obj_list[i] for i in rho_idxs0],
-                       [obj_list[i] for i in rho_idxs1])
+        rho_idxs0 = np.argmin(geq_temps, axis=1)
+        rho_idxs0[rho_idxs0 > 0] -= 1
+        rho_idxs0[high_and_oob] = len(obj_list) - 1
+
+        rho_idxs1 = (rho_idxs0 + 1).clip(0, len(obj_list) - 1)
+        rho_idxs1[low_and_oob] = 0
+
+        return zip([obj_list[i] for i in rho_idxs0],
+                   [obj_list[i] for i in rho_idxs1])
 
     def culled_measurement(self, attr_name, non_null_attrs):
         '''
@@ -288,8 +288,7 @@ class ImportedRecordWithEstimation(object):
             ref_temp_values = np.array([[d.ref_temp_k for d in r]
                                         for r in closest_densities])
 
-            greater_than = (np.all((temperature > ref_temp_values.T).T, axis=1)
-                            .astype(int))
+            greater_than = np.all((temperature > ref_temp_values.T).T, axis=1)
 
             density_values[greater_than, 0] = density_values[greater_than, 1]
             ref_temp_values[greater_than, 0] = ref_temp_values[greater_than, 1]
@@ -319,12 +318,10 @@ class ImportedRecordWithEstimation(object):
         k_rho_t = np.array([est.vol_expansion_coeff(*args)
                             for args in args_list])
 
-        greater_than = (np.all((temperature > closest_values[:, :, 1].T).T,
-                               axis=1)
-                        .astype(int))
-        less_than = (np.all((temperature < closest_values[:, :, 1].T).T,
-                            axis=1)
-                     .astype(int))
+        greater_than = np.all((temperature > closest_values[:, :, 1].T).T,
+                              axis=1)
+        less_than = np.all((temperature < closest_values[:, :, 1].T).T,
+                           axis=1)
 
         if self.record.api > 30:
             k_rho_default = 0.0009
