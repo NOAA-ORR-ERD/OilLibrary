@@ -288,7 +288,9 @@ class ImportedRecordWithEstimation(object):
             ref_temp_values = np.array([[d.ref_temp_k for d in r]
                                         for r in closest_densities])
 
-            greater_than = np.all((temperature > ref_temp_values.T).T, axis=1)
+            greater_than = (np.all((temperature > ref_temp_values.T).T, axis=1)
+                            .astype(int))
+
             density_values[greater_than, 0] = density_values[greater_than, 1]
             ref_temp_values[greater_than, 0] = ref_temp_values[greater_than, 1]
 
@@ -317,10 +319,12 @@ class ImportedRecordWithEstimation(object):
         k_rho_t = np.array([est.vol_expansion_coeff(*args)
                             for args in args_list])
 
-        greater_than = np.all((temperature > closest_values[:, :, 1].T).T,
-                              axis=1)
-        less_than = np.all((temperature < closest_values[:, :, 1].T).T,
-                           axis=1)
+        greater_than = (np.all((temperature > closest_values[:, :, 1].T).T,
+                               axis=1)
+                        .astype(int))
+        less_than = (np.all((temperature < closest_values[:, :, 1].T).T,
+                            axis=1)
+                     .astype(int))
 
         if self.record.api > 30:
             k_rho_default = 0.0009
