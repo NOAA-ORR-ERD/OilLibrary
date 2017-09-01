@@ -13,7 +13,7 @@ from setuptools.command.test import test as TestCommand
 here = os.path.abspath(os.path.dirname(__file__))
 README = open(os.path.join(here, 'README.md')).read()
 pkg_name = 'oil_library'
-pkg_version = '1.0.4'
+pkg_version = '1.0.5'
 
 
 def clean_files(del_db=False):
