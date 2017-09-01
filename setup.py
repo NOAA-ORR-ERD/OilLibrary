@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import os
+import sys
 import fnmatch
 import shutil
 from subprocess import call
@@ -75,7 +76,7 @@ class remake_oil_db(Command):
                 raise
 
         print "Deleting {0} ..".format(to_rm)
-        ret = call("initialize_OilLibrary_db")
+        ret = call(os.path.join(sys.prefix, 'bin', 'initialize_OilLibrary_db'))
 
         if ret == 0:
             print 'OilLibrary database successfully generated from file!'
@@ -143,13 +144,12 @@ s = setup(name=pkg_name,
 if 'install' in s.script_args or 'build' in s.script_args:
     print "Calling initialize_OilLibrary_db"
     call("initialize_OilLibrary_db")
-
-elif 'develop' in s.script_args:
+elif 'develop' in s.script_args and '--uninstall' not in s.script_args:
     if os.path.exists(os.path.join(here, 'oil_library', 'OilLib.db')):
         print 'OilLibrary database exists - do not remake!'
     else:
         print "Calling initialize_OilLibrary_db"
-        ret = call("initialize_OilLibrary_db")
+        ret = call(os.path.join(sys.prefix, 'bin', 'initialize_OilLibrary_db'))
 
         if ret == 0:
             print 'OilLibrary database successfully generated from file!'
