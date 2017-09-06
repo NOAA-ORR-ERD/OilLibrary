@@ -42,7 +42,7 @@ def clean_files(del_db=False):
                 shutil.rmtree(f)
             else:
                 os.remove(f)
-        except:
+        except Exception:
             pass
 
         print "Deleting {0} ..".format(f)
@@ -103,7 +103,6 @@ class PyTest(TestCommand):
         # import pytest
         # errno = pytest.main(self.test_args)
         errno = os.system('py.test --pyargs oil_library')
-        import sys
         sys.exit(errno)
 
 
