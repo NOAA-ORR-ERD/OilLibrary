@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import os
+import sys
 import fnmatch
 import shutil
 from subprocess import call
@@ -12,7 +13,13 @@ from setuptools.command.test import test as TestCommand
 here = os.path.abspath(os.path.dirname(__file__))
 README = open(os.path.join(here, 'README.md')).read()
 pkg_name = 'oil_library'
-pkg_version = '1.0.0'
+pkg_version = '1.0.6'
+
+db_init_script_name = 'initialize_OilLibrary_db'
+
+
+def db_init_script_path():
+    return os.path.join(sys.prefix, 'bin', db_init_script_name)
 
 
 def clean_files(del_db=False):
@@ -35,7 +42,7 @@ def clean_files(del_db=False):
                 shutil.rmtree(f)
             else:
                 os.remove(f)
-        except:
+        except Exception:
             pass
 
         print "Deleting {0} ..".format(f)
@@ -75,7 +82,7 @@ class remake_oil_db(Command):
                 raise
 
         print "Deleting {0} ..".format(to_rm)
-        ret = call("initialize_OilLibrary_db")
+        ret = call(db_init_script_path())
 
         if ret == 0:
             print 'OilLibrary database successfully generated from file!'
@@ -96,8 +103,8 @@ class PyTest(TestCommand):
         # import pytest
         # errno = pytest.main(self.test_args)
         errno = os.system('py.test --pyargs oil_library')
-        import sys
         sys.exit(errno)
+
 
 s = setup(name=pkg_name,
           version=pkg_version,
@@ -115,15 +122,16 @@ s = setup(name=pkg_name,
                                         'OilLib',
                                         'OilLibTest',
                                         'OilLibNorway',
+                                        'blacklist_whitelist.txt',
                                         'tests/*.py',
                                         'tests/sample_data/*']},
           cmdclass={'remake_oil_db': remake_oil_db,
                     'cleanall': cleanall,
                     'test': PyTest,
                     },
-          entry_points={'console_scripts': [('initialize_OilLibrary_db = '
-                                             'oil_library.initializedb'
-                                             ':make_db'),
+          entry_points={'console_scripts': [('{} = oil_library.initializedb'
+                                             ':make_db'
+                                             .format(db_init_script_name)),
                                             ('diff_import_files = '
                                              'oil_library.scripts.oil_import'
                                              ':diff_import_files_cmd'),
@@ -139,15 +147,14 @@ s = setup(name=pkg_name,
 # console script
 
 if 'install' in s.script_args or 'build' in s.script_args:
-    print "Calling initialize_OilLibrary_db"
-    call("initialize_OilLibrary_db")
-
-elif 'develop' in s.script_args:
+    print "Calling {}".format(db_init_script_path())
+    call(db_init_script_path())
+elif 'develop' in s.script_args and '--uninstall' not in s.script_args:
     if os.path.exists(os.path.join(here, 'oil_library', 'OilLib.db')):
         print 'OilLibrary database exists - do not remake!'
     else:
-        print "Calling initialize_OilLibrary_db"
-        ret = call("initialize_OilLibrary_db")
+        print "Calling {}".format(db_init_script_path())
+        ret = call(db_init_script_path())
 
         if ret == 0:
             print 'OilLibrary database successfully generated from file!'

@@ -6,7 +6,7 @@ from pkg_resources import get_distribution
 
 from sqlalchemy import create_engine
 from sqlalchemy.exc import UnboundExecutionError
-from sqlalchemy.orm.exc import NoResultFound # so we can catch it up higher.
+from sqlalchemy.orm.exc import NoResultFound
 
 from .models import DBSession
 
@@ -14,12 +14,13 @@ import sample_oils
 
 try:
     __version__ = get_distribution('oil_library').version
-except:
+except Exception:
     __version__ = 'not_found'
 
-'''
-currently, the DB is created and located when package is installed
-'''
+
+#
+# currently, the DB is created and located when package is installed
+#
 _oillib_path = os.path.dirname(__file__)
 __module_folder__ = __file__.split(os.sep)[-2]
 _db_file = 'OilLib.db'
@@ -42,6 +43,7 @@ def _get_db_session():
         session.bind = create_engine('sqlite:///' + _db_file_path)
 
     return session
+
 
 _sample_oils = {}
 
@@ -66,12 +68,13 @@ def initialize_console_log(level='debug'):
               "error": logging.ERROR,
               "critical": logging.CRITICAL,
               }
+
     level = levels[level.lower()]
     format_str = '%(levelname)s - %(module)8s - line:%(lineno)d - %(message)s'
+
     logging.basicConfig(stream=sys.stdout,
                         level=level,
-                        format=format_str,
-                        )
+                        format=format_str)
 
 
 # Set default logging handler to avoid "No handler found" warnings.

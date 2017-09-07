@@ -15,8 +15,10 @@ def diff_import_files(file1, file2):
     fd2 = OilLibraryFile(file2, ignore_version=True)
 
     lines1, lines2 = list(fd1.readlines()), list(fd2.readlines())
+
     print 'line lengths = ', (len(lines1), len(lines2))
     print 'matching slices for these files:'
+
     get_diffs(lines1, lines2, fd1.file_columns)
 
 
@@ -38,10 +40,13 @@ def get_diffs(a, b, field_names):
                              b, 0, len(b),
                              matching_lines)
     slices.append((len(a), len(b), 0))
+
     print
+
     for sa, sb, n in slices:
         print (ia, sa), (ib, sb), n
         sa_len, sb_len = sa - ia, sb - ib
+
         for idx in range(max([sa_len, sb_len])):
             if idx < sa_len and idx < sb_len:
                 # we will diff sa and sb as lists
@@ -98,6 +103,7 @@ def longest_matching_slice(a, a0, a1,
 
             if matching_lines[(i, j)]:
                 sys.stderr.write('.')
+
                 k = new_runs[j] = runs.get(j - 1, 0) + 1
                 if k > n:
                     sa, sb, n = i - k + 1, j - k + 1, k
@@ -117,7 +123,7 @@ def is_equal(item1, item2):
             return True
         else:
             return False
-    except:
+    except Exception:
         # try to evaluate as non-numeric
         return item1 == item2
 
@@ -130,8 +136,10 @@ def row_diff(a, b, field_names):
 
 def diff_import_files_usage(argv):
     cmd = os.path.basename(argv[0])
+
     print('usage: {0} <import_file_1> <import_file_2>\n'
           '(example: "{0} OilLib ADIOS2Export.txt")'.format(cmd))
+
     sys.exit(1)
 
 
@@ -143,7 +151,7 @@ def diff_import_files_cmd(argv=sys.argv, proc=diff_import_files):
 
     try:
         proc(f1, f2)
-    except:
+    except Exception:
         print "{0} FAILED\n".format(proc)
         raise
 
@@ -190,6 +198,7 @@ def get_file_version(file_obj):
             len(file_obj.__version__) == 3):
         print 'current file version: {}'.format(file_obj.__version__[0])
         print 'would you like to keep the existing file version (y)? ',
+
         yes_or_no = sys.stdin.readline().strip()
         if yes_or_no == '':
             yes_or_no = 'y'
@@ -234,6 +243,7 @@ def get_application_name(file_obj):
             len(file_obj.__version__) == 3):
         print 'current applicaton name: {}'.format(file_obj.__version__[2])
         print 'would you like to keep the existing application name (y)? ',
+
         yes_or_no = sys.stdin.readline().strip()
         if yes_or_no == '':
             yes_or_no = 'y'
@@ -255,8 +265,10 @@ def get_chosen_app_name():
 
     while app_num == -1:
         print 'available application names:'
+
         for i, n in enumerate(apps):
             print '\t{}\t{}'.format(i, n)
+
         print 'which application? ',
         app_num = sys.stdin.readline().strip()
 
@@ -280,8 +292,10 @@ def get_chosen_app_name():
 
 def add_header_to_csv_usage(argv):
     cmd = os.path.basename(argv[0])
+
     print('usage: {0} <import_file_1>\n'
           '(example: "{0} ADIOS2Export.txt")'.format(cmd))
+
     sys.exit(1)
 
 
@@ -293,6 +307,6 @@ def add_header_to_csv_cmd(argv=sys.argv, proc=add_header_to_csv):
 
     try:
         proc(f1)
-    except:
+    except Exception:
         print "{0} FAILED\n".format(proc)
         raise

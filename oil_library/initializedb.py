@@ -36,7 +36,9 @@ def load_database(settings):
         session = DBSession()
 
         logger.info('Purging old records in database')
+
         imported_recs_purged, oil_recs_purged = purge_old_records(session)
+
         logger.info('finished!!!\n'
                     '    {0} imported records purged.\n'
                     '    {0} oil records purged.'
@@ -48,6 +50,7 @@ def load_database(settings):
             logger.info('file version: {}'.format(fd.__version__))
 
             print('Adding new records to database')
+
             rowcount = 0
             for r in fd.readlines():
                 if len(r) < 10:
@@ -101,6 +104,6 @@ def make_db(oillib_files=None, db_file=None, blacklist_file=None):
     try:
         initialize_sql(settings)
         load_database(settings)
-    except:
+    except Exception:
         logger.info("FAILED TO CREATED OIL LIBRARY DATABASE \n")
         raise

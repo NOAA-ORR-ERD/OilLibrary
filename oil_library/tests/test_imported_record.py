@@ -1,4 +1,3 @@
-import sys
 import os
 
 import unittest
@@ -39,27 +38,31 @@ class BaseTestCase(unittest.TestCase):
 
     def setUp(self):
         self.session = DBSession()
+
         if not self.session.bind:
             self.session.bind = self.engine
+
         transaction.begin()
 
     def tearDown(self):
-
         # for unit testing, we throw away any modifications we may have made.
-
         transaction.abort()
+
         self.session.close()
 
     def add_objs_and_assert_ids(self, objs):
         if type(objs) is list:
             for o in objs:
                 self.session.add(o)
+
             self.session.flush()
+
             for o in objs:
                 assert o.id is not None
         else:
             self.session.add(objs)
             self.session.flush()
+
             assert objs.id is not None
 
 
@@ -158,12 +161,14 @@ class OilTestCase(BaseTestCase):
         oil_obj = ImportedRecord()
         assert oil_obj is not None
         assert oil_obj.id is None
+
         with raises(IntegrityError):
             self.session.add(oil_obj)
             self.session.flush()
 
     def test_init_with_args(self):
         oil_obj = ImportedRecord(**self.get_mock_oil_file_record())
+
         self.assert_mock_oil_object(oil_obj)
         self.add_objs_and_assert_ids(oil_obj)
 
@@ -183,8 +188,10 @@ class SynonymTestCase(BaseTestCase):
 
     def test_init_with_args(self):
         synonym_obj = Synonym('synonym')
+
         assert synonym_obj is not None
         assert synonym_obj.name == 'synonym'
+
         self.add_objs_and_assert_ids(synonym_obj)
 
 
@@ -206,6 +213,7 @@ class DensityTestCase(BaseTestCase):
 
     def test_init_with_args(self):
         density_obj = Density(**self.get_mock_density_file_record())
+
         self.assert_mock_density_object(density_obj)
         self.add_objs_and_assert_ids(density_obj)
 
@@ -228,6 +236,7 @@ class KVisTestCase(BaseTestCase):
 
     def test_init_with_args(self):
         kvis_obj = KVis(**self.get_mock_kvis_file_record())
+
         self.assert_mock_kvis_object(kvis_obj)
         self.add_objs_and_assert_ids(kvis_obj)
 
@@ -250,6 +259,7 @@ class DVisTestCase(BaseTestCase):
 
     def test_init_with_args(self):
         dvis_obj = DVis(**self.get_mock_dvis_file_record())
+
         self.assert_mock_dvis_object(dvis_obj)
         self.add_objs_and_assert_ids(dvis_obj)
 
@@ -272,6 +282,7 @@ class CutTestCase(BaseTestCase):
 
     def test_init_with_args(self):
         cut_obj = Cut(**self.get_mock_cut_file_record())
+
         self.assert_mock_cut_object(cut_obj)
         self.add_objs_and_assert_ids(cut_obj)
 
@@ -280,17 +291,16 @@ class ToxicityTestCase(BaseTestCase):
 
     @classmethod
     def get_mock_toxicity_file_record(cls):
-        return {
-            u'species': u'Daphnia Magna',
-            u'tox_type': u'EC',
-            u'after_24h': None,
-            u'after_48h': u'0.61',
-            u'after_96h': None,
-            }
+        return {u'species': u'Daphnia Magna',
+                u'tox_type': u'EC',
+                u'after_24h': None,
+                u'after_48h': u'0.61',
+                u'after_96h': None}
 
     def assert_mock_toxicity_object(self, toxicity):
         assert toxicity.tox_type == u'EC'
         assert toxicity.species == u'Daphnia Magna'
+
         assert toxicity.after_24h is None
         assert toxicity.after_48h == u'0.61'
         assert toxicity.after_96h is None
@@ -298,6 +308,7 @@ class ToxicityTestCase(BaseTestCase):
     def test_init_no_args(self):
         toxicity_obj = Toxicity()
         assert toxicity_obj is not None
+
         with raises(IntegrityError):
             self.session.add(toxicity_obj)
             self.session.flush()
@@ -311,6 +322,7 @@ class ToxicityTestCase(BaseTestCase):
         toxicity_args = self.get_mock_toxicity_file_record()
         toxicity_args[u'tox_type'] = u'invalid'
         toxicity_obj = Toxicity(**toxicity_args)  # IGNORE:W0142
+
         with raises(IntegrityError):
             self.session.add(toxicity_obj)
             self.session.flush()
@@ -325,6 +337,7 @@ class IntegrationTestCase(BaseTestCase):
         oil_obj.synonyms.append(synonym_obj)
 
         self.add_objs_and_assert_ids([oil_obj, synonym_obj])
+
         assert oil_obj.synonyms == [synonym_obj]
         assert synonym_obj.imported == [oil_obj]
 
@@ -340,6 +353,7 @@ class IntegrationTestCase(BaseTestCase):
         oil_obj2.synonyms.append(synonym_obj)
 
         self.add_objs_and_assert_ids([oil_obj1, oil_obj2, synonym_obj])
+
         assert oil_obj1.synonyms == [synonym_obj]
         assert oil_obj2.synonyms == [synonym_obj]
         assert synonym_obj.imported == [oil_obj1, oil_obj2]
@@ -352,6 +366,7 @@ class IntegrationTestCase(BaseTestCase):
         oil_obj.densities.append(density_obj)
 
         self.add_objs_and_assert_ids([oil_obj, density_obj])
+
         assert oil_obj.densities == [density_obj]
         assert density_obj.imported == oil_obj
 
@@ -362,6 +377,7 @@ class IntegrationTestCase(BaseTestCase):
         oil_obj.kvis.append(kvis_obj)
 
         self.add_objs_and_assert_ids([oil_obj, kvis_obj])
+
         assert oil_obj.kvis == [kvis_obj]
         assert kvis_obj.imported == oil_obj
 
@@ -372,6 +388,7 @@ class IntegrationTestCase(BaseTestCase):
         oil_obj.dvis.append(dvis_obj)
 
         self.add_objs_and_assert_ids([oil_obj, dvis_obj])
+
         assert oil_obj.dvis == [dvis_obj]
         assert dvis_obj.imported == oil_obj
 
@@ -382,6 +399,7 @@ class IntegrationTestCase(BaseTestCase):
         oil_obj.cuts.append(cut_obj)
 
         self.add_objs_and_assert_ids([oil_obj, cut_obj])
+
         assert oil_obj.cuts == [cut_obj]
         assert cut_obj.imported == oil_obj
 
@@ -393,5 +411,6 @@ class IntegrationTestCase(BaseTestCase):
         oil_obj.toxicities.append(toxicity_obj)
 
         self.add_objs_and_assert_ids([oil_obj, toxicity_obj])
+
         assert oil_obj.toxicities == [toxicity_obj]
         assert toxicity_obj.imported == oil_obj

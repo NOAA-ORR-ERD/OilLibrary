@@ -15,6 +15,10 @@ from ..utilities import estimations as est
 
 
 def _linear_curve(x, a, b):
+    '''
+        Here we describe the form of a linear function for the purpose of
+        curve-fitting measured data points.
+    '''
     return (a * x + b)
 
 
@@ -39,6 +43,15 @@ def _inverse_linear_curve(y, a, b, M, zeta=0.12):
 class ImportedRecordWithEstimation(object):
     def __init__(self, imported_rec):
         self.record = imported_rec
+        self._k_v2 = None
+
+    def __repr__(self):
+        try:
+            return ('<{0}({1.name})>'
+                    .format(self.__class__.__name__, self.record))
+        except Exception:
+            return ('<{0}({1.oil_name})>'
+                    .format(self.__class__.__name__, self.record))
 
     @classmethod
     def lowest_temperature(cls, obj_list):
@@ -118,26 +131,26 @@ class ImportedRecordWithEstimation(object):
 
             We accept only a scalar temperature or a sequence of temperatures
         '''
-        temperature = np.array(temperature)
+        temperature = np.array(temperature).reshape(-1, 1)
 
         if len(obj_list) <= 1:
             # range where the lowest and highest are basically the same.
-            return [obj_list * 2]
-        else:
-            geq_temps = temperature.reshape(-1, 1) >= [obj.ref_temp_k
-                                                       for obj in obj_list]
-            high_and_oob = np.all(geq_temps, axis=1)
-            low_and_oob = np.all(geq_temps ^ True, axis=1)
+            obj_list *= 2
 
-            rho_idxs0 = np.argmin(geq_temps, axis=1)
-            rho_idxs0[rho_idxs0 > 0] -= 1
-            rho_idxs0[high_and_oob] = len(obj_list) - 1
+        geq_temps = temperature >= [obj.ref_temp_k for obj in obj_list]
 
-            rho_idxs1 = (rho_idxs0 + 1).clip(0, len(obj_list) - 1)
-            rho_idxs1[low_and_oob] = 0
+        high_and_oob = np.all(geq_temps, axis=1)
+        low_and_oob = np.all(geq_temps ^ True, axis=1)
 
-            return zip([obj_list[i] for i in rho_idxs0],
-                       [obj_list[i] for i in rho_idxs1])
+        rho_idxs0 = np.argmin(geq_temps, axis=1)
+        rho_idxs0[rho_idxs0 > 0] -= 1
+        rho_idxs0[high_and_oob] = len(obj_list) - 1
+
+        rho_idxs1 = (rho_idxs0 + 1).clip(0, len(obj_list) - 1)
+        rho_idxs1[low_and_oob] = 0
+
+        return zip([obj_list[i] for i in rho_idxs0],
+                   [obj_list[i] for i in rho_idxs1])
 
     def culled_measurement(self, attr_name, non_null_attrs):
         '''
@@ -242,6 +255,7 @@ class ImportedRecordWithEstimation(object):
 
         rho_t = est.density_at_temp(ref_density, ref_temp_k,
                                     temperature, k_rho_t)
+
         if len(rho_t) == 1:
             return rho_t[0]
         elif shape is not None:
@@ -273,7 +287,9 @@ class ImportedRecordWithEstimation(object):
                                        for r in closest_densities])
             ref_temp_values = np.array([[d.ref_temp_k for d in r]
                                         for r in closest_densities])
+
             greater_than = np.all((temperature > ref_temp_values.T).T, axis=1)
+
             density_values[greater_than, 0] = density_values[greater_than, 1]
             ref_temp_values[greater_than, 0] = ref_temp_values[greater_than, 1]
 
@@ -341,6 +357,7 @@ class ImportedRecordWithEstimation(object):
 
     def dvis_to_kvis(self, kg_ms, ref_temp_k):
         density = self.density_at_temp(ref_temp_k)
+
         if density is None:
             return None
         else:
@@ -382,6 +399,7 @@ class ImportedRecordWithEstimation(object):
 
     def kvis_at_temp(self, temp_k=288.15, weathering=0.0):
         shape = None
+
         if hasattr(temp_k, '__iter__'):
             # we like to deal with numpy arrays as opposed to simple iterables
             temp_k = np.array(temp_k)
@@ -409,12 +427,68 @@ class ImportedRecordWithEstimation(object):
         else:
             return None
 
-        kvis_t = est.kvis_at_temp(ref_kvis, ref_temp_k, temp_k)
+        if self._k_v2 is None:
+            self.determine_k_v2()
+
+        kvis_t = est.kvis_at_temp(ref_kvis, ref_temp_k, temp_k, self._k_v2)
 
         if shape is not None:
             return kvis_t.reshape(shape)
         else:
             return kvis_t
+
+    def determine_k_v2(self, kvis_list=None):
+        '''
+            The value k_v2 is the coefficient of exponential decay used
+            when calculating kinematic viscosity as a function of
+            temperature.
+            - If the oil contains two or more viscosity measurements, then
+              we will make an attempt at determining k_v2 using a least
+              squares fit.
+            - Otherwise we will need to choose a reasonable average default
+              value.  Bill's most recent viscosity document, and an
+              analysis of the multi-KVis oils in our oil library suggest that
+              a value of 2416.0 (Abu Eishah 1999) would be a good default
+              value.
+        '''
+        self._k_v2 = 2416.0
+
+        def exp_func(temp_k, a, k_v2):
+            return a * np.exp(k_v2 / temp_k)
+
+        if kvis_list is None:
+            kvis_list = [kv for kv in self.aggregate_kvis()[0]
+                         if (kv.weathering in (None, 0.0))]
+
+        if len(kvis_list) < 2:
+            return
+
+        ref_temp_k, ref_kvis = zip(*[(k.ref_temp_k, k.m_2_s)
+                                     for k in kvis_list])
+
+        for k in np.logspace(3.6, 4.5, num=8):
+            # k = log range from about 5000-32000
+            a_coeff = ref_kvis[0] * np.exp(-k / ref_temp_k[0])
+
+            try:
+                popt, pcov = curve_fit(exp_func, ref_temp_k, ref_kvis,
+                                       p0=(a_coeff, k), maxfev=2000)
+
+                # - we want our covariance to be a reasonably small number,
+                #   but it can get into the thousands even for a good fit.
+                #   So we will only check for inf values.
+                # - for sample sizes < 3, the covariance is unreliable.
+                if len(ref_kvis) > 2 and np.any(pcov == np.inf):
+                    print 'covariance too high.'
+                    continue
+
+                if popt[1] <= 1.0:
+                    continue
+
+                self._k_v2 = popt[1]
+                break
+            except (ValueError, RuntimeError):
+                continue
 
     #
     # Oil Distillation Fractional Properties
@@ -444,6 +518,7 @@ class ImportedRecordWithEstimation(object):
 
     def culled_cuts(self):
         prev_temp = prev_fraction = 0.0
+
         for c in self.record.cuts:
             if c.vapor_temp_k < prev_temp:
                 continue
