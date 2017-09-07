@@ -18,8 +18,8 @@ pkg_version = '1.0.6'
 db_init_script_name = 'initialize_OilLibrary_db'
 
 
-def db_init_script_path():
-    return os.path.join(sys.prefix, 'bin', db_init_script_name)
+# def db_init_script_path():
+#     return os.path.join(sys.prefix, 'bin', db_init_script_name)
 
 
 def clean_files(del_db=False):
@@ -46,6 +46,24 @@ def clean_files(del_db=False):
             pass
 
         print "Deleting {0} ..".format(f)
+
+
+def init_db():
+    try:
+        # remove the working dir from sys.path so we can import the installed version
+        sys.path.remove(os.getcwd())
+    except ValueError:
+        # not there?
+        pass
+    import oil_library.initializedb
+    print "got this version:", oil_library.__file__
+    print "calling initializedb.make_db() from the code"
+    try:
+        oil_library.initializedb.make_db()
+        print 'OilLibrary database successfully generated from file!'
+    except:
+        print 'OilLibrary database generation failed'
+        raise
 
 
 class cleanall(clean):
@@ -82,12 +100,10 @@ class remake_oil_db(Command):
                 raise
 
         print "Deleting {0} ..".format(to_rm)
-        ret = call(db_init_script_path())
+        # ret = call(db_init_script_path())
 
-        if ret == 0:
-            print 'OilLibrary database successfully generated from file!'
-        else:
-            print 'OilLibrary database generation returned: ', ret
+        print "****\ncreating a new DB with direct call into package\n********"
+        init_db()
 
 
 class PyTest(TestCommand):
@@ -143,20 +159,22 @@ s = setup(name=pkg_name,
           zip_safe=False,
           )
 
-# make database post install - couldn't call this directly so used
-# console script
+
+
 
 if 'install' in s.script_args or 'build' in s.script_args:
-    print "Calling {}".format(db_init_script_path())
-    call(db_init_script_path())
+    # print "Calling {}".format(db_init_script_path())
+    # call(db_init_script_path())
+    init_db()
 elif 'develop' in s.script_args and '--uninstall' not in s.script_args:
     if os.path.exists(os.path.join(here, 'oil_library', 'OilLib.db')):
         print 'OilLibrary database exists - do not remake!'
     else:
-        print "Calling {}".format(db_init_script_path())
-        ret = call(db_init_script_path())
+        init_db()
+        # print "Calling {}".format(db_init_script_path())
+        # ret = call(db_init_script_path())
 
-        if ret == 0:
-            print 'OilLibrary database successfully generated from file!'
-        else:
-            print 'OilLibrary database generation returned: ', ret
+        # if ret == 0:
+        #     print 'OilLibrary database successfully generated from file!'
+        # else:
+        #     print 'OilLibrary database generation returned: ', ret
