@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import os
 import sys
+import sysconfig
 import fnmatch
 import shutil
 from subprocess import call
@@ -19,7 +20,7 @@ db_init_script_name = 'initialize_OilLibrary_db'
 
 
 def db_init_script_path():
-    return os.path.join(sys.prefix, 'bin', db_init_script_name)
+    return os.path.join(sysconfig.get_paths()['scripts'], db_init_script_name)
 
 
 def clean_files(del_db=False):
