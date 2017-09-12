@@ -3,10 +3,11 @@ import os
 import sys
 import fnmatch
 import shutil
-from subprocess import call
 
 from setuptools import setup, find_packages
 from distutils.command.clean import clean
+from setuptools.command.install import install
+from setuptools.command.develop import develop
 from setuptools import Command
 from setuptools.command.test import test as TestCommand
 
@@ -16,11 +17,6 @@ pkg_name = 'oil_library'
 pkg_version = '1.0.6'
 
 db_init_script_name = 'initialize_OilLibrary_db'
-
-
-# def db_init_script_path():
-#     return os.path.join(sys.prefix, 'bin', db_init_script_name)
-
 
 def clean_files(del_db=False):
     src = os.path.join(here, r'oil_library')
@@ -122,6 +118,30 @@ class PyTest(TestCommand):
         sys.exit(errno)
 
 
+class Install_db(install):
+    """
+    this command class overrides the usual one, so that the oil_db can
+    be installed after the main install.
+    """
+    def run(self):
+        # run the usual install
+        install.run(self)
+        init_db()
+
+class Develop_db(develop):
+    """
+    this command class overides the usual develop, so that the oil_db can
+    be installed after the main install.
+    """
+    def run(self):
+        # run the usual develop command
+        develop.run(self)
+        if os.path.exists(os.path.join(here, 'oil_library', 'OilLib.db')):
+            print 'OilLibrary database exists - do not remake!'
+        else:
+            init_db()
+
+
 s = setup(name=pkg_name,
           version=pkg_version,
           description=('{}: {}'.format(pkg_name,
@@ -144,6 +164,8 @@ s = setup(name=pkg_name,
           cmdclass={'remake_oil_db': remake_oil_db,
                     'cleanall': cleanall,
                     'test': PyTest,
+                    'install': Install_db,
+                    'develop': Develop_db,
                     },
           entry_points={'console_scripts': [('{} = oil_library.initializedb'
                                              ':make_db'
@@ -162,19 +184,19 @@ s = setup(name=pkg_name,
 
 
 
-if 'install' in s.script_args or 'build' in s.script_args:
-    # print "Calling {}".format(db_init_script_path())
-    # call(db_init_script_path())
-    init_db()
-elif 'develop' in s.script_args and '--uninstall' not in s.script_args:
-    if os.path.exists(os.path.join(here, 'oil_library', 'OilLib.db')):
-        print 'OilLibrary database exists - do not remake!'
-    else:
-        init_db()
-        # print "Calling {}".format(db_init_script_path())
-        # ret = call(db_init_script_path())
+# if 'install' in s.script_args or 'build' in s.script_args:
+#     # print "Calling {}".format(db_init_script_path())
+#     # call(db_init_script_path())
+#     init_db()
+# elif 'develop' in s.script_args and '--uninstall' not in s.script_args:
+#     if os.path.exists(os.path.join(here, 'oil_library', 'OilLib.db')):
+#         print 'OilLibrary database exists - do not remake!'
+#     else:
+#         init_db()
+#         # print "Calling {}".format(db_init_script_path())
+#         # ret = call(db_init_script_path())
 
-        # if ret == 0:
-        #     print 'OilLibrary database successfully generated from file!'
-        # else:
-        #     print 'OilLibrary database generation returned: ', ret
+#         # if ret == 0:
+#         #     print 'OilLibrary database successfully generated from file!'
+#         # else:
+#         #     print 'OilLibrary database generation returned: ', ret
