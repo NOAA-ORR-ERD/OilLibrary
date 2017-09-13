@@ -6,9 +6,9 @@ import shutil
 
 from setuptools import setup, find_packages
 from distutils.command.clean import clean
-from setuptools.command.install import install
-from setuptools.command.develop import develop
+
 from setuptools import Command
+from setuptools.command.build_py import build_py
 from setuptools.command.test import test as TestCommand
 
 here = os.path.abspath(os.path.dirname(__file__))
@@ -17,6 +17,7 @@ pkg_name = 'oil_library'
 pkg_version = '1.0.6'
 
 db_init_script_name = 'initialize_OilLibrary_db'
+
 
 def clean_files(del_db=False):
     src = os.path.join(here, r'oil_library')
@@ -45,21 +46,19 @@ def clean_files(del_db=False):
 
 
 def init_db():
-    try:
-        # remove the working dir from sys.path so we can import the installed version
-        sys.path.remove(os.getcwd())
-    except ValueError:
-        # not there?
-        pass
-    import oil_library.initializedb
-    print "got this version:", oil_library.__file__
-    print "calling initializedb.make_db() from the code"
-    try:
-        oil_library.initializedb.make_db()
-        print 'OilLibrary database successfully generated from file!'
-    except:
-        print 'OilLibrary database generation failed'
-        raise
+    if os.path.exists(os.path.join(here, 'oil_library', 'OilLib.db')):
+        print 'OilLibrary database exists - do not remake!'
+    else:
+        try:
+            import oil_library.initializedb
+            print "got this version:", oil_library.__file__
+
+            print "calling initializedb.make_db() from the code"
+            oil_library.initializedb.make_db()
+            print 'OilLibrary database successfully generated from file!'
+        except Exception:
+            print 'OilLibrary database generation failed'
+            raise
 
 
 class cleanall(clean):
@@ -118,28 +117,14 @@ class PyTest(TestCommand):
         sys.exit(errno)
 
 
-class Install_db(install):
-    """
-    this command class overrides the usual one, so that the oil_db can
-    be installed after the main install.
-    """
+class BuildPyCommand(build_py):
+    """ Custom build command. """
+
     def run(self):
-        # run the usual install
-        install.run(self)
         init_db()
 
-class Develop_db(develop):
-    """
-    this command class overides the usual develop, so that the oil_db can
-    be installed after the main install.
-    """
-    def run(self):
-        # run the usual develop command
-        develop.run(self)
-        if os.path.exists(os.path.join(here, 'oil_library', 'OilLib.db')):
-            print 'OilLibrary database exists - do not remake!'
-        else:
-            init_db()
+        # build_py is an old-style class, so we can't use super()
+        build_py.run(self)
 
 
 s = setup(name=pkg_name,
@@ -164,8 +149,7 @@ s = setup(name=pkg_name,
           cmdclass={'remake_oil_db': remake_oil_db,
                     'cleanall': cleanall,
                     'test': PyTest,
-                    'install': Install_db,
-                    'develop': Develop_db,
+                    'build_py': BuildPyCommand,
                     },
           entry_points={'console_scripts': [('{} = oil_library.initializedb'
                                              ':make_db'
@@ -182,21 +166,5 @@ s = setup(name=pkg_name,
           )
 
 
-
-
-# if 'install' in s.script_args or 'build' in s.script_args:
-#     # print "Calling {}".format(db_init_script_path())
-#     # call(db_init_script_path())
-#     init_db()
-# elif 'develop' in s.script_args and '--uninstall' not in s.script_args:
-#     if os.path.exists(os.path.join(here, 'oil_library', 'OilLib.db')):
-#         print 'OilLibrary database exists - do not remake!'
-#     else:
-#         init_db()
-#         # print "Calling {}".format(db_init_script_path())
-#         # ret = call(db_init_script_path())
-
-#         # if ret == 0:
-#         #     print 'OilLibrary database successfully generated from file!'
-#         # else:
-#         #     print 'OilLibrary database generation returned: ', ret
+if 'develop' in s.script_args and '--uninstall' not in s.script_args:
+    init_db()
