@@ -14,6 +14,7 @@ temp.txt
 
 /OilLibrary.egg-info
 /build
+/dist
 /*.egg
 oil_library.egg-info
 
