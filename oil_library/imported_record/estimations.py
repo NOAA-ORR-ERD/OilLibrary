@@ -500,21 +500,23 @@ class ImportedRecordWithEstimation(object):
             f_res, f_asph = (self.record.resins_fraction,
                              self.record.asphaltenes_fraction)
 
+        estimated_res = estimated_asph = False
+        
         if f_res is not None and f_asph is not None:
-            estimated = False
-            return f_res, f_asph, estimated
+            return f_res, f_asph, estimated_res, estimated_asph
         else:
-            estimated = True
             density = self.density_at_temp(288.15)
             viscosity = self.kvis_at_temp(288.15)
 
         if f_res is None:
             f_res = est.resin_fraction(density, viscosity)
+            estimated_res = True
 
         if f_asph is None:
             f_asph = est.asphaltene_fraction(density, viscosity, f_res)
+            estimated_asph = True
 
-        return f_res, f_asph, estimated
+        return f_res, f_asph, estimated_res, estimated_asph
 
     def culled_cuts(self):
         prev_temp = prev_fraction = 0.0
@@ -532,7 +534,7 @@ class ImportedRecordWithEstimation(object):
             yield c
 
     def normalized_cut_values(self, N=10):
-        f_res, f_asph, _estimated = self.inert_fractions()
+        f_res, f_asph, _estimated_res, estimated_asph = self.inert_fractions()
         cuts = list(self.culled_cuts())
 
         if len(cuts) == 0:
@@ -626,7 +628,7 @@ class ImportedRecordWithEstimation(object):
         return est.specific_gravity(rho_list)
 
     def component_mass_fractions(self):
-        f_res, f_asph, _estimated = self.inert_fractions()
+        f_res, f_asph, _estimated_res, estimated_asph = self.inert_fractions()
         cut_temps, fmass_i = self.get_cut_temps_fmasses()
 
         f_sat_i = fmass_i / 2.0
@@ -816,7 +818,7 @@ class ImportedRecordWithEstimation(object):
             OilInitialize.cpp contains steps that are missing here and in the
             document.
         '''
-        _f_res, f_asph, _estimated = self.inert_fractions()
+        _f_res, f_asph, _estimated_res, estimated_asph = self.inert_fractions()
 
         if f_asph > 0.0:
             return est.bullwinkle_fraction_from_asph(f_asph)
@@ -850,7 +852,7 @@ class ImportedRecordWithEstimation(object):
                   if self.record.vanadium is not None
                   else 0.0)
 
-            _f_res, f_asph, estimated = self.inert_fractions()
+            _f_res, f_asph, _estimated_res, _estimated_asph = self.inert_fractions()
             oil_api = self.get_api()
 
             if (Ni > 0.0 and Va > 0.0 and Ni + Va > 15.0):
