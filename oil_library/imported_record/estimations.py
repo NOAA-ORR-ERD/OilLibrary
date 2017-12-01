@@ -518,6 +518,32 @@ class ImportedRecordWithEstimation(object):
 
         return f_res, f_asph, estimated_res, estimated_asph
 
+    def volatile_fractions(self):
+        try:
+            f_sat, f_arom = self.record.saturates, self.record.aromatics
+        except AttributeError:
+            f_sat, f_arom = (self.record.saturates_fraction,
+                             self.record.aromatics_fraction)
+
+        estimated_sat = estimated_arom = False
+        
+        if f_sat is not None and f_arom is not None:
+            return f_sat, f_arom, estimated_sat, estimated_arom
+        else:
+            density = self.density_at_temp(288.15)
+            viscosity = self.kvis_at_temp(288.15)
+
+        if f_sat is None:
+            f_sat = est.saturates_fraction(density, viscosity)
+            estimated_sat = True
+
+        f_res, f_asph, _estimated_res, _estimated_asph = self.inert_fractions()
+        if f_arom is None:
+            f_arom = est.aromatics_fraction(f_res, f_asph, f_sat)
+            estimated_arom = True
+
+        return f_sat, f_arom, estimated_sat, estimated_arom
+
     def culled_cuts(self):
         prev_temp = prev_fraction = 0.0
 
@@ -534,7 +560,7 @@ class ImportedRecordWithEstimation(object):
             yield c
 
     def normalized_cut_values(self, N=10):
-        f_res, f_asph, _estimated_res, estimated_asph = self.inert_fractions()
+        f_res, f_asph, _estimated_res, _estimated_asph = self.inert_fractions()
         cuts = list(self.culled_cuts())
 
         if len(cuts) == 0:
@@ -628,7 +654,10 @@ class ImportedRecordWithEstimation(object):
         return est.specific_gravity(rho_list)
 
     def component_mass_fractions(self):
-        f_res, f_asph, _estimated_res, estimated_asph = self.inert_fractions()
+        return self.component_mass_fractions_riazi()
+
+    def component_mass_fractions_riazi(self):
+        f_res, f_asph, _estimated_res, _estimated_asph = self.inert_fractions()
         cut_temps, fmass_i = self.get_cut_temps_fmasses()
 
         f_sat_i = fmass_i / 2.0
@@ -818,7 +847,7 @@ class ImportedRecordWithEstimation(object):
             OilInitialize.cpp contains steps that are missing here and in the
             document.
         '''
-        _f_res, f_asph, _estimated_res, estimated_asph = self.inert_fractions()
+        _f_res, f_asph, _estimated_res, _estimated_asph = self.inert_fractions()
 
         if f_asph > 0.0:
             return est.bullwinkle_fraction_from_asph(f_asph)

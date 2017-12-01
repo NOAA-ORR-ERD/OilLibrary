@@ -117,6 +117,22 @@ def asphaltene_fraction(density, viscosity, f_other=0.0):
     return f_asph
 
 
+def saturates_fraction(density, viscosity, f_other=0.0):
+    A = _A_coeff(density)
+    B = _B_coeff(density, viscosity)
+
+    f_sat = -2.5 + 76.6 / A + 0.00013 * np.log(B)
+    f_sat = np.clip(f_sat, 0.0, 1.0 - f_other)
+
+    return f_sat
+
+
+def aromatics_fraction(f_res, f_asph, f_sat):
+    f_arom = 1.0 - (f_res + f_asph + f_sat)
+    f_arom = np.clip(f_arom, 0.0, 1.0)
+
+    return f_arom
+
 def _A_coeff(density):
     '''
         Source: Fingas empirical formulas that are based upon analysis

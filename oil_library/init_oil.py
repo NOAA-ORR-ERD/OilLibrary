@@ -115,6 +115,7 @@ def generate_oil(imported_rec):
 
     # Distillation estimations
     add_inert_fractions(imp_rec_obj, oil)
+    add_volatile_fractions(imp_rec_obj, oil)
     add_distillation_cuts(imp_rec_obj, oil)
 
     # Component Fractional estimations
@@ -135,7 +136,7 @@ def generate_oil(imported_rec):
 
     # estimations not in the document, but needed
     add_metals(imp_rec_obj, oil)
-    add_aggregate_volatile_fractions(oil)
+    #add_aggregate_volatile_fractions(oil)
     add_misc_fractions(imp_rec_obj, oil)
     add_product_type(imp_rec_obj, oil)
     add_k0y(imp_rec_obj, oil)
@@ -182,6 +183,19 @@ def add_inert_fractions(imp_rec_obj, oil):
 
     oil.estimated.resins_fraction = estimated_res
     oil.estimated.asphaltenes_fraction = estimated_asph
+
+
+def add_volatile_fractions(imp_rec_obj, oil):
+    '''
+        Add the saturates and aromatics fractions to our oil
+        This does not include the component saturates & aromatics
+    '''
+    f_sat, f_arom, estimated_sat, estimated_arom = imp_rec_obj.volatile_fractions()
+
+    oil.saturates_fraction, oil.aromatics_fraction = f_sat, f_arom
+
+    oil.estimated.saturates_fraction = estimated_sat
+    oil.estimated.aromatics_fraction = estimated_arom
 
 
 def add_distillation_cuts(imp_rec_obj, oil):
