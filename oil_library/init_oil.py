@@ -116,6 +116,7 @@ def generate_oil(imported_rec):
     # Distillation estimations
     add_inert_fractions(imp_rec_obj, oil)
     add_volatile_fractions(imp_rec_obj, oil)
+    check_sara_fractions(imp_rec_obj, oil)
     add_distillation_cuts(imp_rec_obj, oil)
 
     # Component Fractional estimations
@@ -136,7 +137,7 @@ def generate_oil(imported_rec):
 
     # estimations not in the document, but needed
     add_metals(imp_rec_obj, oil)
-    #add_aggregate_volatile_fractions(oil)
+    add_aggregate_volatile_fractions(oil)
     add_misc_fractions(imp_rec_obj, oil)
     add_product_type(imp_rec_obj, oil)
     add_k0y(imp_rec_obj, oil)
@@ -196,6 +197,23 @@ def add_volatile_fractions(imp_rec_obj, oil):
 
     oil.estimated.saturates_fraction = estimated_sat
     oil.estimated.aromatics_fraction = estimated_arom
+
+def check_sara_fractions(imp_rec_obj, oil):
+    f_sat, f_arom = oil.saturates_fraction, oil.aromatics_fraction
+    f_res, f_asph = oil.resins_fraction, oil.asphaltenes_fraction
+
+    estimated_sat = oil.estimated.saturates_fraction
+    estimated_arom = oil.estimated.aromatics_fraction
+    estimated_res = oil.estimated.resins_fraction
+    estimated_asph = oil.estimated.asphaltenes_fraction
+
+    total_sara = f_sat + f_arom + f_res + f_asph
+    if total_sara == 1.0:
+        return
+    else:
+        print "SARA totals don't add up - ", oil, total_sara
+
+    #if estimated_sat is False and estimated_arom is False and estimated
 
 
 def add_distillation_cuts(imp_rec_obj, oil):
@@ -323,13 +341,16 @@ def add_aggregate_volatile_fractions(oil):
     '''
         for this we need an oil record that already has
         the component mass fractions estimated.
+        don't estimate if the record has the totals
+        or if we already have a 'good' estimate
     '''
-    oil.saturates_fraction = np.sum([f.fraction
-                                     for f in oil.sara_fractions
-                                     if f.sara_type == 'Saturates'])
-    oil.aromatics_fraction = np.sum([f.fraction
-                                     for f in oil.sara_fractions
-                                     if f.sara_type == 'Aromatics'])
+    if np.isnan(oil.saturates_fraction):
+        oil.saturates_fraction = np.sum([f.fraction
+                                         for f in oil.sara_fractions
+                                         if f.sara_type == 'Saturates'])
+        oil.aromatics_fraction = np.sum([f.fraction
+                                         for f in oil.sara_fractions
+                                         if f.sara_type == 'Aromatics'])
 
 
 def add_misc_fractions(imp_rec_obj, oil):
