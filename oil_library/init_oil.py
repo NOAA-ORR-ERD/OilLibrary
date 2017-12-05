@@ -116,7 +116,6 @@ def generate_oil(imported_rec):
     # Distillation estimations
     add_inert_fractions(imp_rec_obj, oil)
     add_volatile_fractions(imp_rec_obj, oil)
-    check_sara_fractions(imp_rec_obj, oil)
     add_distillation_cuts(imp_rec_obj, oil)
 
     # Component Fractional estimations
@@ -197,23 +196,6 @@ def add_volatile_fractions(imp_rec_obj, oil):
 
     oil.estimated.saturates_fraction = estimated_sat
     oil.estimated.aromatics_fraction = estimated_arom
-
-def check_sara_fractions(imp_rec_obj, oil):
-    f_sat, f_arom = oil.saturates_fraction, oil.aromatics_fraction
-    f_res, f_asph = oil.resins_fraction, oil.asphaltenes_fraction
-
-    estimated_sat = oil.estimated.saturates_fraction
-    estimated_arom = oil.estimated.aromatics_fraction
-    estimated_res = oil.estimated.resins_fraction
-    estimated_asph = oil.estimated.asphaltenes_fraction
-
-    total_sara = f_sat + f_arom + f_res + f_asph
-    if total_sara == 1.0:
-        return
-    else:
-        print "SARA totals don't add up - ", oil, total_sara
-
-    #if estimated_sat is False and estimated_arom is False and estimated
 
 
 def add_distillation_cuts(imp_rec_obj, oil):
