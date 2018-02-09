@@ -8,8 +8,8 @@
 import numpy as np
 
 
-# fixme -- these are unit conversion, and are in the unit_conversion(NUCOS) library.
-#          we should use that lib to be consistent.
+# fixme -- these are unit conversion, and are in the unit_conversion(NUCOS)
+#          library.  We should use that lib to be consistent.
 
 def density_from_api(api):
     '''
@@ -64,8 +64,9 @@ def specific_gravity(density):
         Specific Gravity of Oil with respect to water at 4C (greatest
         density of water)
 
-        Fixme: also in unit_conversion, and SG is NOT at 4C -- it is usually at 60F (15.6)
-               and that is the definition used for API gravity
+        Fixme: also in unit_conversion, and SG is NOT at 4C
+               -- it is usually at 60F (15.6) and that is the definition used
+                  for API gravity
 
     '''
     return density / 1000.0
@@ -132,6 +133,7 @@ def aromatics_fraction(f_res, f_asph, f_sat):
     f_arom = np.clip(f_arom, 0.0, 1.0)
 
     return f_arom
+
 
 def _A_coeff(density):
     '''

@@ -262,7 +262,7 @@ class KVis(Base):
             self.weathering = 0.0
 
     def __repr__(self):
-        return ('<KVis({0.m_2_s} m^2/s at {0.ref_temp_k}K)>'
+        return ('<KVis({0.m_2_s} m^2/s at {0.ref_temp_k}K, w={0.weathering})>'
                 .format(self))
 
 
@@ -285,7 +285,7 @@ class DVis(Base):
             self.weathering = 0.0
 
     def __repr__(self):
-        return ('<DVis({0.kg_ms} kg/ms at {0.ref_temp_k}K)>'
+        return ('<DVis({0.kg_ms} kg/ms at {0.ref_temp_k}K, w={0.weathering})>'
                 .format(self))
 
 
