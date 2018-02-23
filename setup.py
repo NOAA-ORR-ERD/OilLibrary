@@ -16,8 +16,6 @@ README = open(os.path.join(here, 'README.md')).read()
 pkg_name = 'oil_library'
 pkg_version = '1.0.6'
 
-db_init_script_name = 'initialize_OilLibrary_db'
-
 
 def clean_files(del_db=False):
     src = os.path.join(here, r'oil_library')
@@ -151,15 +149,18 @@ s = setup(name=pkg_name,
                     'test': PyTest,
                     'build_py': BuildPyCommand,
                     },
-          entry_points={'console_scripts': [('{} = oil_library.initializedb'
-                                             ':make_db'
-                                             .format(db_init_script_name)),
+          entry_points={'console_scripts': [('initialize_OilLibrary_db = '
+                                             'oil_library.initializedb'
+                                             ':make_db'),
                                             ('diff_import_files = '
                                              'oil_library.scripts.oil_import'
                                              ':diff_import_files_cmd'),
                                             ('add_header_to_import_file = '
                                              'oil_library.scripts.oil_import'
                                              ':add_header_to_csv_cmd'),
+                                            ('get_import_record_dates = '
+                                             'oil_library.scripts.oil_import'
+                                             ':get_import_record_dates_cmd'),
                                             ],
                         },
           zip_safe=False,
