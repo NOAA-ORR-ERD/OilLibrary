@@ -5,7 +5,7 @@
     find a place for all the data.
 '''
 import sys
-
+import re
 import transaction
 
 from slugify import slugify_filename
@@ -65,8 +65,9 @@ def add_oil_object(session, file_columns, row_data):
 
     fix_name(row_dict)
 
-    # fix_location(row_dict)
-    # fix_field_name(row_dict)
+    fix_location(row_dict)
+    fix_field_name(row_dict)
+    add_record_date(row_dict)
 
     fix_pour_point(row_dict)
     fix_flash_point(row_dict)
@@ -100,6 +101,24 @@ def fix_field_name(kwargs):
     ''' just to maintain our uniqueness constraint '''
     if kwargs['field_name'] is None:
         kwargs['field_name'] = ''
+
+
+def add_record_date(kwargs):
+    '''
+        Search the reference field looking for any 4 digit numeric values.
+        We will assume these to be possible years of publication.
+    '''
+    if kwargs['reference'] is None:
+        ref_dates = ['no-ref']
+    else:
+        p = re.compile(r'\d{4}')
+        m = p.findall(kwargs['reference'])
+        if len(m) == 0:
+            ref_dates = ['no-date']
+        else:
+            ref_dates = m
+
+    kwargs['reference_date'] = ', '.join(list(set(ref_dates)))
 
 
 def fix_pour_point(kwargs):
