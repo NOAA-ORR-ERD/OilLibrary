@@ -372,11 +372,11 @@ class ImportedRecordWithEstimation(object):
                     m_2_s=viscosity)
 
     def aggregate_kvis(self):
-        kvis_list = [(k.ref_temp_k, (k.m_2_s, False))
+        kvis_list = [((k.ref_temp_k, k.weathering), (k.m_2_s, False))
                      for k in self.culled_kvis()]
 
         if hasattr(self.record, 'dvis'):
-            dvis_list = [(d.ref_temp_k,
+            dvis_list = [((d.ref_temp_k, d.weathering),
                           (est.dvis_to_kvis(d.kg_ms,
                                             self.density_at_temp(d.ref_temp_k)
                                             ),
@@ -389,13 +389,8 @@ class ImportedRecordWithEstimation(object):
         else:
             agg = dict(kvis_list)
 
-        out_items = sorted([(i[0], i[1][0], i[1][1])
-                            for i in agg.iteritems()])
-
-        kvis_out, estimated = zip(*[(KVis(m_2_s=k, ref_temp_k=t), e)
-                                    for t, k, e in out_items])
-
-        return kvis_out, estimated
+        return zip(*[(KVis(m_2_s=k, ref_temp_k=t, weathering=w), e)
+                     for (t, w), (k, e) in sorted(agg.iteritems())])
 
     def kvis_at_temp(self, temp_k=288.15, weathering=0.0):
         shape = None
@@ -501,7 +496,7 @@ class ImportedRecordWithEstimation(object):
                              self.record.asphaltenes_fraction)
 
         estimated_res = estimated_asph = False
-        
+
         if f_res is not None and f_asph is not None:
             return f_res, f_asph, estimated_res, estimated_asph
         else:
@@ -526,7 +521,7 @@ class ImportedRecordWithEstimation(object):
                              self.record.aromatics_fraction)
 
         estimated_sat = estimated_arom = False
-        
+
         if f_sat is not None and f_arom is not None:
             return f_sat, f_arom, estimated_sat, estimated_arom
         else:

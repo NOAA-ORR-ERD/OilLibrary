@@ -4,6 +4,7 @@ import logging
 
 import transaction
 from sqlalchemy import engine_from_config
+from sqlalchemy.exc import IntegrityError
 
 from .oil_library_parse import OilLibraryFile
 
@@ -49,7 +50,7 @@ def load_database(settings):
             fd = OilLibraryFile(fn)
             logger.info('file version: {}'.format(fd.__version__))
 
-            print('Adding new records to database')
+            logger.info('Adding new records to database')
 
             rowcount = 0
             for r in fd.readlines():
@@ -58,14 +59,24 @@ def load_database(settings):
 
                 r = [unicode(f, 'utf-8') if f is not None else f
                      for f in r]
-                add_oil_object(session, fd.file_columns, r)
+
+                try:
+                    add_oil_object(session, fd.file_columns, r)
+                except IntegrityError as e:
+                    logger.warning('Failed to add oil: {}'.format(e))
+
+                    logger.info('rolling back...')
+                    transaction.abort()
+
+                    logger.info('continuing...')
+                    continue
 
                 if rowcount % 100 == 0:
                     sys.stderr.write('.')
 
                 rowcount += 1
 
-            print('finished!!!  {0} rows processed.'.format(rowcount))
+            logger.info('finished!!!  {0} rows processed.'.format(rowcount))
             session.close()
 
         # we need to open a session for each record here because we want
