@@ -317,8 +317,11 @@ def add_header_to_csv_cmd(argv=sys.argv, proc=add_header_to_csv):
 
 def get_import_record_dates(import_file):
     sys.stderr.write('opening file: {0} ...\n'.format(import_file))
-    fd = OilLibraryFile(import_file)
+    fd = OilLibraryFile(import_file, ignore_version=True)
     sys.stderr.write('file version: {}\n'.format(fd.__version__))
+
+    print '\t'.join(('oil_name', 'adios_oil_id',
+                     'reference_date', 'reference'))
 
     sys.stderr.write('reading_records...\n')
     for r in fd.readlines():
@@ -339,18 +342,21 @@ def get_record_date(file_columns, row_data):
 
     oil_name = row_dict['oil_name']
     adios_oil_id = row_dict['adios_oil_id']
+    reference = row_dict['reference']
 
-    if row_dict['reference'] is None:
+    if reference is None:
         ref_dates = ['no-ref']
+        reference = ''
     else:
         p = re.compile(r'\d{4}')
-        m = p.findall(row_dict['reference'])
+        m = p.findall(reference)
         if len(m) == 0:
             ref_dates = ['no-date']
         else:
             ref_dates = m
 
-    return oil_name, adios_oil_id, ', '.join(list(set(ref_dates)))
+    return (oil_name, adios_oil_id,
+            ', '.join(list(set(ref_dates))), reference)
 
 
 def get_import_record_dates_usage(argv):
