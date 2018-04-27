@@ -133,7 +133,8 @@ class ImportedRecord(Base):
         dimensional tabular format.
     '''
     __tablename__ = 'imported_records'
-    __table_args__ = (UniqueConstraint('oil_name', 'location', 'field_name'),
+    __table_args__ = (UniqueConstraint('oil_name', 'location', 'field_name',
+                                       'reference_date'),
                       )
 
     id = Column(Integer, primary_key=True)
@@ -145,6 +146,7 @@ class ImportedRecord(Base):
     location = Column(String(64))
     field_name = Column(String(64))
     reference = Column(Text)
+    reference_date = Column(String(22))
     api = Column(Float(53))
     pour_point_min_k = Column(Float(53))
     pour_point_max_k = Column(Float(53))
@@ -262,7 +264,7 @@ class KVis(Base):
             self.weathering = 0.0
 
     def __repr__(self):
-        return ('<KVis({0.m_2_s} m^2/s at {0.ref_temp_k}K)>'
+        return ('<KVis({0.m_2_s} m^2/s at {0.ref_temp_k}K, w={0.weathering})>'
                 .format(self))
 
 
@@ -285,7 +287,7 @@ class DVis(Base):
             self.weathering = 0.0
 
     def __repr__(self):
-        return ('<DVis({0.kg_ms} kg/ms at {0.ref_temp_k}K)>'
+        return ('<DVis({0.kg_ms} kg/ms at {0.ref_temp_k}K, w={0.weathering})>'
                 .format(self))
 
 

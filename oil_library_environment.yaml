@@ -1,0 +1,37 @@
+name: oil_lib_temp
+channels:
+- conda-forge
+- NOAA-ORR-ERD
+- defaults
+dependencies:
+- unit_conversion=2.5.5=py27_0
+- awesome-slugify=1.6.5=py_2
+- blas=1.1=openblas
+- ca-certificates=2017.7.27.1=0
+- certifi=2017.7.27.1=py27_0
+- libgfortran=3.0.0=0
+- ncurses=5.9=10
+- numpy=1.13.1=py27_blas_openblas_200
+- openblas=0.2.19=2
+- openssl=1.0.2l=0
+- pip=9.0.1=py27_0
+- py=1.4.34=py27_0
+- pytest=3.2.2=py_0
+- python=2.7.13=1
+- readline=6.2=0
+- regex=2017.07.28=py27_0
+- scipy=0.19.1=py27_blas_openblas_202
+- setuptools=36.3.0=py27_0
+- sqlalchemy=1.1.13=py27_0
+- sqlite=3.13.0=1
+- tk=8.5.19=2
+- transaction=2.1.2=py27_0
+- unidecode=0.04.21=py27_0
+- wheel=0.29.0=py27_0
+- zlib=1.2.11=0
+- repoze.lru=0.6=py27_0
+- zope=1.0=py27_0
+- zope.interface=4.4.2=py27_0
+- zope.sqlalchemy=0.7.7=py27_0
+prefix: /Users/chris.barker/miniconda2/envs/oil_lib_temp
+

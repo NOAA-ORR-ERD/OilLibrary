@@ -4,7 +4,7 @@
            some oil properties records can get quite large)
 '''
 
-json_data = {'name': u'BAHIA',
+json_data = {'name': u'oil_bahia',
              'adios_oil_id': u'AD00102',
              'api': 35.2,
 

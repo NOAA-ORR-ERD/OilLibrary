@@ -1,5 +1,6 @@
 *.pyc
 *.swp
+__pycache__
 *~
 
 # ignore generated oildb
@@ -14,6 +15,7 @@ temp.txt
 
 /OilLibrary.egg-info
 /build
+/dist
 /*.egg
 oil_library.egg-info
 

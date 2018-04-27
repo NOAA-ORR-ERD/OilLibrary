@@ -8,6 +8,9 @@
 import numpy as np
 
 
+# fixme -- these are unit conversion, and are in the unit_conversion(NUCOS)
+#          library.  We should use that lib to be consistent.
+
 def density_from_api(api):
     '''
         Source: Adios2
@@ -60,14 +63,18 @@ def specific_gravity(density):
     '''
         Specific Gravity of Oil with respect to water at 4C (greatest
         density of water)
+
+        Fixme: also in unit_conversion, and SG is NOT at 4C
+               -- it is usually at 60F (15.6) and that is the definition used
+                  for API gravity
+
     '''
     return density / 1000.0
 
 
 def dvis_to_kvis(dvis, density):
     '''
-        Source: Probably Adios2, but there are lots of places to
-                get this.
+        Source: Definition of kinematic viscosity.
 
         Conversion from dynamic viscosity to kinematic viscosity.
     '''
@@ -109,6 +116,23 @@ def asphaltene_fraction(density, viscosity, f_other=0.0):
     f_asph = np.clip(f_asph, 0.0, 1.0 - f_other)
 
     return f_asph
+
+
+def saturates_fraction(density, viscosity, f_other=0.0):
+    A = _A_coeff(density)
+    B = _B_coeff(density, viscosity)
+
+    f_sat = -2.5 + 76.6 / A + 0.00013 * np.log(B)
+    f_sat = np.clip(f_sat, 0.0, 1.0 - f_other)
+
+    return f_sat
+
+
+def aromatics_fraction(f_res, f_asph, f_sat):
+    f_arom = 1.0 - (f_res + f_asph + f_sat)
+    f_arom = np.clip(f_arom, 0.0, 1.0)
+
+    return f_arom
 
 
 def _A_coeff(density):

@@ -4,7 +4,7 @@
            some oil properties records can get quite large)
 '''
 
-json_data = {'name': u'ALASKA NORTH SLOPE (MIDDLE PIPELINE)',
+json_data = {'name': u'oil_ans_mp',
              'adios_oil_id': u'AD01759',
              'api': 29.9,
 
