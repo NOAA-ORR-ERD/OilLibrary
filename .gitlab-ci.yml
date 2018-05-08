@@ -8,5 +8,12 @@ develop:
     only: 
         - develop
     script:
-        - docker build -f dockerfile . -t gitlab.orr.noaa.gov:50002/oillibrary:develop
+        - docker build -f dockerfile . -t gitlab.orr.noaa.gov:5002/oillibrary:develop
         - docker push gitlab.orr.noaa.gov:5002/oillibrary:develop
+
+production:
+    only:
+        - production
+    script:
+        - docker build -f dockerfile . -t gitlab.orr.noaa.gov:5002/oillibrary:production
+        - docker push gitlab.orr.noaa.gov:5002/oillibrary:production
