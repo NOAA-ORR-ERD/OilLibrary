@@ -11,10 +11,14 @@ from setuptools import Command
 from setuptools.command.build_py import build_py
 from setuptools.command.test import test as TestCommand
 
+from git import Repo
+
 here = os.path.abspath(os.path.dirname(__file__))
 README = open(os.path.join(here, 'README.md')).read()
 pkg_name = 'oil_library'
 pkg_version = '1.0.6'
+
+repo_head = Repo('.').head
 
 
 def clean_files(del_db=False):
@@ -127,9 +131,13 @@ class BuildPyCommand(build_py):
 
 s = setup(name=pkg_name,
           version=pkg_version,
-          description=('{}: {}'.format(pkg_name,
-                                       'The NOAA library of oils '
-                                       'and their properties.')),
+          description=('{}: The NOAA library of oils and their properties.\n'
+                       'Branch: {}\n'
+                       'LastUpdate: {}'
+                       .format(pkg_name,
+                               repo_head.ref.name,
+                               repo_head.commit.committed_datetime.isoformat(),
+                               )),
           long_description=README,
           author='ADIOS/GNOME team at NOAA ORR',
           author_email='orr.gnome@noaa.gov',
