@@ -19,7 +19,12 @@ pkg_name = 'oil_library'
 pkg_version = '1.0.6'
 
 repo = Repo('.')
-branch_name = repo.active_branch.name,
+
+try:
+    branch_name = repo.active_branch.name
+except TypeError:
+    branch_name = 'no-branch'
+
 last_update = repo.iter_commits().next().committed_datetime.isoformat(),
 
 
