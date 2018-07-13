@@ -18,7 +18,9 @@ README = open(os.path.join(here, 'README.md')).read()
 pkg_name = 'oil_library'
 pkg_version = '1.0.6'
 
-repo_head = Repo('.').head
+repo = Repo('.')
+branch_name = repo.active_branch.name,
+last_update = repo.iter_commits().next().committed_datetime.isoformat(),
 
 
 def clean_files(del_db=False):
@@ -134,10 +136,7 @@ s = setup(name=pkg_name,
           description=('{}: The NOAA library of oils and their properties.\n'
                        'Branch: {}\n'
                        'LastUpdate: {}'
-                       .format(pkg_name,
-                               repo_head.ref.name,
-                               repo_head.commit.committed_datetime.isoformat(),
-                               )),
+                       .format(pkg_name, branch_name, last_update)),
           long_description=README,
           author='ADIOS/GNOME team at NOAA ORR',
           author_email='orr.gnome@noaa.gov',
