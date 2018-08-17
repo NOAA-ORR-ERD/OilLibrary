@@ -13,7 +13,11 @@ Not sure at present if this needs to be serializable?
 import copy
 from itertools import groupby, chain, izip_longest
 
-from repoze.lru import lru_cache
+try:
+    from functools import lru_cache  # it's built-in on py3
+except ImportError:
+    from backports.functools_lru_cache import lru_cache  # needs backports for py2
+
 import numpy as np
 
 from .models import Oil
