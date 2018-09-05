@@ -16,7 +16,7 @@ from git import Repo
 here = os.path.abspath(os.path.dirname(__file__))
 README = open(os.path.join(here, 'README.md')).read()
 pkg_name = 'oil_library'
-pkg_version = '1.0.6'
+pkg_version = '1.1.0'
 
 repo = Repo('.')
 
