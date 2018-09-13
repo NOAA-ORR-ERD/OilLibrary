@@ -3,6 +3,9 @@
 __pycache__
 *~
 
+# pytest stuff
+.pytest_cache/
+
 # ignore generated oildb
 oil_library/OilLib.db
 OilLibrary.db

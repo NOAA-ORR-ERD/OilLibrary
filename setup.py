@@ -18,7 +18,7 @@ from git.exc import InvalidGitRepositoryError
 here = os.path.abspath(os.path.dirname(__file__))
 README = open(os.path.join(here, 'README.md')).read()
 pkg_name = 'oil_library'
-pkg_version = '1.1.1'
+pkg_version = '1.1.2'
 
 
 # try to get update date from repo

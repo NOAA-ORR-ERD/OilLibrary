@@ -65,7 +65,7 @@ viscosity_tests = [oil_obj.kvis[ix].ref_temp_k if ix < len(oil_obj.kvis)
                    for ix in range(0, len(oil_obj.kvis) + 3)]
 
 print 'v_max', v_max
-viscosity_exp = [(d.m_2_s, v_max)[v_max < d.m_2_s]
+viscosity_exp = [(d.m_2_s, v_max)[int(v_max < d.m_2_s)]
                  for temp in viscosity_tests
                  for d in oil_obj.kvis
                  if abs(d.ref_temp_k - temp) == 0]
