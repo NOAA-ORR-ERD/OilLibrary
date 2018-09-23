@@ -1,12 +1,5 @@
-#requirements file for the oil_library package.
-
-## note -- this duplicates what's in setup.py -- not good.
-#  we should get rid of one or the other.
-#
-# There is discussion of that here:
-#  https://caremad.io/2013/07/setup-vs-requirement/
-#  but I'm not sure how this plays with conda...
-
+# pip requirements file for the oil_library package.
+#  this needs to be manually kept in sync with the conda_requirements file :-(
 
 numpy
 scipy
@@ -14,7 +7,10 @@ SQLAlchemy
 zope.sqlalchemy
 awesome-slugify
 pytest
-repoze.lru
-git+https://github.com/NOAA-ORR-ERD/PyNUCOS.git#egg=unit_conversion
+gitpython
+backports.functools_lru_cache
+https://github.com/NOAA-ORR-ERD/PyNUCOS/archive/v2.5.5.tar.gz
+
+
 
 

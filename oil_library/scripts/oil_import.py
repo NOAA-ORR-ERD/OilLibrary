@@ -1,6 +1,9 @@
 import os
 import sys
 import datetime
+import re
+
+from slugify import slugify_filename
 
 import numpy as np
 
@@ -83,7 +86,7 @@ def matching_slices(a, a0, a1,
 
     return (matching_slices(a, a0, sa, b, b0, sb, matching_lines) +
             [(sa, sb, n)] +
-            matching_slices(a, sa+n, a1, b, sb+n, b1, matching_lines))
+            matching_slices(a, sa + n, a1, b, sb + n, b1, matching_lines))
 
 
 def longest_matching_slice(a, a0, a1,
@@ -302,6 +305,67 @@ def add_header_to_csv_usage(argv):
 def add_header_to_csv_cmd(argv=sys.argv, proc=add_header_to_csv):
     if len(argv) < 2:
         add_header_to_csv_usage(argv)
+
+    f1 = argv[1]
+
+    try:
+        proc(f1)
+    except Exception:
+        print "{0} FAILED\n".format(proc)
+        raise
+
+
+def get_import_record_dates(import_file):
+    sys.stderr.write('opening file: {0} ...\n'.format(import_file))
+    fd = OilLibraryFile(import_file, ignore_version=True)
+    sys.stderr.write('file version: {}\n'.format(fd.__version__))
+
+    print '\t'.join(('oil_name', 'adios_oil_id',
+                     'reference_date', 'reference'))
+
+    sys.stderr.write('reading_records...\n')
+    for r in fd.readlines():
+        if len(r) < 10:
+            sys.stderr.write('got record: {}\n'.format(r))
+
+        r = [unicode(f, 'utf-8') if f is not None else f
+             for f in r]
+
+        print '\t'.join(get_record_date(fd.file_columns, r))
+
+    sys.stderr.write('finished!!!\n')
+
+
+def get_record_date(file_columns, row_data):
+    file_columns = [slugify_filename(c).lower() for c in file_columns]
+    row_dict = dict(zip(file_columns, row_data))
+
+    oil_name = row_dict['oil_name']
+    adios_oil_id = row_dict['adios_oil_id']
+    reference = row_dict['reference']
+
+    if reference is None:
+        ref_dates = ['no-ref']
+        reference = ''
+    else:
+        p = re.compile(r'\d{4}')
+        m = p.findall(reference)
+        if len(m) == 0:
+            ref_dates = ['no-date']
+        else:
+            ref_dates = m
+
+    return (oil_name, adios_oil_id,
+            ', '.join(list(set(ref_dates))), reference)
+
+
+def get_import_record_dates_usage(argv):
+    add_header_to_csv_usage(argv)  # uses the same command usage
+
+
+def get_import_record_dates_cmd(argv=sys.argv, proc=get_import_record_dates):
+    if len(argv) < 2:
+        get_import_record_dates_usage(argv)
 
     f1 = argv[1]
 

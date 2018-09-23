@@ -3,6 +3,7 @@ import os
 import sys
 import fnmatch
 import shutil
+from datetime import datetime
 
 from setuptools import setup, find_packages
 from distutils.command.clean import clean
@@ -11,12 +12,29 @@ from setuptools import Command
 from setuptools.command.build_py import build_py
 from setuptools.command.test import test as TestCommand
 
+from git import Repo
+from git.exc import InvalidGitRepositoryError
+
 here = os.path.abspath(os.path.dirname(__file__))
 README = open(os.path.join(here, 'README.md')).read()
 pkg_name = 'oil_library'
-pkg_version = '1.0.6'
+pkg_version = '1.1.1'
 
-db_init_script_name = 'initialize_OilLibrary_db'
+
+# try to get update date from repo
+try:
+    repo = Repo('.')
+    try:
+        branch_name = repo.active_branch.name
+    except TypeError:
+        branch_name = 'no-branch'
+    last_update = repo.iter_commits().next().committed_datetime.isoformat()
+except InvalidGitRepositoryError:
+    # not builiding in a valid git repo
+    # use today's date.
+    print "not in a valid git repo -- using today's date as build date"
+    branch_name = 'no-branch'
+    last_update = datetime.now().isoformat()
 
 
 def clean_files(del_db=False):
@@ -129,9 +147,10 @@ class BuildPyCommand(build_py):
 
 s = setup(name=pkg_name,
           version=pkg_version,
-          description=('{}: {}'.format(pkg_name,
-                                       'The NOAA library of oils '
-                                       'and their properties.')),
+          description=('{}: The NOAA library of oils and their properties.\n'
+                       'Branch: {}\n'
+                       'LastUpdate: {}'
+                       .format(pkg_name, branch_name, last_update)),
           long_description=README,
           author='ADIOS/GNOME team at NOAA ORR',
           author_email='orr.gnome@noaa.gov',
@@ -151,15 +170,18 @@ s = setup(name=pkg_name,
                     'test': PyTest,
                     'build_py': BuildPyCommand,
                     },
-          entry_points={'console_scripts': [('{} = oil_library.initializedb'
-                                             ':make_db'
-                                             .format(db_init_script_name)),
+          entry_points={'console_scripts': [('initialize_OilLibrary_db = '
+                                             'oil_library.initializedb'
+                                             ':make_db'),
                                             ('diff_import_files = '
                                              'oil_library.scripts.oil_import'
                                              ':diff_import_files_cmd'),
                                             ('add_header_to_import_file = '
                                              'oil_library.scripts.oil_import'
                                              ':add_header_to_csv_cmd'),
+                                            ('get_import_record_dates = '
+                                             'oil_library.scripts.oil_import'
+                                             ':get_import_record_dates_cmd'),
                                             ],
                         },
           zip_safe=False,
