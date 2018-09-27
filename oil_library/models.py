@@ -240,7 +240,8 @@ class Density(Base):
             self.weathering = 0.0
 
     def __repr__(self):
-        return ("<Density({0.kg_m_3} kg/m^3 at {0.ref_temp_k}K)>"
+        return ('<Density({0.kg_m_3} kg/m^3 at {0.ref_temp_k}K), '
+                'w={0.weathering}>'
                 .format(self))
 
 
