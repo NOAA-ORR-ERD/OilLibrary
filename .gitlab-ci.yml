@@ -4,6 +4,10 @@ master:
     script:
         - docker build -f dockerfile . -t gitlab.orr.noaa.gov:5002/oillibrary
         - docker push gitlab.orr.noaa.gov:5002/oillibrary
+    tags:
+        - shell
+        - build
+
 develop:
     only: 
         - develop
@@ -11,9 +15,16 @@ develop:
         - docker build -f dockerfile . -t gitlab.orr.noaa.gov:5002/oillibrary:develop
         - docker push gitlab.orr.noaa.gov:5002/oillibrary:develop
 
+    tags:
+        - shell
+        - build
+
 production:
     only:
         - production
     script:
         - docker build -f dockerfile . -t gitlab.orr.noaa.gov:5002/oillibrary:production
         - docker push gitlab.orr.noaa.gov:5002/oillibrary:production
+    tags:
+        - shell
+        - build
