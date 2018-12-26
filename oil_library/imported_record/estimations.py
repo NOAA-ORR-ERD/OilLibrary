@@ -188,7 +188,7 @@ class ImportedRecordWithEstimation(object):
     def culled_dvis(self):
         return self.culled_measurement('dvis', ['kg_ms', 'ref_temp_k'])
 
-    def get_densities(self, weathering=0.0):
+    def get_densities(self):
         '''
             return a list of densities for the oil at a specified state
             of weathering.
@@ -197,13 +197,12 @@ class ImportedRecordWithEstimation(object):
             - the culled list of densities does not contain a measurement
               at 15C
         '''
-        densities = [d for d in self.culled_densities()
-                     if d.weathering == weathering]
+        densities = [d for d in self.culled_densities()]
 
-        if (weathering == 0.0 and
-                self.record.api is not None and
+        if (self.record.api is not None and
                 len([d for d in densities
-                     if np.isclose(d.ref_temp_k, 288.0, atol=1.0)]) == 0):
+                     if np.isclose(d.weathering, 0.0)
+                     and np.isclose(d.ref_temp_k, 288.0, atol=1.0)]) == 0):
             kg_m_3, ref_temp_k = est.density_from_api(self.record.api)
 
             densities.append(Density(kg_m_3=kg_m_3,
@@ -212,7 +211,7 @@ class ImportedRecordWithEstimation(object):
 
         return sorted(densities, key=lambda d: d.ref_temp_k)
 
-    def density_at_temp(self, temperature=288.15, weathering=0.0):
+    def density_at_temp(self, temperature=288.15):
         '''
             Get the oil density at a temperature or temperatures.
 
@@ -227,9 +226,17 @@ class ImportedRecordWithEstimation(object):
             Note: If we have a pour point that is higher than one or more
                   of our reference temperatures, then the lowest reference
                   temperature will become our minimum temperature.
+
+            TODO: We are getting rid of the argument that specifies a
+                  weathering amount because it is currently implemented
+                  in an unusably precise manner.  Robert would like us to
+                  implement a means of interpolating density using a
+                  combination of (temperature, weathering).  But the algorithm
+                  for this is not defined at the moment.
         '''
         shape = None
-        densities = self.get_densities(weathering=weathering)
+        densities = [d for d in self.get_densities()
+                     if np.isclose(d.weathering, 0.0)]
 
         # set the minimum temperature to be the oil's pour point
         if (self.record.pour_point_min_k is None and

@@ -320,7 +320,7 @@ def link_refined_fuel_oil_6(session):
        - 200.0 <= v cSt @ 50 degrees Celcius
     '''
     top, categories = get_categories_by_names(session, 'Refined',
-                                              ('Fuel Oil 6',
+                                              ('Fuel Oil 6 (HFO)',
                                                'Bunker',
                                                'Heavy Fuel Oil',
                                                'Group V'))
