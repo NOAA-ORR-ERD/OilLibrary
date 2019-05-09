@@ -220,6 +220,54 @@ class OilProps(OilWithEstimation):
 
         return Oil.from_json(self.record.tojson()).tojson()
 
+    def get_gnome_oil(self):
+        '''
+            Return just the oil attributes needed for Gnome
+        '''
+
+        densities = []
+        density_ref_temps = []
+        density_weathering = []
+        kvis = []
+        kvis_ref_temps = []
+        kvis_weathering = []
+        for d in self.record.densities:
+            densities.append(d.kg_m_3)
+            density_ref_temps.append(d.ref_temp_k)
+            density_weathering.append(d.weathering)
+
+        for k in self.record.kvis:
+            kvis.append(k.m_2_s)
+            kvis_ref_temps.append(k.ref_temp_k)
+            kvis_weathering.append(k.weathering)
+
+        mass_fraction = self.mass_fraction.tolist()
+        boiling_point = self.boiling_point.tolist()
+        molecular_weight = self.molecular_weight.tolist()
+        component_density = self.component_density.tolist()
+        component_types = self.component_types.tolist()
+
+        gnome_oil = {'name':self.name,
+                       'api':self.api,
+                       'pour_point':self.pour_point()[0],
+                       'solubility':self.solubility(),
+                       'bullwinkle_fraction':self.get('bullwinkle_fraction'),
+                       'bullwinkle_time':self.bulltime,
+                       'densities':densities,
+                       'density_ref_temps':density_ref_temps,
+                       'density_weathering':density_weathering,
+                       'kvis':kvis,
+                       'kvis_ref_temps':kvis_ref_temps,
+                       'kvis_weathering':kvis_weathering,
+                       'emulsion_water_fraction_max':self.record.emulsion_water_fraction_max,
+                       'mass_fraction':mass_fraction,
+                       'boiling_point':boiling_point,
+                       'molecular_weight':molecular_weight,
+                       'component_density':component_density,
+                       'sara_type':component_types}
+
+        return gnome_oil
+        
     def _compare__dict(self, other):
         '''
         cannot just do self.__dict__ == other.__dict__ since
