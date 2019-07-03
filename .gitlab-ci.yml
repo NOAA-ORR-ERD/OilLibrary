@@ -1,4 +1,10 @@
+stages:
+  - test
+  - build
+
+
 master:
+    stage: build
     only:
         - master
     script:
@@ -9,6 +15,7 @@ master:
         - build
 
 develop:
+    stage: build
     only:
         - develop
     script:
@@ -19,6 +26,7 @@ develop:
         - build
 
 production:
+    stage: build
     only:
         - production
     script:
@@ -27,3 +35,19 @@ production:
     tags:
         - shell
         - build
+
+test_develop:
+    stage: test
+    image: gitlab.orr.noaa.gov:5002/centos-conda
+    only:
+        - develop
+    script:
+        - conda install --file conda_requirements.txt
+        - python setup.py develop
+        - pytest --pyargs oil_library
+    except:
+        - master
+        - production
+    tags:
+        - docker
+
