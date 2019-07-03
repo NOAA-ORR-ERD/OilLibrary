@@ -1,9 +1,16 @@
-FROM gitlab.orr.noaa.gov:5002/centos:latest
+FROM gitlab.orr.noaa.gov:5002/centos-conda:latest
 
 RUN yum update -y
 # RUN yum install -y gcc
 
-COPY ./ /oillibrary/
-# RUN cd /oillibrary/ && pip install -r requirements.txt
+RUN conda info
+
+COPY ./ /OilLibrary/
+RUN cd /OilLibrary/ && conda install -y --file conda_requirements.txt
+
+# RUN cd /OilLibrary/ && pip install -r requirements.txt
 # RUN conda install scipy
-# RUN cd /oillibrary/ && python setup.py develop
+
+RUN cd /OilLibrary/ && python setup.py develop
+
+

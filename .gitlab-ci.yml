@@ -9,12 +9,11 @@ master:
         - build
 
 develop:
-    only: 
+    only:
         - develop
     script:
         - docker build -f dockerfile . -t gitlab.orr.noaa.gov:5002/oillibrary:develop
         - docker push gitlab.orr.noaa.gov:5002/oillibrary:develop
-
     tags:
         - shell
         - build
