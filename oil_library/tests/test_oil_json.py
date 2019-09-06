@@ -1,8 +1,8 @@
 '''
 test the Oil.from_json function
 '''
-from oil_library import get_oil
-from oil_library.models import Oil
+from .. import get_oil
+from ..models import Oil
 
 
 def test_get_oil_from_json():

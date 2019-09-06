@@ -32,7 +32,7 @@ class ImportedRecordWithScore(object):
                   (self.score_flash_point(), 1.0),
                   (self.score_emulsion_constants(), 1.0)]
 
-        return self.aggregate_score(*zip(*scores))
+        return self.aggregate_score(*list(zip(*scores)))
 
     def score_demographics(self):
         fields = ('reference',)

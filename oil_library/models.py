@@ -200,7 +200,7 @@ class ImportedRecord(Base):
     oil = relationship('Oil', backref='imported', uselist=False)
 
     def __init__(self, **kwargs):
-        for a, v in kwargs.iteritems():
+        for a, v in kwargs.items():
             if (a in self.columns):
                 setattr(self, a, v)
 
@@ -231,7 +231,7 @@ class Density(Base):
     weathering = Column(Float(53))
 
     def __init__(self, **kwargs):
-        for a, v in kwargs.iteritems():
+        for a, v in kwargs.items():
             if (a in self.columns):
                 setattr(self, a, v)
 
@@ -256,7 +256,7 @@ class KVis(Base):
     weathering = Column(Float(53))
 
     def __init__(self, **kwargs):
-        for a, v in kwargs.iteritems():
+        for a, v in kwargs.items():
             if (a in self.columns):
                 setattr(self, a, v)
 
@@ -279,7 +279,7 @@ class DVis(Base):
     weathering = Column(Float(53))
 
     def __init__(self, **kwargs):
-        for a, v in kwargs.iteritems():
+        for a, v in kwargs.items():
             if (a in self.columns):
                 setattr(self, a, v)
 
@@ -303,7 +303,7 @@ class Cut(Base):
     fraction = Column(Float(53))
 
     def __init__(self, **kwargs):
-        for a, v in kwargs.iteritems():
+        for a, v in kwargs.items():
             if (a in self.columns):
                 setattr(self, a, v)
 
@@ -326,7 +326,7 @@ class Toxicity(Base):
     after_96h = Column(Float(53))
 
     def __init__(self, **kwargs):
-        for a, v in kwargs.iteritems():
+        for a, v in kwargs.items():
             if (a in self.columns):
                 setattr(self, a, v)
 
@@ -413,7 +413,7 @@ class Estimated(Base):
     oil = relationship('Oil', backref='estimated', uselist=False)
 
     def __init__(self, **kwargs):
-        for a, v in kwargs.iteritems():
+        for a, v in kwargs.items():
             if (a in self.columns):
                 setattr(self, a, v)
 
@@ -483,7 +483,7 @@ class Oil(Base):
                                      cascade="all, delete, delete-orphan")
 
     def __init__(self, **kwargs):
-        for a, v in kwargs.iteritems():
+        for a, v in kwargs.items():
             if (a in self.columns):
                 setattr(self, a, v)
 
@@ -568,7 +568,7 @@ class SARAFraction(Base):
     ref_temp_k = Column(Float(53))
 
     def __init__(self, **kwargs):
-        for a, v in kwargs.iteritems():
+        for a, v in kwargs.items():
             if (a in self.columns):
                 setattr(self, a, v)
 
@@ -588,7 +588,7 @@ class SARADensity(Base):
     ref_temp_k = Column(Float(53))
 
     def __init__(self, **kwargs):
-        for a, v in kwargs.iteritems():
+        for a, v in kwargs.items():
             if (a in self.columns):
                 setattr(self, a, v)
 
@@ -609,7 +609,7 @@ class MolecularWeight(Base):
     ref_temp_k = Column(Float(53))
 
     def __init__(self, **kwargs):
-        for a, v in kwargs.iteritems():
+        for a, v in kwargs.items():
             if (a in self.columns):
                 setattr(self, a, v)
 

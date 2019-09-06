@@ -48,9 +48,9 @@ def get_op_and_value(value_in):
     '''
     op = None
 
-    if isinstance(value_in, (int, long, float)):
+    if isinstance(value_in, (int, float)):
         value = value_in
-    elif isinstance(value_in, (str, unicode)):
+    elif isinstance(value_in, str):
         op = value_in[0].encode('utf8')
         value = float(value_in[1:])
     else:

@@ -42,9 +42,9 @@ def get_cuts_from_bp_distribution(oil_columns, field_indexes, weathering):
     props = get_oil_properties_by_category(oil_columns, field_indexes,
                                            'boiling_point_'
                                            'distribution_temperature_c')
-    prop_names = props.keys()
+    prop_names = list(props.keys())
 
-    for idx, vals in enumerate(zip(*props.values())):
+    for idx, vals in enumerate(zip(*list(props.values()))):
         cuts_from_dist = build_cuts_from_dist_data(prop_names, vals,
                                                    weathering[idx])
         cuts.extend(cuts_from_dist)
@@ -71,7 +71,7 @@ def build_cuts_from_dist_data(prop_names, values, weathering):
               don't precisely know.
     '''
     cuts = []
-    dist_data = dict(zip(prop_names, [v[0].value for v in values]))
+    dist_data = dict(list(zip(prop_names, [v[0].value for v in values])))
 
     # The only labels we care about are the percent value labels
     for frac in ([(p / 100.0) for p in range(5, 100, 5)] + [1]):
@@ -88,9 +88,9 @@ def get_cuts_from_bp_cumulative_frac(oil_columns, field_indexes, weathering):
     props = get_oil_properties_by_category(oil_columns, field_indexes,
                                            'boiling_point_'
                                            'cumulative_weight_fraction')
-    prop_names = props.keys()
+    prop_names = list(props.keys())
 
-    for idx, vals in enumerate(zip(*props.values())):
+    for idx, vals in enumerate(zip(*list(props.values()))):
         cuts_from_dist = build_cuts_from_cumulative_fraction(prop_names, vals,
                                                              weathering[idx])
         cuts.extend(cuts_from_dist)
@@ -117,11 +117,11 @@ def build_cuts_from_cumulative_fraction(prop_names, values, weathering):
               don't precisely know.
     '''
     cuts = []
-    dist_data = dict(zip(prop_names, [v[0].value for v in values]))
+    dist_data = dict(list(zip(prop_names, [v[0].value for v in values])))
 
     # The only labels we care about are the temperature labels
     temp_values = [item
-                   for sublist in [range(40, 200, 20), range(200, 701, 50)]
+                   for sublist in [list(range(40, 200, 20)), list(range(200, 701, 50))]
                    for item in sublist]
 
     for temp_c in temp_values:

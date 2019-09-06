@@ -57,9 +57,9 @@ def test_list_categories(session):
     q = session.query(Category).filter(Category.parent == None)
     all_cats = {category.name: tuple(list_categories(category)) for category in q}
 
-    print all
+    print(all)
 
-    assert all_cats.keys() == [u'Crude', u'Refined', u'Other']
+    assert list(all_cats.keys()) == ['Crude', 'Refined', 'Other']
     # maybe test more here at some point...
 
 

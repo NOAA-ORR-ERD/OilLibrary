@@ -28,11 +28,11 @@ try:
         branch_name = repo.active_branch.name
     except TypeError:
         branch_name = 'no-branch'
-    last_update = repo.iter_commits().next().committed_datetime.isoformat()
+    last_update = next(repo.iter_commits()).committed_datetime.isoformat()
 except InvalidGitRepositoryError:
     # not builiding in a valid git repo
     # use today's date.
-    print "not in a valid git repo -- using today's date as build date"
+    print("not in a valid git repo -- using today's date as build date")
     branch_name = 'no-branch'
     last_update = datetime.now().isoformat()
 
@@ -60,22 +60,22 @@ def clean_files(del_db=False):
         except Exception:
             pass
 
-        print "Deleting {0} ..".format(f)
+        print("Deleting {0} ..".format(f))
 
 
 def init_db():
     if os.path.exists(os.path.join(here, 'oil_library', 'OilLib.db')):
-        print 'OilLibrary database exists - do not remake!'
+        print('OilLibrary database exists - do not remake!')
     else:
         try:
             import oil_library.initializedb
-            print "got this version:", oil_library.__file__
+            print("got this version:", oil_library.__file__)
 
-            print "calling initializedb.make_db() from the code"
+            print("calling initializedb.make_db() from the code")
             oil_library.initializedb.make_db()
-            print 'OilLibrary database successfully generated from file!'
+            print('OilLibrary database successfully generated from file!')
         except Exception:
-            print 'OilLibrary database generation failed'
+            print('OilLibrary database generation failed')
             raise
 
 
@@ -112,10 +112,10 @@ class remake_oil_db(Command):
             else:
                 raise
 
-        print "Deleting {0} ..".format(to_rm)
+        print("Deleting {0} ..".format(to_rm))
         # ret = call(db_init_script_path())
 
-        print "****\ncreating a new DB with direct call into package\n********"
+        print("****\ncreating a new DB with direct call into package\n********")
         init_db()
 
 

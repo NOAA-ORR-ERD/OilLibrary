@@ -36,9 +36,9 @@ def get_oil_tensions_at_15c(oil_columns, field_indexes, weathering):
     props = get_oil_properties_by_category(oil_columns, field_indexes,
                                            'surface_interfacial_tension_'
                                            'at_15_c_mn_m_or_dynes_cm')
-    prop_names = props.keys()
+    prop_names = list(props.keys())
 
-    for idx, vals in enumerate(zip(*props.values())):
+    for idx, vals in enumerate(zip(*list(props.values()))):
         tension_obj = build_tension_kwargs(prop_names, vals,
                                            'surface_tension_15_c_oil_air',
                                            weathering[idx],
@@ -69,9 +69,9 @@ def get_oil_tensions_at_0c(oil_columns, field_indexes, weathering):
     props = get_oil_properties_by_category(oil_columns, field_indexes,
                                            'surface_interfacial_tension_'
                                            'at_0_5_c_mn_m_or_dynes_cm')
-    prop_names = props.keys()
+    prop_names = list(props.keys())
 
-    for idx, vals in enumerate(zip(*props.values())):
+    for idx, vals in enumerate(zip(*list(props.values()))):
         tension_obj = build_tension_kwargs(prop_names, vals,
                                            'surface_tension_0_c_oil_air',
                                            weathering[idx],
@@ -101,9 +101,9 @@ def get_oil_tensions_at_5c(oil_columns, field_indexes, weathering):
     props = get_oil_properties_by_category(oil_columns, field_indexes,
                                            'surface_interfacial_tension_'
                                            'at_0_5_c_mn_m_or_dynes_cm')
-    prop_names = props.keys()
+    prop_names = list(props.keys())
 
-    for idx, vals in enumerate(zip(*props.values())):
+    for idx, vals in enumerate(zip(*list(props.values()))):
         tension_obj = build_tension_kwargs(prop_names, vals,
                                            'surface_tension_5_c_oil_air',
                                            weathering[idx],
@@ -140,7 +140,7 @@ def build_tension_kwargs(prop_names, values, ift_name,
         - ref_temp_k: The temperature of the oil at measurement time.
         - interface: The type of substance interfacing the oil.
     '''
-    tension_obj = dict(zip(prop_names, [v[0].value for v in values]))
+    tension_obj = dict(list(zip(prop_names, [v[0].value for v in values])))
 
     # add some properties to the oil that we expect
     add_tension_kwargs(tension_obj, ref_temp_k, weathering, interface)
@@ -160,7 +160,7 @@ def convert_to_nm(mn_per_m):
     '''
         Convert mN/m (dynes/cm) into N/m or return None value
     '''
-    if isinstance(mn_per_m, (int, long, float)):
+    if isinstance(mn_per_m, (int, float)):
         return mn_per_m * 1e-3
     else:
         return None

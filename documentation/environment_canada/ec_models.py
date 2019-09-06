@@ -24,7 +24,7 @@ class InterfacialTension(Base):
     weathering = Column(Float(53))
 
     def __init__(self, **kwargs):
-        for a, v in kwargs.iteritems():
+        for a, v in kwargs.items():
             if (a in self.columns):
                 setattr(self, a, v)
 
@@ -50,7 +50,7 @@ class FlashPoint(Base):
     weathering = Column(Float(53))
 
     def __init__(self, **kwargs):
-        for a, v in kwargs.iteritems():
+        for a, v in kwargs.items():
             if (a in self.columns):
                 setattr(self, a, v)
 
@@ -78,7 +78,7 @@ class PourPoint(Base):
     weathering = Column(Float(53))
 
     def __init__(self, **kwargs):
-        for a, v in kwargs.iteritems():
+        for a, v in kwargs.items():
             if (a in self.columns):
                 setattr(self, a, v)
 
@@ -111,7 +111,7 @@ class ECCut(Base):
     weathering = Column(Float(53))
 
     def __init__(self, **kwargs):
-        for a, v in kwargs.iteritems():
+        for a, v in kwargs.items():
             if (a in self.columns):
                 setattr(self, a, v)
 
@@ -138,7 +138,7 @@ class Adhesion(Base):
     weathering = Column(Float(53))
 
     def __init__(self, **kwargs):
-        for a, v in kwargs.iteritems():
+        for a, v in kwargs.items():
             if (a in self.columns):
                 setattr(self, a, v)
 
@@ -169,7 +169,7 @@ class EvaporationEq(Base):
     weathering = Column(Float(53))
 
     def __init__(self, **kwargs):
-        for a, v in kwargs.iteritems():
+        for a, v in kwargs.items():
             if (a in self.columns):
                 setattr(self, a, v)
 
@@ -219,7 +219,7 @@ class Emulsion(Base):
     weathering = Column(Float(53))
 
     def __init__(self, **kwargs):
-        for a, v in kwargs.iteritems():
+        for a, v in kwargs.items():
             if (a in self.columns):
                 setattr(self, a, v)
 

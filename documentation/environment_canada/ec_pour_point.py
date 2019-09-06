@@ -26,9 +26,9 @@ def get_pour_points_by_weathering(oil_columns, field_indexes, weathering):
 
     props = get_oil_properties_by_category(oil_columns, field_indexes,
                                            'pour_point_c')
-    prop_names = props.keys()
+    prop_names = list(props.keys())
 
-    for idx, vals in enumerate(zip(*props.values())):
+    for idx, vals in enumerate(zip(*list(props.values()))):
         pour_point_obj = build_pour_point_kwargs(prop_names, vals,
                                                  weathering[idx])
         pour_points.append(pour_point_obj)
@@ -45,7 +45,7 @@ def build_pour_point_kwargs(prop_names, values, weathering):
         - values: A list of Excel cell objects representing the properties.
         - weathering: The fractional oil weathering amount.
     '''
-    pour_point_obj = dict(zip(prop_names, [v[0].value for v in values]))
+    pour_point_obj = dict(list(zip(prop_names, [v[0].value for v in values])))
 
     pour_point_obj['weathering'] = weathering
 

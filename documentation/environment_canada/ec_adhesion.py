@@ -44,7 +44,7 @@ def build_adhesion_kwargs(prop_names, values, weathering):
         - values: A list of Excel cell objects representing the properties.
         - weathering: The fractional oil weathering amount.
     '''
-    adhesion_kwargs = dict(zip(prop_names, [v[0].value for v in values]))
+    adhesion_kwargs = dict(list(zip(prop_names, [v[0].value for v in values])))
 
     adhesion_kwargs['weathering'] = weathering
 

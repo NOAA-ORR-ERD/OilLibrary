@@ -60,7 +60,7 @@ def get_oil_sara_total_fractions(oil_columns, field_indexes):
                                                          field_indexes,
                                                          weathering)
 
-    return zip(saturates, aromatics, resins, asphaltenes)
+    return list(zip(saturates, aromatics, resins, asphaltenes))
 
 
 def get_sulfur_content_by_weathering(oil_columns, field_indexes, weathering):
@@ -68,9 +68,9 @@ def get_sulfur_content_by_weathering(oil_columns, field_indexes, weathering):
 
     props = get_oil_properties_by_category(oil_columns, field_indexes,
                                            'sulfur_content_astm_d4294')
-    prop_names = props.keys()
+    prop_names = list(props.keys())
 
-    for idx, vals in enumerate(zip(*props.values())):
+    for idx, vals in enumerate(zip(*list(props.values()))):
         kwargs = build_kwargs(prop_names, vals, weathering[idx])
         sulfur_contents.append(kwargs)
 
@@ -84,9 +84,9 @@ def get_water_content_by_weathering(oil_columns, field_indexes, weathering):
 
     props = get_oil_properties_by_category(oil_columns, field_indexes,
                                            'water_content_astm_e203')
-    prop_names = props.keys()
+    prop_names = list(props.keys())
 
-    for idx, vals in enumerate(zip(*props.values())):
+    for idx, vals in enumerate(zip(*list(props.values()))):
         kwargs = build_kwargs(prop_names, vals, weathering[idx])
         water_contents.append(kwargs)
 
@@ -100,9 +100,9 @@ def get_wax_content_by_weathering(oil_columns, field_indexes, weathering):
 
     props = get_oil_properties_by_category(oil_columns, field_indexes,
                                            'wax_content_ests_1994')
-    prop_names = props.keys()
+    prop_names = list(props.keys())
 
-    for idx, vals in enumerate(zip(*props.values())):
+    for idx, vals in enumerate(zip(*list(props.values()))):
         kwargs = build_kwargs(prop_names, vals, weathering[idx],
                               props_to_rename={'waxes': 'wax_content'})
         wax_contents.append(kwargs)
@@ -118,9 +118,9 @@ def get_saturates_fraction_by_weathering(oil_columns, field_indexes,
 
     props = get_oil_properties_by_category(oil_columns, field_indexes,
                                            'hydrocarbon_group_content')
-    prop_names = props.keys()
+    prop_names = list(props.keys())
 
-    for idx, vals in enumerate(zip(*props.values())):
+    for idx, vals in enumerate(zip(*list(props.values()))):
         props_to_rename = {'saturates': 'saturates_fraction'}
         kwargs = build_kwargs(prop_names, vals, weathering[idx],
                               props_to_rename=props_to_rename)
@@ -137,9 +137,9 @@ def get_aromatics_fraction_by_weathering(oil_columns, field_indexes,
 
     props = get_oil_properties_by_category(oil_columns, field_indexes,
                                            'hydrocarbon_group_content')
-    prop_names = props.keys()
+    prop_names = list(props.keys())
 
-    for idx, vals in enumerate(zip(*props.values())):
+    for idx, vals in enumerate(zip(*list(props.values()))):
         props_to_rename = {'aromatics': 'aromatics_fraction'}
         kwargs = build_kwargs(prop_names, vals, weathering[idx],
                               props_to_rename=props_to_rename)
@@ -156,9 +156,9 @@ def get_resins_fraction_by_weathering(oil_columns, field_indexes,
 
     props = get_oil_properties_by_category(oil_columns, field_indexes,
                                            'hydrocarbon_group_content')
-    prop_names = props.keys()
+    prop_names = list(props.keys())
 
-    for idx, vals in enumerate(zip(*props.values())):
+    for idx, vals in enumerate(zip(*list(props.values()))):
         props_to_rename = {'resin': 'resins_fraction'}
         kwargs = build_kwargs(prop_names, vals, weathering[idx],
                               props_to_rename=props_to_rename)
@@ -175,9 +175,9 @@ def get_asphaltenes_fraction_by_weathering(oil_columns, field_indexes,
 
     props = get_oil_properties_by_category(oil_columns, field_indexes,
                                            'hydrocarbon_group_content')
-    prop_names = props.keys()
+    prop_names = list(props.keys())
 
-    for idx, vals in enumerate(zip(*props.values())):
+    for idx, vals in enumerate(zip(*list(props.values()))):
         props_to_rename = {'asphaltene': 'asphaltenes_fraction'}
         kwargs = build_kwargs(prop_names, vals, weathering[idx],
                               props_to_rename=props_to_rename)
@@ -197,12 +197,12 @@ def build_kwargs(prop_names, values, weathering,
         - values: A list of Excel cell objects representing the properties.
         - weathering: The fractional oil weathering amount.
     '''
-    kwargs = dict(zip(prop_names, [v[0].value for v in values]))
+    kwargs = dict(list(zip(prop_names, [v[0].value for v in values])))
 
     kwargs['weathering'] = weathering
 
     if props_to_rename is not None:
-        for old_prop, new_prop in props_to_rename.iteritems():
+        for old_prop, new_prop in props_to_rename.items():
             rename_prop(kwargs, old_prop, new_prop)
 
     return kwargs

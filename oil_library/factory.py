@@ -13,7 +13,7 @@ from .models import (Oil, KVis, Density, Cut,
 
 from .oil_props import OilProps
 
-import utilities.estimations as est
+from .utilities import estimations as est
 from .imported_record.estimations import ImportedRecordWithEstimation
 from .json_record.estimations import JsonRecordWithEstimation
 

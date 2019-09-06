@@ -61,7 +61,7 @@ def purge_oil_records(session):
 def add_oil_object(session, file_columns, row_data):
     file_columns = [slugify_filename(c).lower()
                     for c in file_columns]
-    row_dict = dict(zip(file_columns, row_data))
+    row_dict = dict(list(zip(file_columns, row_data)))
 
     fix_name(row_dict)
 

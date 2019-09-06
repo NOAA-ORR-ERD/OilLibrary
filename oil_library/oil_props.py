@@ -11,7 +11,7 @@ object used to initialize and OilProps object
 Not sure at present if this needs to be serializable?
 '''
 import copy
-from itertools import groupby, chain, izip_longest
+from itertools import groupby, chain, zip_longest
 
 try:
     from functools import lru_cache  # it's built-in on py3
@@ -272,7 +272,7 @@ class OilProps(OilWithEstimation):
         '''
         cannot just do self.__dict__ == other.__dict__ since
         '''
-        for key, val in self.__dict__.iteritems():
+        for key, val in self.__dict__.items():
             o_val = other.__dict__[key]
 
             if isinstance(val, np.ndarray):
@@ -372,7 +372,7 @@ class OilProps(OilWithEstimation):
 
         items = []
         sum_frac = 0.
-        for comp, dens, mol_wt in izip_longest(all_comp, all_dens, all_mw):
+        for comp, dens, mol_wt in zip_longest(all_comp, all_dens, all_mw):
             if (comp.ref_temp_k != comp.ref_temp_k or
                     comp.sara_type != comp.sara_type):
                 msg = "mismatch in sara_fractions and sara_densities tables"
