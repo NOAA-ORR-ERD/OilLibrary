@@ -330,7 +330,7 @@ class ImportedRecordWithEstimation(object):
         less_than = np.all((temperature < closest_values[:, :, 1].T).T,
                            axis=1)
 
-        if self.record.api > 30:
+        if self.record.api is not None and self.record.api > 30:
             k_rho_default = 0.0009
         else:
             k_rho_default = 0.0008
