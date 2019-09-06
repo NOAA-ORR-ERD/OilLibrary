@@ -550,7 +550,7 @@ class ImportedRecordWithEstimation(object):
         prev_temp = prev_fraction = 0.0
 
         for c in self.record.cuts:
-            if c.vapor_temp_k < prev_temp:
+            if c.vapor_temp_k is None or c.vapor_temp_k < prev_temp:
                 continue
 
             if c.fraction < prev_fraction:
