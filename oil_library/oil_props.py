@@ -186,7 +186,6 @@ class OilProps(OilWithEstimation):
     def component_types(self):
         return self._sara['type']
 
-    @lru_cache(2)
     def vapor_pressure(self, temp, atmos_pressure=101325.0):
         '''
         water_temp and boiling point units are Kelvin
