@@ -91,8 +91,8 @@ class OilLibraryFile(object):
 
     def _set_table_columns(self):
         self.file_columns = self.readline()
-        self.file_columns_lu = dict(zip(self.file_columns,
-                                        range(len(self.file_columns))))
+        self.file_columns_lu = dict(list(zip(self.file_columns,
+                                        list(range(len(self.file_columns))))))
         self.num_columns = len(self.file_columns)
 
     def _parse_row(self, line):
@@ -103,16 +103,16 @@ class OilLibraryFile(object):
         line = line.strip()
         if len(line) > 0:
             try:
-                row = line.decode('utf-8')
+                row = line.encode('utf-8')
             except Exception:
                 # If we fail to encode in utf-8, then it is possible that
                 # our file contains mac_roman characters of which some are
                 # out-of-range.
                 # This is probably about the best we can do to anticipate
                 # our file contents.
-                row = line.decode('mac_roman')
+                row = line.encode('mac_roman')
 
-            row = row.encode('utf-8')
+            row = row.decode('utf-8')
             row = (row.split(self.field_delim))
             row = [c.strip('"') for c in row]
             row = [c if len(c) > 0 else None for c in row]

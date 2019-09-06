@@ -31,10 +31,10 @@ def get_oil_densities_at_15c(oil_columns, field_indexes, weathering):
 
     props = get_oil_properties_by_category(oil_columns, field_indexes,
                                            'density_at_15_c_g_ml_astm_d5002')
-    prop_names = props.keys()
+    prop_names = list(props.keys())
 
-    for idx, vals in enumerate(zip(*props.values())):
-        density_obj = dict(zip(prop_names, [v[0].value for v in vals]))
+    for idx, vals in enumerate(zip(*list(props.values()))):
+        density_obj = dict(list(zip(prop_names, [v[0].value for v in vals])))
 
         # add some properties to the oil that we expect
         density_obj['idx'] = idx
@@ -59,10 +59,10 @@ def get_oil_densities_at_0c(oil_columns, field_indexes, weathering):
 
     props = get_oil_properties_by_category(oil_columns, field_indexes,
                                            'density_at_0_5_c_g_ml_astm_d5002')
-    prop_names = props.keys()
+    prop_names = list(props.keys())
 
-    for idx, vals in enumerate(zip(*props.values())):
-        density_obj = dict(zip(prop_names, [v[0].value for v in vals]))
+    for idx, vals in enumerate(zip(*list(props.values()))):
+        density_obj = dict(list(zip(prop_names, [v[0].value for v in vals])))
 
         # add some properties to the oil that we expect
         density_obj['idx'] = idx
@@ -88,10 +88,10 @@ def get_oil_densities_at_5c(oil_columns, field_indexes, weathering):
 
     props = get_oil_properties_by_category(oil_columns, field_indexes,
                                            'density_at_0_5_c_g_ml_astm_d5002')
-    prop_names = props.keys()
+    prop_names = list(props.keys())
 
-    for idx, vals in enumerate(zip(*props.values())):
-        density_obj = dict(zip(prop_names, [v[0].value for v in vals]))
+    for idx, vals in enumerate(zip(*list(props.values()))):
+        density_obj = dict(list(zip(prop_names, [v[0].value for v in vals])))
 
         # add some properties to the oil that we expect
         density_obj['idx'] = idx

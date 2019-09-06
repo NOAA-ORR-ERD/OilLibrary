@@ -10,7 +10,7 @@ from sqlalchemy.orm.exc import NoResultFound
 
 from .models import DBSession
 
-import sample_oils
+from . import sample_oils
 
 try:
     __version__ = get_distribution('oil_library').version
@@ -91,4 +91,4 @@ logging.getLogger(__name__).addHandler(NullHandler())
 from .factory import get_oil, get_oil_props
 
 _sample_oils.update({k: get_oil(v, max_cuts=2)
-                     for k, v in sample_oils._sample_oils.iteritems()})
+                     for k, v in sample_oils._sample_oils.items()})

@@ -4,7 +4,7 @@ test functions in utilities modules
 import numpy as np
 import pytest
 
-from oil_library import get_oil_props
+from .. import get_oil_props
 
 
 op_obj = get_oil_props('LUCKENBACH FUEL OIL')
@@ -64,7 +64,7 @@ viscosity_tests = [oil_obj.kvis[ix].ref_temp_k if ix < len(oil_obj.kvis)
                    else oil_obj.kvis[0].ref_temp_k
                    for ix in range(0, len(oil_obj.kvis) + 3)]
 
-print 'v_max', v_max
+print('v_max', v_max)
 viscosity_exp = [(d.m_2_s, v_max)[int(v_max < d.m_2_s)]
                  for temp in viscosity_tests
                  for d in oil_obj.kvis
@@ -89,9 +89,9 @@ def test_get_viscosity(temps, exp_value, use_out):
     else:
         out = op_obj.kvis_at_temp(temps)
 
-    print 'temps: ', temps
-    print 'out: ', out
-    print 'expected: ', exp_value
+    print('temps: ', temps)
+    print('out: ', out)
+    print('expected: ', exp_value)
 
     assert np.all(out == exp_value)   # so it works for scalar + arrays
 
@@ -106,7 +106,7 @@ def test_boiling_point(max_cuts):
 
     bp = op_obj.component_temps(N=max_cuts)
 
-    print 'bp = ', bp
+    print('bp = ', bp)
 
     assert len(bp) == max_cuts * 2 + 2
     assert ([bp[ix] - bp[ix + 1]

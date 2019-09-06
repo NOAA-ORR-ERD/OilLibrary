@@ -34,59 +34,59 @@ if __name__ == '__main__':
     col_indexes = get_oil_column_indexes(db_sheet)
     field_indexes = get_row_field_names(db_sheet)
 
-    for cat, v in field_indexes.iteritems():
-        for field, idxs in v.iteritems():
-            print cat, field, idxs
+    for cat, v in field_indexes.items():
+        for field, idxs in v.items():
+            print(cat, field, idxs)
 
-    for name, idxs in col_indexes.iteritems():
+    for name, idxs in col_indexes.items():
         # if name == 'Arabian Heavy [2004]':
         # if name == 'Anadarko HIA-376':
         # if name == 'Gail Well E010':
         # if name == 'Access West Winter Blend':
         if name == 'Alaminos Canyon Block 25':
             oil_columns = get_oil_columns(db_sheet, col_indexes[name])
-            print 'Weathered %: ', get_oil_weathering(oil_columns, field_indexes)
-            print 'Reference: ', get_oil_reference(oil_columns, field_indexes)
+            print('Weathered %: ', get_oil_weathering(oil_columns, field_indexes))
+            print('Reference: ', get_oil_reference(oil_columns, field_indexes))
 
-            print 'Densities: '
+            print('Densities: ')
             pp.pprint(get_oil_densities(oil_columns, field_indexes))
-            print 'APIs:', get_oil_api(oil_columns, field_indexes)
+            print('APIs:', get_oil_api(oil_columns, field_indexes))
 
-            print 'DVis: '
+            print('DVis: ')
             pp.pprint(get_oil_viscosities(oil_columns, field_indexes))
 
-            print 'Interfacial Tensions:'
+            print('Interfacial Tensions:')
             pp.pprint(get_oil_interfacial_tensions(oil_columns, field_indexes))
 
-            print 'Flash Points:'
+            print('Flash Points:')
             pp.pprint(get_oil_flash_points(oil_columns, field_indexes))
 
-            print 'Pour Points:'
+            print('Pour Points:')
             pp.pprint(get_oil_pour_points(oil_columns, field_indexes))
 
-            print 'Boiling Point Distribution:'
+            print('Boiling Point Distribution:')
             pp.pprint(get_oil_distillation_cuts(oil_columns, field_indexes))
 
-            print 'Adhesion:'
+            print('Adhesion:')
             pp.pprint(get_oil_adhesions(oil_columns, field_indexes))
 
-            print 'Evaporation:'
+            print('Evaporation:')
             evap_eqs = get_oil_evaporation_eqs(oil_columns, field_indexes)
             pp.pprint([(eq, eq.calculate(np.e, 1)) for eq in evap_eqs])
 
-            print 'Emulsion:'
+            print('Emulsion:')
             pp.pprint(get_oil_emulsions(oil_columns, field_indexes))
 
-            print 'Sulfur Content:'
+            print('Sulfur Content:')
             pp.pprint(get_oil_sulfur_content(oil_columns, field_indexes))
 
-            print 'Water Content:'
+            print('Water Content:')
             pp.pprint(get_oil_water_content(oil_columns, field_indexes))
 
-            print 'Wax Content:'
+            print('Wax Content:')
             pp.pprint(get_oil_wax_content(oil_columns, field_indexes))
 
-            print 'SARA Fractions:'
+            print('SARA Fractions:')
             pp.pprint(get_oil_sara_total_fractions(oil_columns, field_indexes))
 
 

@@ -27,9 +27,9 @@ def get_emulsion_age_0(oil_columns, field_indexes, weathering):
                                            'emulsion_at_15_degc_'
                                            'on_the_day_of_formation_'
                                            'ests_1998_2')
-    prop_names = props.keys()
+    prop_names = list(props.keys())
 
-    for idx, vals in enumerate(zip(*props.values())):
+    for idx, vals in enumerate(zip(*list(props.values()))):
         emulsion_kwargs = build_emulsion_kwargs(prop_names, vals,
                                                 weathering[idx],
                                                 273.15 + 15.0, 0.0)
@@ -46,9 +46,9 @@ def get_emulsion_age_7(oil_columns, field_indexes, weathering):
                                            'emulsion_at_15_degc_'
                                            'one_week_after_formation_'
                                            'ests_1998b')
-    prop_names = props.keys()
+    prop_names = list(props.keys())
 
-    for idx, vals in enumerate(zip(*props.values())):
+    for idx, vals in enumerate(zip(*list(props.values()))):
         emulsion_kwargs = build_emulsion_kwargs(prop_names, vals,
                                                 weathering[idx],
                                                 273.15 + 15.0, 7.0)
@@ -67,7 +67,7 @@ def build_emulsion_kwargs(prop_names, values,
         - values: A list of Excel cell objects representing the properties.
         - weathering: The fractional oil weathering amount.
     '''
-    emul_kwargs = dict(zip(prop_names, [v[0].value for v in values]))
+    emul_kwargs = dict(list(zip(prop_names, [v[0].value for v in values])))
 
     emul_kwargs['weathering'] = weathering
     emul_kwargs['ref_temp_k'] = ref_temp_k

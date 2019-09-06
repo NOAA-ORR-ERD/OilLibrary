@@ -33,9 +33,9 @@ def get_oil_viscosities_at_15c(oil_columns, field_indexes, weathering):
 
     props = get_oil_properties_by_category(oil_columns, field_indexes,
                                            'viscosity_at_15_c_mpa_s')
-    prop_names = props.keys()
+    prop_names = list(props.keys())
 
-    for idx, vals in enumerate(zip(*props.values())):
+    for idx, vals in enumerate(zip(*list(props.values()))):
         dvis_kwargs = build_dvis_kwargs(prop_names, vals,
                                         'viscosity_at_15_c_mpa_s',
                                         weathering[idx],
@@ -52,9 +52,9 @@ def get_oil_viscosities_at_0c(oil_columns, field_indexes, weathering):
 
     props = get_oil_properties_by_category(oil_columns, field_indexes,
                                            'viscosity_at_0_5_c_mpa_s')
-    prop_names = props.keys()
+    prop_names = list(props.keys())
 
-    for idx, vals in enumerate(zip(*props.values())):
+    for idx, vals in enumerate(zip(*list(props.values()))):
         dvis_kwargs = build_dvis_kwargs(prop_names, vals,
                                         'viscosity_at_0_c_mpa_s',
                                         weathering[idx],
@@ -71,9 +71,9 @@ def get_oil_viscosities_at_5c(oil_columns, field_indexes, weathering):
 
     props = get_oil_properties_by_category(oil_columns, field_indexes,
                                            'viscosity_at_0_5_c_mpa_s')
-    prop_names = props.keys()
+    prop_names = list(props.keys())
 
-    for idx, vals in enumerate(zip(*props.values())):
+    for idx, vals in enumerate(zip(*list(props.values()))):
         dvis_kwargs = build_dvis_kwargs(prop_names, vals,
                                         'viscosity_at_5_c_mpa_s',
                                         weathering[idx],
@@ -94,7 +94,7 @@ def build_dvis_kwargs(prop_names, values, dvis_label, weathering, ref_temp_k):
               viscosity value.  I don't really know what else to do in
               this case but parse the float value and ignore the operator.
     '''
-    dvis_kwargs = dict(zip(prop_names, [v[0].value for v in values]))
+    dvis_kwargs = dict(list(zip(prop_names, [v[0].value for v in values])))
 
     dvis_kwargs['weathering'] = weathering
 

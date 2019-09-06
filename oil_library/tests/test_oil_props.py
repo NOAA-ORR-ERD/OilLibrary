@@ -11,7 +11,7 @@ from pytest import raises
 
 import unit_conversion as uc
 
-from oil_library import get_oil_props, get_oil
+from .. import get_oil_props, get_oil
 
 from sqlalchemy.orm.exc import NoResultFound
 
@@ -29,7 +29,7 @@ def test_get_oil(search, isNone):
             o = get_oil(search)
     else:
         o = get_oil(search)
-        if isinstance(search, basestring):
+        if isinstance(search, str):
             assert o.name == search
 
 
@@ -96,16 +96,17 @@ def test_OilProps_DBquery(oil, api):
 
 
 class TestProperties:
-    op = get_oil_props(u'ALASKA NORTH SLOPE (MIDDLE PIPELINE, 1997)')
+    def __init__ (self):
+        self.op = get_oil_props('ALASKA NORTH SLOPE (MIDDLE PIPELINE, 1997)')
 
-    s_comp = sorted(op.record.sara_fractions, key=lambda s: s.ref_temp_k)
-    s_dens = sorted(op.record.sara_densities, key=lambda s: s.ref_temp_k)
+        self.s_comp = sorted(self.op.record.sara_fractions, key=lambda s: s.ref_temp_k)
+        self.s_dens = sorted(self.op.record.sara_densities, key=lambda s: s.ref_temp_k)
 
-    # only keep density records + sara_fractions which fraction > 0.
-    # OilProps prunes SARA to keep data for fractions > 0.
-    s_dens = [d_comp for ix, d_comp in enumerate(s_dens)
-              if s_comp[ix].fraction > 0.]
-    s_comp = [comp for comp in s_comp if comp.fraction > 0.]
+        # only keep density records + sara_fractions which fraction > 0.
+        # OilProps prunes SARA to keep data for fractions > 0.
+        self.s_dens = [d_comp for ix, d_comp in enumerate(self.s_dens)
+                if self.s_comp[ix].fraction > 0.]
+        self.s_comp = [comp for comp in self.s_comp if comp.fraction > 0.]
 
     def test_num_components(self):
         assert self.op.num_components == len(self.s_comp)

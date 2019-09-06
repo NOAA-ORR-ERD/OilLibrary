@@ -34,9 +34,9 @@ def get_evaporation_eqs_ests_1998(oil_columns, field_indexes, weathering):
 
     props = get_oil_properties_by_category(oil_columns, field_indexes,
                                            'evaporation_ests_1998_1')
-    prop_names = props.keys()
+    prop_names = list(props.keys())
 
-    for idx, vals in enumerate(zip(*props.values())):
+    for idx, vals in enumerate(zip(*list(props.values()))):
         evaporation_kwargs = build_evaporation_kwargs(prop_names, vals,
                                                       weathering[idx],
                                                       '(A + BT) ln t',
@@ -53,9 +53,9 @@ def get_evaporation_eqs_mass_loss1(oil_columns, field_indexes, weathering):
     props = get_oil_properties_by_category(oil_columns, field_indexes,
                                            'parameters_for_'
                                            'evaporation_equation_mass_loss')
-    prop_names = props.keys()
+    prop_names = list(props.keys())
 
-    for idx, vals in enumerate(zip(*props.values())):
+    for idx, vals in enumerate(zip(*list(props.values()))):
         evaporation_kwargs = build_evaporation_kwargs(prop_names, vals,
                                                       weathering[idx],
                                                       '(A + BT) sqrt(t)',
@@ -72,9 +72,9 @@ def get_evaporation_eqs_mass_loss2(oil_columns, field_indexes, weathering):
     props = get_oil_properties_by_category(oil_columns, field_indexes,
                                            'parameters_for_'
                                            'evaporation_equation_mass_loss')
-    prop_names = props.keys()
+    prop_names = list(props.keys())
 
-    for idx, vals in enumerate(zip(*props.values())):
+    for idx, vals in enumerate(zip(*list(props.values()))):
         evaporation_kwargs = build_evaporation_kwargs(prop_names, vals,
                                                       weathering[idx],
                                                       'A + B ln (t + C)',
@@ -97,7 +97,7 @@ def build_evaporation_kwargs(prop_names, values, weathering,
                        is a suffix that we will prepend with the coefficient
                        we would like to get.
     '''
-    evap_kwargs = dict(zip(prop_names, [v[0].value for v in values]))
+    evap_kwargs = dict(list(zip(prop_names, [v[0].value for v in values])))
 
     evap_kwargs['weathering'] = weathering
     evap_kwargs['equation'] = equation

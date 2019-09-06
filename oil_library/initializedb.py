@@ -96,7 +96,7 @@ def make_db(oillib_files=None, db_file=None, blacklist_file=None):
 
     pck_loc = os.path.dirname(os.path.realpath(__file__))
 
-    print "Building oil database:, installing to: {}".format(pck_loc)
+    print("Building oil database:, installing to: {}".format(pck_loc))
 
     if not db_file:
         db_file = os.path.join(pck_loc, 'OilLib.db')

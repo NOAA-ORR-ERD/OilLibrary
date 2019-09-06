@@ -67,13 +67,13 @@ def get_row_field_names(xl_sheet):
             category_name = custom_slugify(row[0].value).lower()
             row_prev_name = category_name
             if row[1].value is not None:
-                field_name = custom_slugify(unicode(row[1].value)).lower()
+                field_name = custom_slugify(str(row[1].value)).lower()
             else:
                 field_name = None
         else:
             category_name = row_prev_name
             if row[1].value is not None:
-                field_name = custom_slugify(unicode(row[1].value)).lower()
+                field_name = custom_slugify(str(row[1].value)).lower()
             else:
                 field_name = None
 
@@ -112,7 +112,7 @@ def get_oil_properties_by_category(oil_columns, field_indexes,
     '''
     ret = {}
     cat_fields = field_indexes[category]
-    for f, idxs in cat_fields.iteritems():
+    for f, idxs in cat_fields.items():
         ret[f] = [[c[i] for i in idxs]
                   for c in oil_columns]
 

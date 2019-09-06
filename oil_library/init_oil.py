@@ -503,9 +503,9 @@ def has_densities_below_pour_point(imported_rec):
             rho_temps.append(288.15)
 
         if any([(t < pour_point) for t in rho_temps]):
-            print ('\tadios_id: {}, pour_point: {}, rho_temps: {}, lt: {}'
+            print(('\tadios_id: {}, pour_point: {}, rho_temps: {}, lt: {}'
                    .format(imported_rec.adios_oil_id, pour_point, rho_temps,
-                           [(t < pour_point) for t in rho_temps]))
+                           [(t < pour_point) for t in rho_temps])))
             return True
 
 

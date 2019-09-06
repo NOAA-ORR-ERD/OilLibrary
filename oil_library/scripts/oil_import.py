@@ -11,16 +11,16 @@ from ..oil_library_parse import OilLibraryFile
 
 
 def diff_import_files(file1, file2):
-    print 'opening file: {0} ...'.format(file1)
+    print('opening file: {0} ...'.format(file1))
     fd1 = OilLibraryFile(file1, ignore_version=True)
 
-    print 'opening file: {0} ...'.format(file2)
+    print('opening file: {0} ...'.format(file2))
     fd2 = OilLibraryFile(file2, ignore_version=True)
 
     lines1, lines2 = list(fd1.readlines()), list(fd2.readlines())
 
-    print 'line lengths = ', (len(lines1), len(lines2))
-    print 'matching slices for these files:'
+    print('line lengths = ', (len(lines1), len(lines2)))
+    print('matching slices for these files:')
 
     get_diffs(lines1, lines2, fd1.file_columns)
 
@@ -44,31 +44,31 @@ def get_diffs(a, b, field_names):
                              matching_lines)
     slices.append((len(a), len(b), 0))
 
-    print
+    print()
 
     for sa, sb, n in slices:
-        print (ia, sa), (ib, sb), n
+        print((ia, sa), (ib, sb), n)
         sa_len, sb_len = sa - ia, sb - ib
 
         for idx in range(max([sa_len, sb_len])):
             if idx < sa_len and idx < sb_len:
                 # we will diff sa and sb as lists
-                print '<-> {0}: {1}'.format(a[ia + idx][1],
+                print('<-> {0}: {1}'.format(a[ia + idx][1],
                                             row_diff(a[ia + idx],
                                                      b[ib + idx],
-                                                     field_names))
+                                                     field_names)))
             elif idx < sa_len:
                 # display sa but not sb
-                print '- {0}'.format(a[ia + idx][:2])
+                print('- {0}'.format(a[ia + idx][:2]))
             elif idx < sb_len:
                 # display sb but not sa
-                print '+ {0}'.format(b[ib + idx][:2])
+                print('+ {0}'.format(b[ib + idx][:2]))
 
         for line in a[sa:sa + min(n, 4)]:
-            print '  {0}'.format(line[:2])
+            print('  {0}'.format(line[:2]))
 
         if n > 4:
-            print '  ...'
+            print('  ...')
 
         ia = sa + n
         ib = sb + n
@@ -140,8 +140,8 @@ def row_diff(a, b, field_names):
 def diff_import_files_usage(argv):
     cmd = os.path.basename(argv[0])
 
-    print('usage: {0} <import_file_1> <import_file_2>\n'
-          '(example: "{0} OilLib ADIOS2Export.txt")'.format(cmd))
+    print(('usage: {0} <import_file_1> <import_file_2>\n'
+          '(example: "{0} OilLib ADIOS2Export.txt")'.format(cmd)))
 
     sys.exit(1)
 
@@ -155,12 +155,12 @@ def diff_import_files_cmd(argv=sys.argv, proc=diff_import_files):
     try:
         proc(f1, f2)
     except Exception:
-        print "{0} FAILED\n".format(proc)
+        print("{0} FAILED\n".format(proc))
         raise
 
 
 def add_header_to_csv(file1):
-    print 'opening file: {0} ...'.format(file1)
+    print('opening file: {0} ...'.format(file1))
     fd1 = OilLibraryFile(file1, ignore_version=True)
 
     new_path = generate_new_filename(file1)
@@ -171,7 +171,7 @@ def add_header_to_csv(file1):
                        datetime.date.today().isoformat(),
                        new_app_name]
 
-    print 'exporting to:', new_path
+    print('exporting to:', new_path)
     fd1.export(new_path)
 
 
@@ -199,8 +199,8 @@ def generate_new_filename(filename):
 def get_file_version(file_obj):
     if (file_obj.__version__ is not None and
             len(file_obj.__version__) == 3):
-        print 'current file version: {}'.format(file_obj.__version__[0])
-        print 'would you like to keep the existing file version (y)? ',
+        print('current file version: {}'.format(file_obj.__version__[0]))
+        print('would you like to keep the existing file version (y)? ', end=' ')
 
         yes_or_no = sys.stdin.readline().strip()
         if yes_or_no == '':
@@ -208,7 +208,7 @@ def get_file_version(file_obj):
 
         choose_version = not yes_or_no.lower()[0] == 'y'
     else:
-        print 'no file version found'
+        print('no file version found')
         choose_version = True
 
     if choose_version is True:
@@ -220,7 +220,7 @@ def get_file_version(file_obj):
 def get_chosen_version():
     file_version = ''
     while file_version == '':
-        print 'file version: ',
+        print('file version: ', end=' ')
         file_version = sys.stdin.readline().strip()
 
         if file_version == '':
@@ -230,7 +230,7 @@ def get_chosen_version():
             file_version = '.'.join(['{}'.format(int(v))
                                      for v in file_version.split('.')])
         except ValueError:
-            print 'invalid number!'
+            print('invalid number!')
             file_version = ''
             continue
 
@@ -244,8 +244,8 @@ def get_application_name(file_obj):
 
     if (file_obj.__version__ is not None and
             len(file_obj.__version__) == 3):
-        print 'current applicaton name: {}'.format(file_obj.__version__[2])
-        print 'would you like to keep the existing application name (y)? ',
+        print('current applicaton name: {}'.format(file_obj.__version__[2]))
+        print('would you like to keep the existing application name (y)? ', end=' ')
 
         yes_or_no = sys.stdin.readline().strip()
         if yes_or_no == '':
@@ -253,7 +253,7 @@ def get_application_name(file_obj):
 
         choose_app = not yes_or_no.lower()[0] == 'y'
     else:
-        print 'no application name found'
+        print('no application name found')
         choose_app = True
 
     if choose_app is True:
@@ -267,12 +267,12 @@ def get_chosen_app_name():
     app_num = -1
 
     while app_num == -1:
-        print 'available application names:'
+        print('available application names:')
 
         for i, n in enumerate(apps):
-            print '\t{}\t{}'.format(i, n)
+            print('\t{}\t{}'.format(i, n))
 
-        print 'which application? ',
+        print('which application? ', end=' ')
         app_num = sys.stdin.readline().strip()
 
         if app_num == '':
@@ -282,11 +282,11 @@ def get_chosen_app_name():
             app_num = int(app_num)
             apps[app_num]
         except ValueError:
-            print 'invalid number!'
+            print('invalid number!')
             app_num = -1
             continue
         except IndexError:
-            print 'number is not in the list!'
+            print('number is not in the list!')
             app_num = -1
             continue
 
@@ -296,8 +296,8 @@ def get_chosen_app_name():
 def add_header_to_csv_usage(argv):
     cmd = os.path.basename(argv[0])
 
-    print('usage: {0} <import_file_1>\n'
-          '(example: "{0} ADIOS2Export.txt")'.format(cmd))
+    print(('usage: {0} <import_file_1>\n'
+          '(example: "{0} ADIOS2Export.txt")'.format(cmd)))
 
     sys.exit(1)
 
@@ -311,7 +311,7 @@ def add_header_to_csv_cmd(argv=sys.argv, proc=add_header_to_csv):
     try:
         proc(f1)
     except Exception:
-        print "{0} FAILED\n".format(proc)
+        print("{0} FAILED\n".format(proc))
         raise
 
 
@@ -320,25 +320,25 @@ def get_import_record_dates(import_file):
     fd = OilLibraryFile(import_file, ignore_version=True)
     sys.stderr.write('file version: {}\n'.format(fd.__version__))
 
-    print '\t'.join(('oil_name', 'adios_oil_id',
-                     'reference_date', 'reference'))
+    print('\t'.join(('oil_name', 'adios_oil_id',
+                     'reference_date', 'reference')))
 
     sys.stderr.write('reading_records...\n')
     for r in fd.readlines():
         if len(r) < 10:
             sys.stderr.write('got record: {}\n'.format(r))
 
-        r = [unicode(f, 'utf-8') if f is not None else f
+        r = [str(f, 'utf-8') if f is not None else f
              for f in r]
 
-        print '\t'.join(get_record_date(fd.file_columns, r))
+        print('\t'.join(get_record_date(fd.file_columns, r)))
 
     sys.stderr.write('finished!!!\n')
 
 
 def get_record_date(file_columns, row_data):
     file_columns = [slugify_filename(c).lower() for c in file_columns]
-    row_dict = dict(zip(file_columns, row_data))
+    row_dict = dict(list(zip(file_columns, row_data)))
 
     oil_name = row_dict['oil_name']
     adios_oil_id = row_dict['adios_oil_id']
@@ -372,5 +372,5 @@ def get_import_record_dates_cmd(argv=sys.argv, proc=get_import_record_dates):
     try:
         proc(f1)
     except Exception:
-        print "{0} FAILED\n".format(proc)
+        print("{0} FAILED\n".format(proc))
         raise
