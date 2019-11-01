@@ -11,7 +11,7 @@ gitpython
 numpy>=1.16.*
 scipy>=0.18.1
 SQLAlchemy>=1.0.13
-zope.sqlalchemy>=0.7.7
+zope.sqlalchemy==1.1
 awesome-slugify>=1.6.5
 pytest>=2.9.2
 backports.functools_lru_cache>=1.5
