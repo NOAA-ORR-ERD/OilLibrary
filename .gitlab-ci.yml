@@ -8,8 +8,8 @@ master:
     only:
         - master
     script:
-        - docker build -f dockerfile . -t gitlab.orr.noaa.gov:5002/oillibrary
-        - docker push gitlab.orr.noaa.gov:5002/oillibrary
+        - docker build -f dockerfile . -t gitlab.orr.noaa.gov:5002/oillibrary:master
+        - docker push gitlab.orr.noaa.gov:5002/oillibrary:master
     tags:
         - shell
         - build
