@@ -250,6 +250,7 @@ class OilProps(OilWithEstimation):
         gnome_oil = {'name':self.name,
                        'api':self.api,
                        'pour_point':self.pour_point()[0],
+                       'flash_point':self.flash_point()[0],
                        'solubility':self.solubility(),
                        'bullwinkle_fraction':self.get('bullwinkle_fraction'),
                        'bullwinkle_time':self.bulltime,
