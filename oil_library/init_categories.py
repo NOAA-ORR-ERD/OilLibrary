@@ -351,7 +351,7 @@ def link_generic_oils(session):
         Criteria:
         - Any oils that have been generically generated.  These are found
           in the OilLibTest data file.  Basically these oils have a name
-          that is prefixed with '*GENERIC'.
+          that is prefixed with 'GENERIC'.
     '''
     _top, categories = get_categories_by_names(session, 'Other',
                                                ('Generic',))
@@ -360,7 +360,7 @@ def link_generic_oils(session):
         logger.warning('Category "Other->Generic" not found!!')
         return
 
-    oils = session.query(Oil).filter(Oil.name.like('*GENERIC%')).all()
+    oils = session.query(Oil).filter(Oil.name.like('GENERIC%')).all()
 
     count = 0
     for o in oils:
