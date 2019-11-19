@@ -17,4 +17,4 @@ zope.sqlalchemy>=1.1
 awesome-slugify>=1.6.5
 pytest>=2.9.2
 backports.functools_lru_cache>=1.5
-unit_conversion>=2.5.4
+unit_conversion>=2.6.3
