@@ -248,6 +248,7 @@ class OilProps(OilWithEstimation):
         component_types = self.component_types.tolist()
 
         gnome_oil = {'name':self.name,
+                       'adios_oil_id':self.record.adios_oil_id,
                        'api':self.api,
                        'pour_point':self.pour_point()[0],
                        'flash_point':self.flash_point()[0],
