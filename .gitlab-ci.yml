@@ -38,7 +38,7 @@ production:
 
 test:
     stage: test
-    image: gitlab.orr.noaa.gov:5002/centos-conda
+    image: registry.orr.noaa.gov/erd/centos-conda
     script:
         - conda install --file conda_requirements.txt
         - python setup.py develop
