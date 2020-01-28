@@ -1,4 +1,4 @@
-FROM registry.orr.noaa.gov:5002/centos-conda:latest
+FROM registry.orr.noaa.gov/erd/centos-conda:latest
 
 RUN yum update -y
 # RUN yum install -y gcc
