@@ -7,7 +7,7 @@ import numpy as np
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 
 from . import _get_db_session
-from . import _sample_oils
+#from . import _sample_oils
 from .models import (Oil, KVis, Density, Cut,
                      MolecularWeight, SARAFraction, SARADensity)
 
@@ -62,8 +62,8 @@ def get_oil(oil_data_in, max_cuts=None):
         _estimate_missing_oil_props(oil_obj, oil_data_in, max_cuts)
 
         return oil_obj
-    elif oil_data_in in _sample_oils:
-        return _sample_oils[oil_data_in]
+    #elif oil_data_in in _sample_oils:
+        #return _sample_oils[oil_data_in]
     else:
         session = _get_db_session()
 
