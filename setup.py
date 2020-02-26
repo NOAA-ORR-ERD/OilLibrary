@@ -16,7 +16,7 @@ from git import Repo
 from git.exc import InvalidGitRepositoryError
 
 here = os.path.abspath(os.path.dirname(__file__))
-README = open(os.path.join(here, 'README.md')).read()
+README = open(os.path.join(here, 'README.rst')).read()
 pkg_name = 'oil_library'
 pkg_version = '1.1.2'
 
@@ -30,7 +30,7 @@ try:
         branch_name = 'no-branch'
     last_update = repo.iter_commits().next().committed_datetime.isoformat()
 except InvalidGitRepositoryError:
-    # not builiding in a valid git repo
+    # not building in a valid git repo
     # use today's date.
     print "not in a valid git repo -- using today's date as build date"
     branch_name = 'no-branch'
