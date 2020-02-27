@@ -8,8 +8,10 @@ master:
     only:
         - master
     script:
-        - docker build -f dockerfile . -t gitlab.orr.noaa.gov:5002/oillibrary:master
-        - docker push gitlab.orr.noaa.gov:5002/oillibrary:master
+        - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+        - docker build -t registry.orr.noaa.gov/gnome/oillibrary:master .
+        - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+        - docker push registry.orr.noaa.gov/gnome/oillibrary:master
     tags:
         - shell
         - build
@@ -19,8 +21,10 @@ develop:
     only:
         - develop
     script:
-        - docker build -f dockerfile . -t gitlab.orr.noaa.gov:5002/oillibrary:develop
-        - docker push gitlab.orr.noaa.gov:5002/oillibrary:develop
+        - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+        - docker build -t registry.orr.noaa.gov/gnome/oillibrary:develop .
+        - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+        - docker push registry.orr.noaa.gov/gnome/oillibrary:develop
     tags:
         - shell
         - build
@@ -30,8 +34,10 @@ production:
     only:
         - production
     script:
-        - docker build -f dockerfile . -t gitlab.orr.noaa.gov:5002/oillibrary:production
-        - docker push gitlab.orr.noaa.gov:5002/oillibrary:production
+        - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+        - docker build -t registry.orr.noaa.gov/gnome/oillibrary:production .
+        - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+        - docker push registry.orr.noaa.gov/gnome/oillibrary:production
     tags:
         - shell
         - build
