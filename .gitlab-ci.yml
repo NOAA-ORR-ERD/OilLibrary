@@ -8,6 +8,7 @@ master:
     only:
         - master
     script:
+        - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
         - docker build -t registry.orr.noaa.gov/gnome/oillibrary:master .
         - docker push registry.orr.noaa.gov/gnome/oillibrary:master
     tags:
@@ -19,6 +20,7 @@ develop:
     only:
         - develop
     script:
+        - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
         - docker build -t registry.orr.noaa.gov/gnome/oillibrary:develop .
         - docker push registry.orr.noaa.gov/gnome/oillibrary:develop
     tags:
@@ -30,6 +32,7 @@ production:
     only:
         - production
     script:
+        - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
         - docker build -t registry.orr.noaa.gov/gnome/oillibrary:production .
         - docker push registry.orr.noaa.gov/gnome/oillibrary:production
     tags:
