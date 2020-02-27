@@ -8,8 +8,8 @@ master:
     only:
         - master
     script:
-        - docker build -f dockerfile . -t gitlab.orr.noaa.gov:5002/oillibrary:master
-        - docker push gitlab.orr.noaa.gov:5002/oillibrary:master
+        - docker build -t registry.orr.noaa.gov/gnome/oillibrary:master .
+        - docker push registry.orr.noaa.gov/gnome/oillibrary:master
     tags:
         - shell
         - build
@@ -19,8 +19,8 @@ develop:
     only:
         - develop
     script:
-        - docker build -f dockerfile . -t gitlab.orr.noaa.gov:5002/oillibrary:develop
-        - docker push gitlab.orr.noaa.gov:5002/oillibrary:develop
+        - docker build -t registry.orr.noaa.gov/gnome/oillibrary:develop .
+        - docker push registry.orr.noaa.gov/gnome/oillibrary:develop
     tags:
         - shell
         - build
@@ -30,8 +30,8 @@ production:
     only:
         - production
     script:
-        - docker build -f dockerfile . -t gitlab.orr.noaa.gov:5002/oillibrary:production
-        - docker push gitlab.orr.noaa.gov:5002/oillibrary:production
+        - docker build -t registry.orr.noaa.gov/gnome/oillibrary:production .
+        - docker push registry.orr.noaa.gov/gnome/oillibrary:production
     tags:
         - shell
         - build
