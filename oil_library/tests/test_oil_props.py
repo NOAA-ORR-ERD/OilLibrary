@@ -75,6 +75,7 @@ oil_density_units = [
     ]
 
 
+@pytest.mark.skip("Moving sample oils to py_gnome")
 @pytest.mark.parametrize(('oil', 'density', 'units'), oil_density_units)
 def test_OilProps_sample_oil(oil, density, units):
     """ compare expected values with values stored in OilProps - make sure

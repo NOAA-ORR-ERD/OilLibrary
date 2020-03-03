@@ -6,7 +6,10 @@ from numbers import Number
 
 import pytest
 
-from oil_library import _sample_oils
+# moving sample oils to py_gnome
+_sample_oils = pytest.importorskip("_sample_oils")
+
+# from oil_library import _sample_oils
 
 oil_gas = _sample_oils['oil_gas']
 oil_jetfuels = _sample_oils['oil_jetfuels']
