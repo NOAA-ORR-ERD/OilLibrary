@@ -1,10 +1,7 @@
 # conda requirements file for the oil_library package.
 
-# these should all be in one of:
-# conda-forge
-# NOAA-ORR-ERD channel
-# defaults
-# best to have them in that order in your conda configuration
+# These should all be in the conda-forge channel:
+# Best to have it at the top in your conda configuration
 
 python=2.7.*
 gitpython
@@ -17,4 +14,4 @@ zope.sqlalchemy>=1.1
 awesome-slugify>=1.6.5
 pytest>=2.9.2
 backports.functools_lru_cache>=1.5
-unit_conversion>=2.6.3
+pynucos>=2.7.4
