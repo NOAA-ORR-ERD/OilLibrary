@@ -17,6 +17,9 @@
     and the viscosity at a given temperature, usually at 38 C(100F).
     The criteria follows closely, but not identically, to the ASTM standards
 '''
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 import logging
 
 import transaction

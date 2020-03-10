@@ -10,6 +10,9 @@ object used to initialize and OilProps object
 
 Not sure at present if this needs to be serializable?
 '''
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 import copy
 from itertools import groupby, chain
 from future.moves.itertools import zip_longest

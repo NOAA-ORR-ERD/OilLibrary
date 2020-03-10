@@ -1,6 +1,9 @@
 '''
 Factory methods for getting an oil object
 '''
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import numpy as np
 
@@ -13,7 +16,7 @@ from .models import (Oil, KVis, Density, Cut,
 
 from .oil_props import OilProps
 
-import utilities.estimations as est
+from .utilities import estimations as est
 from .imported_record.estimations import ImportedRecordWithEstimation
 from .json_record.estimations import JsonRecordWithEstimation
 
