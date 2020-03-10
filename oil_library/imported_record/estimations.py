@@ -5,7 +5,18 @@
     properties that are contained within an imported record from the
     NOAA Filemaker oil library database.
 '''
+from __future__ import division
+from __future__ import absolute_import
+from __future__ import print_function
+from __future__ import unicode_literals
 
+from future import standard_library
+standard_library.install_aliases()
+from builtins import zip
+from builtins import range
+from builtins import *
+from builtins import object
+from past.utils import old_div
 import numpy as np
 from scipy.optimize import curve_fit
 
@@ -30,14 +41,14 @@ def clamp(x, M, zeta=0.03):
         smooth transition as we cross the M boundary.
     '''
     return (x -
-            (x / (1.0 + np.e ** (-15 * (x - M))) ** (1.0 / (1 + zeta))) +
-            (M / (1.0 + np.e ** (-15 * (x - M))) ** (1.0 / (1 - zeta))))
+            (old_div(x, (1.0 + np.e ** (-15 * (x - M))) ** (1.0 / (1 + zeta)))) +
+            (old_div(M, (1.0 + np.e ** (-15 * (x - M))) ** (1.0 / (1 - zeta)))))
 
 
 def _inverse_linear_curve(y, a, b, M, zeta=0.12):
     y_c = clamp(y, M, zeta)
 
-    return (y_c - b) / a
+    return old_div((y_c - b), a)
 
 
 class ImportedRecordWithEstimation(object):
@@ -149,8 +160,8 @@ class ImportedRecordWithEstimation(object):
         rho_idxs1 = (rho_idxs0 + 1).clip(0, len(obj_list) - 1)
         rho_idxs1[low_and_oob] = 0
 
-        return zip([obj_list[i] for i in rho_idxs0],
-                   [obj_list[i] for i in rho_idxs1])
+        return list(zip([obj_list[i] for i in rho_idxs0],
+                   [obj_list[i] for i in rho_idxs1]))
 
     def culled_measurement(self, attr_name, non_null_attrs):
         '''
@@ -356,7 +367,7 @@ class ImportedRecordWithEstimation(object):
         dvis_dict = dict([((d.weathering, d.ref_temp_k), d.kg_ms)
                           for d in self.culled_dvis()])
 
-        non_redundant_keys = set(dvis_dict.keys()).difference(kvis_dict.keys())
+        non_redundant_keys = set(dvis_dict.keys()).difference(list(kvis_dict.keys()))
         for k in sorted(non_redundant_keys):
             yield DVis(ref_temp_k=k[1],
                        weathering=k[0],
@@ -368,7 +379,7 @@ class ImportedRecordWithEstimation(object):
         if density is None:
             return None
         else:
-            return kg_ms / density
+            return old_div(kg_ms, density)
 
     @classmethod
     def dvis_obj_to_kvis_obj(cls, dvis_obj, density):
@@ -396,8 +407,8 @@ class ImportedRecordWithEstimation(object):
         else:
             agg = dict(kvis_list)
 
-        return zip(*[(KVis(m_2_s=k, ref_temp_k=t, weathering=w), e)
-                     for (t, w), (k, e) in sorted(agg.iteritems())])
+        return list(zip(*[(KVis(m_2_s=k, ref_temp_k=t, weathering=w), e)
+                     for (t, w), (k, e) in sorted(agg.items())]))
 
     def kvis_at_temp(self, temp_k=288.15, weathering=0.0):
         shape = None
@@ -415,8 +426,8 @@ class ImportedRecordWithEstimation(object):
         if closest_kvis is not None:
             try:
                 # treat as a list
-                ref_kvis, ref_temp_k = zip(*[(kv[0].m_2_s, kv[0].ref_temp_k)
-                                             for kv in closest_kvis])
+                ref_kvis, ref_temp_k = list(zip(*[(kv[0].m_2_s, kv[0].ref_temp_k)
+                                             for kv in closest_kvis]))
                 if len(closest_kvis) > 1:
                     ref_kvis = np.array(ref_kvis).reshape(temp_k.shape)
                     ref_temp_k = np.array(ref_temp_k).reshape(temp_k.shape)
@@ -456,7 +467,7 @@ class ImportedRecordWithEstimation(object):
         self._k_v2 = 2416.0
 
         def exp_func(temp_k, a, k_v2):
-            return a * np.exp(k_v2 / temp_k)
+            return a * np.exp(old_div(k_v2, temp_k))
 
         if kvis_list is None:
             kvis_list = [kv for kv in self.aggregate_kvis()[0]
@@ -465,12 +476,12 @@ class ImportedRecordWithEstimation(object):
         if len(kvis_list) < 2:
             return
 
-        ref_temp_k, ref_kvis = zip(*[(k.ref_temp_k, k.m_2_s)
-                                     for k in kvis_list])
+        ref_temp_k, ref_kvis = list(zip(*[(k.ref_temp_k, k.m_2_s)
+                                     for k in kvis_list]))
 
         for k in np.logspace(3.6, 4.5, num=8):
             # k = log range from about 5000-32000
-            a_coeff = ref_kvis[0] * np.exp(-k / ref_temp_k[0])
+            a_coeff = ref_kvis[0] * np.exp(old_div(-k, ref_temp_k[0]))
 
             try:
                 popt, pcov = curve_fit(exp_func, ref_temp_k, ref_kvis,
@@ -481,7 +492,7 @@ class ImportedRecordWithEstimation(object):
                 #   So we will only check for inf values.
                 # - for sample sizes < 3, the covariance is unreliable.
                 if len(ref_kvis) > 2 and np.any(pcov == np.inf):
-                    print 'covariance too high.'
+                    print('covariance too high.')
                     continue
 
                 if popt[1] <= 1.0:
@@ -575,7 +586,7 @@ class ImportedRecordWithEstimation(object):
             BP_i = est.cut_temps_from_api(oil_api)
             fevap_i = np.cumsum(est.fmasses_flat_dist(f_res, f_asph))
         else:
-            BP_i, fevap_i = zip(*[(c.vapor_temp_k, c.fraction) for c in cuts])
+            BP_i, fevap_i = list(zip(*[(c.vapor_temp_k, c.fraction) for c in cuts]))
 
         popt, _pcov = curve_fit(_linear_curve, BP_i, fevap_i)
         f_cutoff = _linear_curve(732.0, *popt)  # center of asymptote (< 739)
@@ -612,14 +623,14 @@ class ImportedRecordWithEstimation(object):
         cut_temps = self.get_cut_temps(N)
 
         component_temps = np.append([1015.0, 1015.0],
-                                    zip(cut_temps, cut_temps))
+                                    list(zip(cut_temps, cut_temps)))
 
         return np.roll(component_temps, -2)
 
     def component_types(self, N=10):
         T_i = self.component_temps(N)
 
-        types_out = ['Saturates', 'Aromatics'] * (len(T_i) / 2 - 1)
+        types_out = ['Saturates', 'Aromatics'] * (old_div(len(T_i), 2) - 1)
         types_out += ['Resins', 'Asphaltenes']
 
         return types_out
@@ -632,8 +643,8 @@ class ImportedRecordWithEstimation(object):
     @classmethod
     def estimate_component_mol_wt(cls, boiling_points):
         mw_list = np.append([est.resin_mol_wt(), est.asphaltene_mol_wt()],
-                            zip(est.saturate_mol_wt(boiling_points),
-                                est.aromatic_mol_wt(boiling_points)))
+                            list(zip(est.saturate_mol_wt(boiling_points),
+                                est.aromatic_mol_wt(boiling_points))))
 
         return np.roll(mw_list, -2)
 
@@ -645,8 +656,8 @@ class ImportedRecordWithEstimation(object):
     @classmethod
     def estimate_component_densities(cls, boiling_points):
         rho_list = np.append([est.resin_density(), est.asphaltene_density()],
-                             zip(est.saturate_densities(boiling_points),
-                                 est.aromatic_densities(boiling_points)))
+                             list(zip(est.saturate_densities(boiling_points),
+                                 est.aromatic_densities(boiling_points))))
 
         return np.roll(rho_list, -2)
 
@@ -672,7 +683,7 @@ class ImportedRecordWithEstimation(object):
                                                                   f_arom_i)
 
         mf_list = np.append([f_res, f_asph],
-                            zip(f_sat_i, f_arom_i))
+                            list(zip(f_sat_i, f_arom_i)))
 
         return np.roll(mf_list, -2)
 
@@ -710,8 +721,8 @@ class ImportedRecordWithEstimation(object):
         M_w_sat_i = est.saturate_mol_wt(T_i)
         M_w_arom_i = est.aromatic_mol_wt(T_i)
 
-        M_w_avg_i = (M_w_sat_i * f_sat_i / fmass_i +
-                     M_w_arom_i * f_arom_i / fmass_i)
+        M_w_avg_i = (old_div(M_w_sat_i * f_sat_i, fmass_i) +
+                     old_div(M_w_arom_i * f_arom_i, fmass_i))
 
         # estimate specific gravity
         rho_sat_i = est.saturate_densities(T_i)
@@ -720,8 +731,8 @@ class ImportedRecordWithEstimation(object):
         rho_arom_i = est.aromatic_densities(T_i)
         SG_arom_i = est.specific_gravity(rho_arom_i)
 
-        SG_avg_i = (SG_sat_i * f_sat_i / fmass_i +
-                    SG_arom_i * f_arom_i / fmass_i)
+        SG_avg_i = (old_div(SG_sat_i * f_sat_i, fmass_i) +
+                    old_div(SG_arom_i * f_arom_i, fmass_i))
 
         f_sat_i = est.saturate_mass_fraction(fmass_i, M_w_avg_i, SG_avg_i, T_i)
         f_arom_i = fmass_i - f_sat_i
@@ -747,7 +758,7 @@ class ImportedRecordWithEstimation(object):
                     last_good_sat_i = f_sat_i[above_200 ^ True][-1]
                     last_good_fmass_i = fmass_i[above_200 ^ True][-1]
 
-                    scale_sat_i = last_good_sat_i / last_good_fmass_i
+                    scale_sat_i = old_div(last_good_sat_i, last_good_fmass_i)
 
                 f_sat_i[above_200] = fmass_i[above_200] * scale_sat_i
                 f_arom_i[above_200] = fmass_i[above_200] * (1.0 - scale_sat_i)
@@ -759,7 +770,7 @@ class ImportedRecordWithEstimation(object):
                 if prev_f_sat_i is None:
                     scale_sat_i = 0.5
                 else:
-                    scale_sat_i = prev_f_sat_i / fmass_i
+                    scale_sat_i = old_div(prev_f_sat_i, fmass_i)
 
                 f_sat_i = fmass_i * scale_sat_i
                 f_arom_i = fmass_i * (1.0 - scale_sat_i)
@@ -927,7 +938,7 @@ class ImportedRecordWithEstimation(object):
 
         t_g = 1356.7 - 247.36 * np.log(oil_api)
         t_bp = 532.98 - 3.1295 * oil_api
-        bull_adios1 = (483.0 - t_bp) / t_g
+        bull_adios1 = old_div((483.0 - t_bp), t_g)
 
         bull_adios1 = np.clip(bull_adios1, 0.0, 0.4)
 

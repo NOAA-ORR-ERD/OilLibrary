@@ -9,7 +9,14 @@ NOTE: This isn't testing the initilization of teh DB,
 etc, as I'm not sure how to test that wihtout messing
 with the actual DB -- but it should
 """
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
 
+from future import standard_library
+standard_library.install_aliases()
+from builtins import *
 import os
 import shutil
 import pytest
@@ -57,9 +64,9 @@ def test_list_categories(session):
     q = session.query(Category).filter(Category.parent == None)
     all_cats = {category.name: tuple(list_categories(category)) for category in q}
 
-    print all
+    print(all)
 
-    assert all_cats.keys() == [u'Crude', u'Refined', u'Other']
+    assert list(all_cats.keys()) == [u'Crude', u'Refined', u'Other']
     # maybe test more here at some point...
 
 

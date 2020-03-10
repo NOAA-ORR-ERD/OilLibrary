@@ -1,7 +1,16 @@
 '''
 Tests for oil_props module in gnome.db.oil_library
 '''
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
 
+from future import standard_library
+standard_library.install_aliases()
+from past.builtins import basestring
+from builtins import *
+from builtins import object
 import copy
 
 import numpy as np
@@ -96,7 +105,7 @@ def test_OilProps_DBquery(oil, api):
     assert np.isclose(o.api, api, atol=0.01)
 
 
-class TestProperties:
+class TestProperties(object):
     op = get_oil_props(u'ALASKA NORTH SLOPE (MIDDLE PIPELINE, 1997)')
 
     s_comp = sorted(op.record.sara_fractions, key=lambda s: s.ref_temp_k)
@@ -146,7 +155,7 @@ def test_ne():
             get_oil_props('ARABIAN MEDIUM, EXXON'))
 
 
-class TestCopy():
+class TestCopy(object):
     def test_copy(self):
         '''
         do a shallow copy and test that it is a shallow copy
