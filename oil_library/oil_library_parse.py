@@ -2,6 +2,13 @@
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
+from __future__ import unicode_literals
+from future import standard_library
+standard_library.install_aliases()
+from builtins import zip
+from builtins import range
+from builtins import *
+from builtins import object
 import sys
 import logging
 
@@ -57,7 +64,7 @@ class OilLibraryFile(object):
         self.file_columns_lu = None
         self.num_columns = None
 
-        self.fileobj = open(name, 'rU')
+        self.fileobj = open(name, 'rb') # use binary, as we're trying to decode line by line.
         self.field_delim = field_delim
 
         self.__version__ = self.readline()
@@ -94,8 +101,8 @@ class OilLibraryFile(object):
 
     def _set_table_columns(self):
         self.file_columns = self.readline()
-        self.file_columns_lu = dict(zip(self.file_columns,
-                                        range(len(self.file_columns))))
+        self.file_columns_lu = dict(list(zip(self.file_columns,
+                                        list(range(len(self.file_columns))))))
         self.num_columns = len(self.file_columns)
 
     def _parse_row(self, line):
@@ -105,9 +112,12 @@ class OilLibraryFile(object):
 
         line = line.strip()
         if len(line) > 0:
+            # fixme: decoding one row at a time is NOT good
+            #        particularly since we control the input file!
+            #.       and it's probably never going to be utf-8
             try:
                 row = line.decode('utf-8')
-            except Exception:
+            except Exception:  # this should be looking for an EncodingError!
                 # If we fail to encode in utf-8, then it is possible that
                 # our file contains mac_roman characters of which some are
                 # out-of-range.
@@ -115,7 +125,6 @@ class OilLibraryFile(object):
                 # our file contents.
                 row = line.decode('mac_roman')
 
-            row = row.encode('utf-8')
             row = (row.split(self.field_delim))
             row = [c.strip('"') for c in row]
             row = [c if len(c) > 0 else None for c in row]
