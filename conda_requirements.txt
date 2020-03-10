@@ -15,3 +15,6 @@ awesome-slugify>=1.6.5
 pytest>=2.9.2
 backports.functools_lru_cache>=1.5
 pynucos>=2.7.4
+
+# to support py2/3 compatibility
+future
