@@ -64,7 +64,10 @@ class OilLibraryFile(object):
         self.file_columns_lu = None
         self.num_columns = None
 
-        self.fileobj = open(name, 'rb') # use binary, as we're trying to decode line by line.
+        # use binary, as we're decoding line by line.
+        # NOTE: Universal linefeeds doesn't work reliably with binary
+        # files should not have old style mac lineendings
+        self.fileobj = open(name, 'rb')
         self.field_delim = field_delim
 
         self.__version__ = self.readline()
@@ -86,9 +89,10 @@ class OilLibraryFile(object):
                 self.__version__ = None
                 self.fileobj.seek(0)
             else:
-                raise ImportFileHeaderLengthError('Bad file header: '
-                                                  'did not find '
-                                                  '3 fields for version!!')
+                raise ImportFileHeaderLengthError('Bad file header: did not find '
+                                                  '3 fields for version!!\n'
+                                                  'header: {}\n'
+                                                  'file: {}'.format(self.__version__, self.name))
         elif not self.__version__[-1].startswith('adios'):
             if ignore_version:
                 # If we failed on header content, we probably have a bad
@@ -106,15 +110,25 @@ class OilLibraryFile(object):
         self.num_columns = len(self.file_columns)
 
     def _parse_row(self, line):
-        if line == '':
-            # readline() returns empty string on EOF and '\n' for empty lines
+        """
+        parse a line in the file
+
+        :param line: bytes object, so that we can decode here
+
+        returns: list of unicode (str) objects, with None for empty
+        """
+        if not line:
+            # readline() returns empty string or byte on EOF and '\n' for empty lines
+            # return None for EOF
             return None
 
         line = line.strip()
-        if len(line) > 0:
+        if line:
             # fixme: decoding one row at a time is NOT good
             #        particularly since we control the input file!
-            #.       and it's probably never going to be utf-8
+            #       and it's probably never going to be utf-8
+            # should be looking for ascii forst, then macroman, then ??
+            # or use chardet?
             try:
                 row = line.decode('utf-8')
             except Exception:  # this should be looking for an EncodingError!
@@ -125,9 +139,11 @@ class OilLibraryFile(object):
                 # our file contents.
                 row = line.decode('mac_roman')
 
+            # row is a unicode string now.
             row = (row.split(self.field_delim))
             row = [c.strip('"') for c in row]
-            row = [c if len(c) > 0 else None for c in row]
+            # replace empty fields with None
+            row = [c if c  else None for c in row]
         else:
             row = []
         return row

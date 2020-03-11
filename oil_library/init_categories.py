@@ -424,8 +424,6 @@ def manually_recategorize_oils(session, settings):
     logger.info('Re-categorizing oils in our blacklist')
     rowcount = 0
     for r in fd.readlines():
-        r = [unicode(f, 'utf-8') if f is not None else f
-             for f in r]
         recategorize_oil(session, fd.file_columns, r)
         rowcount += 1
 

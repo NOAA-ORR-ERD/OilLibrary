@@ -59,15 +59,10 @@ def load_database(settings):
             for r in fd.readlines():
                 if len(r) < 10:
                     logger.info('got record: {}'.format(r))
-
-                # r = [unicode(f, 'utf-8') if f is not None else f
-                #      for f in r]
-
                 try:
                     add_oil_object(session, fd.file_columns, r)
                 except IntegrityError as e:
                     logger.warning('Failed to add oil: {}'.format(e))
-
                     logger.info('rolling back...')
                     transaction.abort()
 
