@@ -29,7 +29,7 @@ from .oil.estimations import OilWithEstimation
 
 
 # create a dtype for storing sara information in numpy array
-sara_dtype = np.dtype([('type', 'S16'),
+sara_dtype = np.dtype([('type', 'U16'),
                        ('boiling_point', np.float64),
                        ('fraction', np.float64),
                        ('density', np.float64),
