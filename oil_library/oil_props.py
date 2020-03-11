@@ -278,7 +278,7 @@ class OilProps(OilWithEstimation):
         '''
         cannot just do self.__dict__ == other.__dict__ since
         '''
-        for key, val in self.__dict__.iteritems():
+        for key, val in self.__dict__.items():
             o_val = other.__dict__[key]
 
             if isinstance(val, np.ndarray):

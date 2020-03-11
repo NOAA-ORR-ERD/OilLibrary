@@ -113,8 +113,9 @@ class TestProperties(object):
 
     # only keep density records + sara_fractions which fraction > 0.
     # OilProps prunes SARA to keep data for fractions > 0.
-    s_dens = [d_comp for ix, d_comp in enumerate(s_dens)
-              if s_comp[ix].fraction > 0.]
+    s_dens = [d_comp for d_comp, s_c in zip(s_dens, s_comp)
+              if s_c.fraction > 0.0]
+
     s_comp = [comp for comp in s_comp if comp.fraction > 0.]
 
     def test_num_components(self):
