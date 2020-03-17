@@ -105,8 +105,7 @@ class OilLibraryFile(object):
 
     def _set_table_columns(self):
         self.file_columns = self.readline()
-        self.file_columns_lu = dict(list(zip(self.file_columns,
-                                        list(range(len(self.file_columns))))))
+        self.file_columns_lu = {n: i for i, n in enumerate(self.file_columns)}
         self.num_columns = len(self.file_columns)
 
     def _parse_row(self, line):
