@@ -5,6 +5,7 @@ __pycache__
 
 # pytest stuff
 .pytest_cache/
+.coverage
 
 # ignore generated oildb
 oil_library/OilLib.db
