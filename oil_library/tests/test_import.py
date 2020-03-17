@@ -17,31 +17,35 @@ import pytest
 
 from pathlib import Path
 
+import oil_library
 from oil_library.oil_library_parse import OilLibraryFile
 
-data_dir = Path(__file__).resolve().parent / "sample_data"
+data_dir = Path(oil_library.__file__).resolve().parent
 
 
 @pytest.fixture
 def olf():
-    return OilLibraryFile(str(data_dir / "A00005_record.tsv"))
+    return OilLibraryFile(str(data_dir / "OilLibTest"))
 
 
 def test_load_file(olf):
     """
     this asserts that you can load a file at all
 
-    loading the file checks the version number, so at least that works.
+    loading the file checks the version info and sets up the columns
     """
-
-    assert olf.__version__ == ['6', '2019-05-09', 'adios']
+    ver = olf.__version__
+    assert len(ver) == 3
+    assert ver[0] == '6'
+    assert olf.num_columns == 159
 
 
 def test_load_record(olf):
     record = olf.readline()
 
-    assert len(record) == olf.num_columns
-    assert len(record) == 159
+    # assert len(record) == olf.num_columns
+    # if the last ones are empty, they don't load
+    assert len(record) <= olf.num_columns
     # record should be only unicode or None
     for i, item in enumerate(record):
         if item is None:
@@ -79,7 +83,7 @@ def test_file_columns_lu(olf):
 
 def test_api(olf):
     """
-    make sure the API field is a number
+    make sure the API field is a number or None
     """
 
     cols_lu = olf.file_columns_lu
@@ -87,11 +91,8 @@ def test_api(olf):
     record_1 = olf.readline()
 
     API = record_0[cols_lu["API"]]
-    print(cols_lu["API"])
-    print(API)
-    assert API is None
+    assert float(API) == 34.5  # for Alaska North slope -- change if sample data changes
 
     API = record_1[cols_lu["API"]]
-    print(cols_lu["API"])
-    print(API)
-    assert float(API) == 26.8  # for Alaska North slope -- change if sample data changes
+    assert API is None
+
