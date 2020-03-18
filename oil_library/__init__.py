@@ -47,6 +47,14 @@ def _get_db_session():
 
 #_sample_oils = {}
 
+log_levels = {"debug": logging.DEBUG,
+              "info": logging.INFO,
+              "warning": logging.WARNING,
+              "error": logging.ERROR,
+              "critical": logging.CRITICAL,
+              }
+logger_format = '%(levelname)s - %(module)8s - line:%(lineno)d - %(message)s'
+
 
 # utility for setting up console logging
 def initialize_console_log(level='debug'):
@@ -62,30 +70,30 @@ def initialize_console_log(level='debug'):
     You will only get the logging messages at or above the level you set.
 
     '''
-    levels = {"debug": logging.DEBUG,
-              "info": logging.INFO,
-              "warning": logging.WARNING,
-              "error": logging.ERROR,
-              "critical": logging.CRITICAL,
-              }
 
-    level = levels[level.lower()]
-    format_str = '%(levelname)s - %(module)8s - line:%(lineno)d - %(message)s'
+    level = log_levels[level.lower()]
 
-    logging.basicConfig(stream=sys.stdout,
+    logging.basicConfig(force=True,  # make sure this gets set up
+                        stream=sys.stdout,
                         level=level,
-                        format=format_str)
+                        format=logger_format)
+
+
+def add_file_log(filename, level='info'):
+    """
+    sets up the logger to dump to a new, clean file
+
+    in addition to wherever else it's going
+    """
+    level = log_levels[level.lower()]
+    handler = logging.FileHandler(filename, mode='w', encoding=None, delay=0)
+    handler.setLevel(level)
+    handler.setFormatter(logging.Formatter(logger_format))
+    logging.getLogger('').addHandler(handler)
 
 
 # Set default logging handler to avoid "No handler found" warnings.
-try:  # Python 2.7+
-    from logging import NullHandler
-except ImportError:
-    class NullHandler(logging.Handler):
-        def emit(self, record):
-            pass
-
-logging.getLogger(__name__).addHandler(NullHandler())
+logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 
 from .factory import get_oil, get_oil_props

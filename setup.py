@@ -69,9 +69,10 @@ def init_db():
     else:
         try:
             import oil_library.initializedb
-            print "got this version:", oil_library.__file__
-
-            print "calling initializedb.make_db() from the code"
+            oil_library.initialize_console_log(level='info')
+            print "setting up logger to dump to: DB_build_Log.txt"
+            oil_library.add_file_log("DB_build_Log.txt", level='info')
+            print "calling initializedb.make_db()"
             oil_library.initializedb.make_db()
             print 'OilLibrary database successfully generated from file!'
         except Exception:
@@ -115,7 +116,7 @@ class remake_oil_db(Command):
         print "Deleting {0} ..".format(to_rm)
         # ret = call(db_init_script_path())
 
-        print "****\ncreating a new DB with direct call into package\n********"
+        print "********\ncreating a new DB with direct call into package\n********"
         init_db()
 
 
