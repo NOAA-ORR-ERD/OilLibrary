@@ -341,7 +341,12 @@ class ImportedRecordWithEstimation(object):
         less_than = np.all((temperature < closest_values[:, :, 1].T).T,
                            axis=1)
 
-        if self.record.api > 30:
+        ## fixme: API and density should be the same thing!
+        #         so we should not use API here
+        #         but computing the density at temp requires this.
+        #         frankly, it really doesn't much matter.
+        api = self.record.api
+        if api is not None and api > 30:
             k_rho_default = 0.0009
         else:
             k_rho_default = 0.0008
@@ -561,7 +566,9 @@ class ImportedRecordWithEstimation(object):
         prev_temp = prev_fraction = 0.0
 
         for c in self.record.cuts:
-            if c.vapor_temp_k < prev_temp:
+            # fixme: is this really what we should be doing
+            #        if there is no vapor_temp?
+            if c.vapor_temp_k is None or c.vapor_temp_k < prev_temp:
                 continue
 
             if c.fraction < prev_fraction:
