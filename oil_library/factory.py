@@ -10,7 +10,7 @@ import numpy as np
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 
 from . import _get_db_session
-#from . import _sample_oils
+
 from .models import (Oil, KVis, Density, Cut,
                      MolecularWeight, SARAFraction, SARADensity)
 
@@ -81,12 +81,13 @@ def get_oil(oil_data_in, max_cuts=None):
         except (AttributeError, NoResultFound):
             pass
 
+        print("querying DB:")
+        print("Oil.name == ", repr(oil_data_in))
         results = session.query(Oil).filter(Oil.name == oil_data_in)
 
         try:
             oil = results.one()
             oil.preload_linked_attributes()
-
             return oil
         except MultipleResultsFound as ex:
             ids = ", ".join([oil.adios_oil_id for oil in results])
@@ -102,7 +103,6 @@ def get_oil(oil_data_in, max_cuts=None):
             ex.message = ('Oil with identifier "{0}", not found in database.'
                           .format(oil_data_in))
             ex.args = (ex.message, )
-
             raise ex
 
 

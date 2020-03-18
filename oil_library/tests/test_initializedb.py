@@ -5,10 +5,14 @@ really more of a integration test
 
 """
 
+import pytest
+pytestmark = pytest.mark.skip("skipping 'cause this messes up the DB")
+
 from pathlib import Path
 
 import oil_library
 from oil_library import initializedb
+
 
 test_file = str(Path(oil_library.__file__).parent / "OilLibTest")
 
