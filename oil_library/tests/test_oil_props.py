@@ -6,11 +6,7 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-# from future import standard_library
-# standard_library.install_aliases()
-# from past.builtins import basestring
-# from builtins import *
-# from builtins import object
+from past.builtins import basestring
 
 import copy
 
@@ -32,7 +28,9 @@ def test_OilProps_exceptions():
 
 
 @pytest.mark.parametrize(("search", "isNone"),
-                         [('LUCKENBACH FUEL OIL', False), (51, True)])
+                         [('LUCKENBACH FUEL OIL', False),
+                          (51, True),
+                          ])
 def test_get_oil(search, isNone):
     if isNone:
         with raises(NoResultFound):
