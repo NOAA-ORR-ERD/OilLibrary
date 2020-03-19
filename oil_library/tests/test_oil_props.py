@@ -1,6 +1,12 @@
 '''
 Tests for oil_props module in gnome.db.oil_library
 '''
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+
+from past.builtins import basestring
 
 import copy
 
@@ -22,7 +28,9 @@ def test_OilProps_exceptions():
 
 
 @pytest.mark.parametrize(("search", "isNone"),
-                         [('LUCKENBACH FUEL OIL', False), (51, True)])
+                         [('LUCKENBACH FUEL OIL', False),
+                          (51, True),
+                          ])
 def test_get_oil(search, isNone):
     if isNone:
         with raises(NoResultFound):
@@ -96,7 +104,7 @@ def test_OilProps_DBquery(oil, api):
     assert np.isclose(o.api, api, atol=0.01)
 
 
-class TestProperties:
+class TestProperties(object):
     op = get_oil_props(u'ALASKA NORTH SLOPE (MIDDLE PIPELINE, 1997)')
 
     s_comp = sorted(op.record.sara_fractions, key=lambda s: s.ref_temp_k)
@@ -104,8 +112,9 @@ class TestProperties:
 
     # only keep density records + sara_fractions which fraction > 0.
     # OilProps prunes SARA to keep data for fractions > 0.
-    s_dens = [d_comp for ix, d_comp in enumerate(s_dens)
-              if s_comp[ix].fraction > 0.]
+    s_dens = [d_comp for d_comp, s_c in zip(s_dens, s_comp)
+              if s_c.fraction > 0.0]
+
     s_comp = [comp for comp in s_comp if comp.fraction > 0.]
 
     def test_num_components(self):
@@ -146,7 +155,7 @@ def test_ne():
             get_oil_props('ARABIAN MEDIUM, EXXON'))
 
 
-class TestCopy():
+class TestCopy(object):
     def test_copy(self):
         '''
         do a shallow copy and test that it is a shallow copy

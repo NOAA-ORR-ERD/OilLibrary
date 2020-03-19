@@ -1,1 +1,4 @@
-1	5/26/17	adios oil category whitelist/blacklist	Oil_Name	ADIOS_Oil_ID	Add_To	Remove_From"MTBE, EXXON"	AD00786	Other->Other	"Gasoline, Kerosene, Light Products (Fuel Oil 1)""NAPHTHA CRACKING FRACTION, EXXON"	AD00803	Other->Other	"Fuel Oil 2, Diesel, Heating Oil"
+1	5/26/17	adios oil category whitelist/blacklist
+Oil_Name	ADIOS_Oil_ID	Add_To	Remove_From
+"MTBE, EXXON"	AD00786	Other->Other	"Gasoline, Kerosene, Light Products (Fuel Oil 1)"
+"NAPHTHA CRACKING FRACTION, EXXON"	AD00803	Other->Other	"Fuel Oil 2, Diesel, Heating Oil"

@@ -4,7 +4,16 @@
     These are primitive estimation algorithms to be used primarily for
     estimating oil properties based on known measured values.
 '''
+from __future__ import division
+from __future__ import absolute_import
+from __future__ import print_function
+from __future__ import unicode_literals
 
+from future import standard_library
+standard_library.install_aliases()
+from builtins import range
+from builtins import *
+from past.utils import old_div
 import numpy as np
 
 
@@ -43,7 +52,7 @@ def density_at_temp(ref_density, ref_temp_k, temp_k, k_rho_t=0.0008):
 
         NOTE: need a reference for the coefficient of expansion
     '''
-    return ref_density / (1.0 - k_rho_t * (ref_temp_k - temp_k))
+    return old_div(ref_density, (1.0 - k_rho_t * (ref_temp_k - temp_k)))
 
 
 def vol_expansion_coeff(rho_0, t_0, rho_1, t_1):
@@ -54,7 +63,7 @@ def vol_expansion_coeff(rho_0, t_0, rho_1, t_1):
     if t_0 == t_1:
         k_rho_t = 0.0
     else:
-        k_rho_t = (rho_0 - rho_1) / (rho_0 * (t_1 - t_0))
+        k_rho_t = old_div((rho_0 - rho_1), (rho_0 * (t_1 - t_0)))
 
     return k_rho_t
 
@@ -78,7 +87,7 @@ def dvis_to_kvis(dvis, density):
 
         Conversion from dynamic viscosity to kinematic viscosity.
     '''
-    return dvis / density
+    return old_div(dvis, density)
 
 
 def kvis_at_temp(ref_kvis, ref_temp_k, temp_k, k_v2=2416.0):
@@ -93,7 +102,7 @@ def kvis_at_temp(ref_kvis, ref_temp_k, temp_k, k_v2=2416.0):
               multi-KVis oils in our oil library suggest that a value of
               2416.0 (Abu Eishah 1999) would be a good default value for k_v2.
     '''
-    return ref_kvis * np.exp(k_v2 / temp_k - k_v2 / ref_temp_k)
+    return ref_kvis * np.exp(old_div(k_v2, temp_k) - old_div(k_v2, ref_temp_k))
 
 
 def resin_fraction(density, viscosity, f_other=0.0):
@@ -170,7 +179,7 @@ def cut_temps_from_api(api, N=5):
     T_0 = 457.0 - 3.34 * api
     T_G = 1357.0 - 247.7 * np.log(api)
 
-    return np.array([(T_0 + T_G * i / N) for i in range(N)])
+    return np.array([(T_0 + old_div(T_G * i, N)) for i in range(N)])
 
 
 def fmasses_from_cuts(f_evap_i):
@@ -188,7 +197,7 @@ def fmasses_flat_dist(f_res, f_asph, N=5):
     '''
         Generate a flat distribution of N distillation cut fractional masses.
     '''
-    return np.array([(1.0 - f_res - f_asph) / N] * N)
+    return np.array([old_div((1.0 - f_res - f_asph), N)] * N)
 
 
 def saturate_mol_wt(boiling_point):
@@ -250,7 +259,7 @@ def trial_densities(boiling_points, watson_factor):
         on boiling points and the Watson Characterization Factor.
         This is only good for estimating Aromatics & Saturates.
     '''
-    return 1000.0 * (1.8 * boiling_points) ** (1.0 / 3.0) / watson_factor
+    return old_div(1000.0 * (1.8 * boiling_points) ** (1.0 / 3.0), watson_factor)
 
 
 def saturate_densities(boiling_points):
@@ -306,7 +315,7 @@ def refractive_index(hc_char_param):
     '''
     I = hc_char_param
 
-    return ((1 + 2 * I) / (1 - I)) ** (1.0 / 2.0)
+    return (old_div((1 + 2 * I), (1 - I))) ** (1.0 / 2.0)
 
 
 def _hydrocarbon_grouping_param(mol_wt, specific_gravity, temp_k):
@@ -365,7 +374,7 @@ def pour_point_from_kvis(ref_kvis, ref_temp_k):
         then we can estimate what its pour point might be.
     '''
     c_v1 = 5000.0
-    T_pp = (c_v1 * ref_temp_k) / (c_v1 - ref_temp_k * np.log(ref_kvis))
+    T_pp = old_div((c_v1 * ref_temp_k), (c_v1 - ref_temp_k * np.log(ref_kvis)))
 
     return T_pp
 

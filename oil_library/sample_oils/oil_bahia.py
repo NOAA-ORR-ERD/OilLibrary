@@ -3,7 +3,14 @@
     (Note: we put these things in their own separate file because
            some oil properties records can get quite large)
 '''
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
 
+from future import standard_library
+standard_library.install_aliases()
+from builtins import *
 json_data = {'name': u'oil_bahia',
              'adios_oil_id': u'AD00102',
              'api': 35.2,
