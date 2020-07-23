@@ -4,8 +4,16 @@
     These are general functions to be used primarily for helping us deal
     with an incoming JSON oil record.
 '''
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
 
 
+from future import standard_library
+standard_library.install_aliases()
+from builtins import *
+from builtins import object
 class ObjFromDict(object):
     '''
         Generalized method for interpreting a nested data structure of
@@ -19,7 +27,7 @@ class ObjFromDict(object):
             json_obj.densities[0].ref_temp_k
     '''
     def __init__(self, data):
-        for name, value in data.iteritems():
+        for name, value in data.items():
             setattr(self, name, self._wrap(value))
 
     def _wrap(self, value):

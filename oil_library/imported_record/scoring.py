@@ -1,5 +1,15 @@
 #!/usr/bin/env python
 
+from __future__ import division
+from __future__ import absolute_import
+from __future__ import print_function
+from __future__ import unicode_literals
+from future import standard_library
+standard_library.install_aliases()
+from builtins import zip
+from builtins import *
+from builtins import object
+from past.utils import old_div
 import numpy as np
 
 
@@ -19,7 +29,7 @@ class ImportedRecordWithScore(object):
         else:
             w_i = np.array(w_i)
 
-        return np.sum(w_i * Q_i) / np.sum(w_i)
+        return old_div(np.sum(w_i * Q_i), np.sum(w_i))
 
     def score(self):
         scores = [(self.score_densities(), 5.0),
@@ -32,7 +42,7 @@ class ImportedRecordWithScore(object):
                   (self.score_flash_point(), 1.0),
                   (self.score_emulsion_constants(), 1.0)]
 
-        return self.aggregate_score(*zip(*scores))
+        return self.aggregate_score(*list(zip(*scores)))
 
     def score_demographics(self):
         fields = ('reference',)

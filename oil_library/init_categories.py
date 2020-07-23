@@ -17,6 +17,9 @@
     and the viscosity at a given temperature, usually at 38 C(100F).
     The criteria follows closely, but not identically, to the ASTM standards
 '''
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 import logging
 
 import transaction
@@ -421,8 +424,6 @@ def manually_recategorize_oils(session, settings):
     logger.info('Re-categorizing oils in our blacklist')
     rowcount = 0
     for r in fd.readlines():
-        r = [unicode(f, 'utf-8') if f is not None else f
-             for f in r]
         recategorize_oil(session, fd.file_columns, r)
         rowcount += 1
 

@@ -1,15 +1,24 @@
 '''
     test the oil_library sample oils
 '''
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+from future import standard_library
+standard_library.install_aliases()
+from builtins import zip
+from builtins import *
 import numpy as np
 from numbers import Number
 
 import pytest
 
 # moving sample oils to py_gnome
-_sample_oils = pytest.importorskip("_sample_oils")
+pytestmark = pytest.mark.skip("not using these sample oils anymore")
+# _sample_oils = pytest.importorskip("_sample_oils")
 
-# from oil_library import _sample_oils
+from oil_library.sample_oils import _sample_oils
 
 oil_gas = _sample_oils['oil_gas']
 oil_jetfuels = _sample_oils['oil_jetfuels']

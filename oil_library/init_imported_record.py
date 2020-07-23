@@ -4,6 +4,9 @@
     Basically, we take the parsed record from our OilLib flat file, and
     find a place for all the data.
 '''
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 import sys
 import re
 import transaction

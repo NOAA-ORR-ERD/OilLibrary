@@ -6,6 +6,9 @@
     with the Oil object.  This is where we will place the estimated oil
     properties.
 '''
+from __future__ import print_function
+from __future__ import absolute_import
+from __future__ import division
 import logging
 import transaction
 

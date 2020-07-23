@@ -1,3 +1,6 @@
+from __future__ import print_function
+from __future__ import absolute_import
+from __future__ import division
 import os
 import sys
 import logging
@@ -56,15 +59,10 @@ def load_database(settings):
             for r in fd.readlines():
                 if len(r) < 10:
                     logger.info('got record: {}'.format(r))
-
-                r = [unicode(f, 'utf-8') if f is not None else f
-                     for f in r]
-
                 try:
                     add_oil_object(session, fd.file_columns, r)
                 except IntegrityError as e:
                     logger.warning('Failed to add oil: {}'.format(e))
-
                     logger.info('rolling back...')
                     transaction.abort()
 
@@ -96,7 +94,7 @@ def make_db(oillib_files=None, db_file=None, blacklist_file=None):
 
     pck_loc = os.path.dirname(os.path.realpath(__file__))
 
-    print "Building oil database:, installing to: {}".format(pck_loc)
+    print("Building oil database:, installing to: {}".format(pck_loc))
 
     if not db_file:
         db_file = os.path.join(pck_loc, 'OilLib.db')

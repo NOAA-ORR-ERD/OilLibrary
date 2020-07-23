@@ -5,11 +5,13 @@ __pycache__
 
 # pytest stuff
 .pytest_cache/
+.coverage
 
 # ignore generated oildb
 oil_library/OilLib.db
 OilLibrary.db
 temp.txt
+DB_build_Log.txt
 
 # ignore ipython notebook checkpoints areas
 .ipynb_checkpoints
