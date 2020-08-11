@@ -78,10 +78,17 @@ def initialize_console_log(level='debug'):
 
     level = log_levels[level.lower()]
 
-    logging.basicConfig(force=True,  # make sure this gets set up
-                        stream=sys.stdout,
-                        level=level,
-                        format=logger_format)
+    ver = sys.version_info
+    # only call force for py 3.8 or greater
+    if ver.major == 3 and ver.minor >= 8:
+        logging.basicConfig(force=True,  # make sure this gets set up
+                            stream=sys.stdout,
+                            level=level,
+                            format=logger_format)
+    else:
+        logging.basicConfig(stream=sys.stdout,
+                            level=level,
+                            format=logger_format)
 
 
 def add_file_log(filename, level='info'):
