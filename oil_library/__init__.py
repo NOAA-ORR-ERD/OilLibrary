@@ -15,12 +15,7 @@ from sqlalchemy.orm.exc import NoResultFound
 
 from .models import DBSession
 
-#import sample_oils
-
-try:
-    __version__ = get_distribution('oil_library').version
-except Exception:
-    __version__ = 'not_found'
+__version__ = '1.1.3'
 
 
 #

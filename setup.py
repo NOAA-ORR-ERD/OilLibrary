@@ -17,29 +17,41 @@ from setuptools import Command
 from setuptools.command.build_py import build_py
 from setuptools.command.test import test as TestCommand
 
-from git import Repo
-from git.exc import InvalidGitRepositoryError
 
 here = os.path.abspath(os.path.dirname(__file__))
 README = open(os.path.join(here, 'README.rst')).read()
 pkg_name = 'oil_library'
-pkg_version = '1.1.2'
+
+def get_version():
+    """
+    return the version number from the __init__
+    """
+    for line in open(os.path.join(pkg_name, "__init__.py")):
+        if line.startswith("__version__"):
+            version = line.strip().split('=')[1].strip().strip("'").strip('"')
+            return version
+    raise ValueError("can't find version string in __init__")
+
+pkg_version = get_version()
 
 
-# try to get update date from repo
-try:
-    repo = Repo('.')
+def get_repo_data():
     try:
-        branch_name = repo.active_branch.name
-    except TypeError:
-        branch_name = 'no-branch'
-    last_update = next(repo.iter_commits()).committed_datetime.isoformat()
-except InvalidGitRepositoryError:
-    # not building in a valid git repo
-    # use today's date.
-    print("not in a valid git repo -- using today's date as build date")
-    branch_name = 'no-branch'
-    last_update = datetime.now().isoformat()
+        from git import Repo
+        from git.exc import InvalidGitRepositoryError
+
+        repo = Repo('.')
+        try:
+            branch_name = repo.active_branch.name
+        except TypeError:
+            branch_name = 'no-branch'
+        last_update = next(repo.iter_commits()).committed_datetime.isoformat()
+    except:  # bare excepts are not good, but in this case,
+             # anything that goes wrong results in the same thing.
+        print("something wrong with accessing git repo -- using today's date as build date")
+        branch_name = 'no branch'
+        last_update = datetime.now().isoformat()
+    return branch_name, last_update
 
 
 def clean_files(del_db=False):
@@ -150,49 +162,53 @@ class BuildPyCommand(build_py):
         # build_py is an old-style class, so we can't use super()
         build_py.run(self)
 
+DESCRIPTION = ('{}: The NOAA library of oils and their properties.\n'
+               'Branch: {}\n'
+               'LastUpdate: {}'
+               .format(pkg_name, *get_repo_data())
+               )
 
-s = setup(name=pkg_name,
-          version=pkg_version,
-          description=('{}: The NOAA library of oils and their properties.\n'
-                       'Branch: {}\n'
-                       'LastUpdate: {}'
-                       .format(pkg_name, branch_name, last_update)),
-          long_description=README,
-          author='ADIOS/GNOME team at NOAA ORR',
-          author_email='orr.gnome@noaa.gov',
-          url='',
-          keywords='adios weathering oilspill modeling',
-          packages=find_packages(),
-          include_package_data=True,
-          package_data={'oil_library': ['OilLib.db',
-                                        'OilLib',
-                                        'OilLibTest',
-                                        'OilLibNorway',
-                                        'blacklist_whitelist.txt',
-                                        'tests/*.py',
-                                        'tests/sample_data/*']},
-          cmdclass={'remake_oil_db': remake_oil_db,
-                    'cleanall': cleanall,
-                    'test': PyTest,
-                    'build_py': BuildPyCommand,
+
+setup(name=pkg_name,
+      version=pkg_version,
+      description=DESCRIPTION,
+      long_description=README,
+      author='ADIOS/GNOME team at NOAA ORR',
+      author_email='orr.gnome@noaa.gov',
+      url='',
+      keywords='adios weathering oilspill modeling',
+      packages=find_packages(),
+      include_package_data=True,
+      package_data={'oil_library': ['OilLib.db',
+                                    'OilLib',
+                                    'OilLibTest',
+                                    'OilLibNorway',
+                                    'blacklist_whitelist.txt',
+                                    'tests/*.py',
+                                    'tests/sample_data/*']},
+      cmdclass={'remake_oil_db': remake_oil_db,
+                'cleanall': cleanall,
+                'test': PyTest,
+                'build_py': BuildPyCommand,
+                },
+      entry_points={'console_scripts': [('initialize_OilLibrary_db = '
+                                         'oil_library.initializedb'
+                                         ':make_db'),
+                                        ('diff_import_files = '
+                                         'oil_library.scripts.oil_import'
+                                         ':diff_import_files_cmd'),
+                                        ('add_header_to_import_file = '
+                                         'oil_library.scripts.oil_import'
+                                         ':add_header_to_csv_cmd'),
+                                        ('get_import_record_dates = '
+                                         'oil_library.scripts.oil_import'
+                                         ':get_import_record_dates_cmd'),
+                                        ],
                     },
-          entry_points={'console_scripts': [('initialize_OilLibrary_db = '
-                                             'oil_library.initializedb'
-                                             ':make_db'),
-                                            ('diff_import_files = '
-                                             'oil_library.scripts.oil_import'
-                                             ':diff_import_files_cmd'),
-                                            ('add_header_to_import_file = '
-                                             'oil_library.scripts.oil_import'
-                                             ':add_header_to_csv_cmd'),
-                                            ('get_import_record_dates = '
-                                             'oil_library.scripts.oil_import'
-                                             ':get_import_record_dates_cmd'),
-                                            ],
-                        },
-          zip_safe=False,
-          )
+      zip_safe=False,
+      )
 
 
-if 'develop' in s.script_args and '--uninstall' not in s.script_args:
+if 'develop' in sys.argv and '--uninstall' not in sys.argv:
     init_db()
+
