@@ -141,6 +141,9 @@ class TestProperties(object):
                       dens for dens in self.s_dens)
 
         assert np.allclose(self.op.mass_fraction.sum(), 1.0)
+    def test_vapor_pressure(self):
+        vp = self.op.vapor_pressure(273.)
+
 
 
 def test_eq():
