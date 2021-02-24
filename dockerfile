@@ -6,7 +6,7 @@ RUN yum update -y
 RUN conda info
 
 COPY ./ /OilLibrary/
-RUN cd /OilLibrary/ && conda install -y --file conda_requirements.txt
+RUN cd /OilLibrary/ && conda install -y --file conda_requirements_py3.txt
 
 # RUN cd /OilLibrary/ && pip install -r requirements.txt
 # RUN conda install scipy
