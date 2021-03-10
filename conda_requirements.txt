@@ -3,8 +3,7 @@
 # These should all be in the conda-forge channel:
 # Best to have it at the top in your conda configuration
 
-python=2.7.*
-pathlib
+python=3.8.*
 gitpython
 numpy>=1.16.*
 scipy>=0.18.1

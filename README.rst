@@ -17,21 +17,17 @@ The best way to get the requirements is via conda::
 
   conda install --file conda_requirements.txt
 
-Note that some of the packages are only available in conda-forge or NOAA-ORR-ERD channels.
-To make it easy for your install to find conda-forge and NOAA packages, they should be added to your conda configuration:
+Note that some of the packages are only available in conda-forge channels.
 
-First add the NOAA-ORR-ERD channel::
-
-    > conda config --add channels NOAA-ORR-ERD
-
-And then add the conda-forge channel::
+To make it easy for your install to find the conda-forge packages, it should be added to your conda configuration:
 
     > conda config --add channels conda-forge
 
 When you add a channel to conda, it puts it at the top of the list.
 So now when you install a package, conda will first look in conda-forge,
-then NOAA-ORR-ERD, and then in the default channel.
+and then in the default channel.
 This order should work well for PyGNOME.
+
 Be sure to add the channels in the order we specify.
 
 You can see what channels you have with::
@@ -41,25 +37,38 @@ You can see what channels you have with::
 It should return something like this::
 
     --add channels 'defaults'   # lowest priority
-    --add channels 'NOAA-ORR-ERD'
     --add channels 'conda-forge'   # highest priority
 
 In that order -- the order is important
 
+
 Installing from source
 ----------------------
+
+Activate the environment::
+
+  conda activate gnome
 
 ::
 
   cd <directory containing this file>
 
-::
+Install the dependencies::
 
-  $venv/bin/python setup.py develop
+  conda install --file conda_requirements.txt
+
+
+Build / intall the pacakge::
+
+  python setup.py develop
 
 or::
 
-  $venv/bin/python setup.py install
+  python setup.py install
+
+NOTE: if anything goes wrong, or you've updated the source, you will want to clean out the old installation::
+
+  python setup.py cleanall
 
 
 Using the package
