@@ -46,7 +46,7 @@ test:
     stage: test
     image: registry.orr.noaa.gov/erd/centos-conda
     script:
-        - conda install --file conda_requirements.txt
+        - conda install --file conda_requirements_py3.txt
         - python setup.py develop
         - pytest --pyargs oil_library
     tags:
