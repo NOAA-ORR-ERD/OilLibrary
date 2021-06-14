@@ -47,7 +47,7 @@ test:
     image: registry.orr.noaa.gov/erd/centos-conda
     script:
         - conda install --file conda_requirements.txt
-        - python setup.py develop
+        - python setup.py install
         - pytest --pyargs oil_library
     tags:
         - docker
