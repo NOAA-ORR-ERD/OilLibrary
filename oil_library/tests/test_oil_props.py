@@ -194,3 +194,43 @@ class TestCopy(object):
                 assert getattr(op, item) is getattr(dcop, item)
             else:
                 assert getattr(op, item) is not getattr(dcop, item)
+
+
+def test_hash():
+    """
+    make sure OilProps is hashable
+    """
+    op = get_oil_props('ALASKA NORTH SLOPE (MIDDLE PIPELINE, 1997)')
+
+    print(dir(op))
+    print(op.__hash__)
+    print(f"Hash is: {op.__hash__()}")
+
+    # this may change, but fpr now
+    assert hash(op) == id(op)
+
+
+def test_vapor_pressure():
+
+    # making sure the lru_cache works
+    op = get_oil_props('ALASKA NORTH SLOPE (MIDDLE PIPELINE, 1997)')
+
+    vp = op.vapor_pressure(303)
+
+    print(f"{vp=}")
+
+    # I have no idea if these values are correct
+    assert np.allclose(vp, np.array([4.25112967e+04, 4.25112967e+04,
+                                     4.33030879e+03, 4.33030879e+03,
+                                     3.44544154e+02, 3.44544154e+02,
+                                     2.11131481e+01, 2.11131481e+01,
+                                     1.03347266e+00, 1.03347266e+00,
+                                     4.67207773e-02, 4.67207773e-02,
+                                     2.25663515e-03, 2.25663515e-03,
+                                     1.34558585e-04, 1.34558585e-04,
+                                     2.73632461e-05, 2.73632461e-05,
+                                     1.91947361e-05, 1.91947361e-05,
+                                     4.83593789e-19, 4.83593789e-19]))
+
+
+

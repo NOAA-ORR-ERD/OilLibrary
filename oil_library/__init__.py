@@ -15,7 +15,7 @@ from sqlalchemy.orm.exc import NoResultFound
 
 from .models import DBSession
 
-__version__ = '2.0.0'
+__version__ = '2.0.1'
 
 
 #
