@@ -314,6 +314,12 @@ class OilProps(OilWithEstimation):
         except Exception:
             return False
 
+    def __hash__(self):
+        """
+        so that we can use lru_cache on the methods of the object
+        """
+        return id(self)
+
     def __ne__(self, other):
         return not self == other
 

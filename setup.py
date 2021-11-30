@@ -162,8 +162,8 @@ class BuildPyCommand(build_py):
         # build_py is an old-style class, so we can't use super()
         build_py.run(self)
 
-DESCRIPTION = ('{}: The NOAA library of oils and their properties.\n'
-               'Branch: {}\n'
+DESCRIPTION = ('{}: The NOAA library of oils and their properties.'
+               'Branch: {}'
                'LastUpdate: {}'
                .format(pkg_name, *get_repo_data())
                )
