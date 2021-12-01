@@ -2,6 +2,33 @@
 OilLibrary
 ##########
 
+**NOTE:**
+=========
+
+This OilLibrary Package is not longer under development. If a simple bug like this one crops up, we'll try to fix it, but it won't see any further development.
+
+Our development efforts are now focused on a new system -- in teh end, similar functionality, but new structure.
+
+The data itself is available via an online database:
+
+https://adios.orr.noaa.gov
+
+(note: we will be publishing the raw data in JSON format on gitHub soon)
+
+The code to process the data is in the ``adios_db`` package in the adios_oil_database project:
+
+https://github.com/NOAA-ORR-ERD/adios_oil_database
+
+And some of the computation specific to the oil weathering in now in PyGNOME:
+
+https://github.com/NOAA-ORR-ERD/PyGnome
+
+If you need oil-processing functionality outside of PyGNOME, let us know, we may be able to move some code around.
+
+Overview
+========
+
+
 **OilLibrary** is The NOAA library of oils and their properties.
 It is developed by the National Oceanic and Atmospheric Administration (**NOAA**),
 Office of Response and Restoration (**ORR**), Emergency Response Division.
