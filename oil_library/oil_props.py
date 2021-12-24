@@ -17,11 +17,6 @@ import copy
 from itertools import groupby, chain
 from future.moves.itertools import zip_longest
 
-try:
-    from functools import lru_cache  # it's built-in on py3
-except ImportError:
-    from backports.functools_lru_cache import lru_cache  # needs backports for py2
-
 import numpy as np
 
 from .models import Oil
@@ -190,7 +185,6 @@ class OilProps(OilWithEstimation):
     def component_types(self):
         return self._sara['type']
 
-    @lru_cache(2)
     def vapor_pressure(self, temp, atmos_pressure=101325.0):
         '''
         water_temp and boiling point units are Kelvin
